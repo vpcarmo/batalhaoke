@@ -11,7 +11,7 @@ export interface PlaybackSearchResult {
   channelName: string | null;
   thumbnailUrl: string | null;
   duration: string | null;
-  metadata: Record<string, unknown>;
+  metadata: Record<string, string | number | boolean | null>;
 }
 
 export type PlayerState = "unstarted" | "playing" | "paused" | "buffering" | "ended" | "error";

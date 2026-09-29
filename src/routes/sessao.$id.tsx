@@ -183,7 +183,7 @@ function SessionPage() {
 
 function confirm_(m: string) { return typeof window !== "undefined" && window.confirm(m); }
 
-function StatusOrAction({ pf, onPick, disabled }: { pf?: Performance; onPick: () => void; disabled: boolean }) {
+function StatusOrAction({ pf, onPick, disabled }: { pf: Performance | undefined; onPick: () => void; disabled: boolean }) {
   if (pf?.status === "active") return <span className="rounded-full bg-primary/20 px-2.5 py-1 text-xs font-semibold text-primary">No palco</span>;
   if (pf?.status === "queued") return <span className="rounded-full bg-secondary px-2.5 py-1 text-xs">Na fila</span>;
   return (
