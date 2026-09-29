@@ -1,0 +1,55 @@
+import { useEffect, useImperativeHandle, useRef, useState, forwardRef } from "react";
+import { getProvider } from "@/lib/playback/registry";
+import type { PlayerHandle, PlayerState } from "@/lib/playback/types";
+
+export interface PlaybackPlayerRef { play(): void; pause(): void }
+
+interface Props {
+  provider: string;
+  externalId: string;
+  onState?: (s: PlayerState) => void;
+  className?: string;
+}
+
+/** Generic player slot. Nothing is ever rendered on top of the provider's player. */
+export const PlaybackPlayer = forwardRef<PlaybackPlayerRef, Props>(function PlaybackPlayer({ provider, externalId, onState, className }, ref) {
+  const box = useRef<HTMLDivElement>(null);
+  const handle = useRef<PlayerHandle | null>(null);
+  const cb = useRef(onState);
+  cb.current = onState;
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useImperativeHandle(ref, () => ({ play: () => handle.current?.play(), pause: () => handle.current?.pause() }), []);
+
+  useEffect(() => {
+    let alive = true;
+    setError(null);
+    setLoading(true);
+    const p = getProvider(provider);
+    const t = setTimeout(() => alive && loading && setError("O player demorou demais para carregar. Verifique a internet."), 15000);
+    p.mount(box.current!, externalId, {
+      onReady: () => alive && setLoading(false),
+      onStateChange: (s) => cb.current?.(s),
+      onError: (m) => alive && setError(m),
+    })
+      .then((h) => { if (!alive) h.destroy(); else handle.current = h; })
+      .catch((e) => alive && setError(e.message || "Player indisponível."));
+    return () => { alive = false; clearTimeout(t); handle.current?.destroy(); handle.current = null; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [provider, externalId]);
+
+  const attribution = getProvider(provider).attribution;
+  return (
+    <div className={className}>
+      <div className="relative w-full min-w-[280px] overflow-hidden rounded-xl bg-muted" style={{ aspectRatio: "16 / 9" }}>
+        <div ref={box} className="absolute inset-0" />
+      </div>
+      <div className="mt-2 flex items-center justify-between gap-2 text-xs text-muted-foreground">
+        <span>{attribution}</span>
+        {loading && !error && <span>Carregando player…</span>}
+      </div>
+      {error && <p role="alert" className="mt-2 rounded-lg border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive">{error}</p>}
+    </div>
+  );
+});

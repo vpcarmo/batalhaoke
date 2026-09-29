@@ -1,0 +1,12 @@
+import type { PlaybackProvider, ProviderId } from "./types";
+import { youtubeProvider } from "./youtube-provider";
+
+// Register future providers (e.g. licensed karaoke) here. Nothing else needs to change.
+const providers: Record<ProviderId, PlaybackProvider> = { youtube: youtubeProvider };
+
+export const DEFAULT_PROVIDER: ProviderId = "youtube";
+export function getProvider(id: string): PlaybackProvider {
+  const p = providers[id as ProviderId];
+  if (!p) throw new Error(`Provider desconhecido: ${id}`);
+  return p;
+}
