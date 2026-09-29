@@ -10,33 +10,53 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as KaraokeTvRouteImport } from './routes/karaoke-tv'
+import { Route as SessaoIdRouteImport } from './routes/sessao.$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const KaraokeTvRoute = KaraokeTvRouteImport.update({
+  id: '/karaoke-tv',
+  path: '/karaoke-tv',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SessaoIdRoute = SessaoIdRouteImport.update({
+  id: '/sessao/$id',
+  path: '/sessao/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/karaoke-tv': typeof KaraokeTvRoute
+  '/sessao/$id': typeof SessaoIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/karaoke-tv': typeof KaraokeTvRoute
+  '/sessao/$id': typeof SessaoIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/karaoke-tv': typeof KaraokeTvRoute
+  '/sessao/$id': typeof SessaoIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/karaoke-tv' | '/sessao/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/karaoke-tv' | '/sessao/$id'
+  id: '__root__' | '/' | '/karaoke-tv' | '/sessao/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  KaraokeTvRoute: typeof KaraokeTvRoute
+  SessaoIdRoute: typeof SessaoIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +68,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/karaoke-tv': {
+      id: '/karaoke-tv'
+      path: '/karaoke-tv'
+      fullPath: '/karaoke-tv'
+      preLoaderRoute: typeof KaraokeTvRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sessao/$id': {
+      id: '/sessao/$id'
+      path: '/sessao/$id'
+      fullPath: '/sessao/$id'
+      preLoaderRoute: typeof SessaoIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  KaraokeTvRoute: KaraokeTvRoute,
+  SessaoIdRoute: SessaoIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
