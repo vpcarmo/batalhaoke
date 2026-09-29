@@ -1,0 +1,265 @@
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect, useRef, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { ArrowLeft, Mic2, Music, Pause, Play, Plus, Square, Tv, Smartphone, Check } from "lucide-react";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { supabase } from "@/integrations/supabase/client";
+import { useSessionLive } from "@/hooks/use-session-live";
+import { addParticipant, commandChannel, createPerformance, displayName, finishSession, getApiStats, setPerformanceStatus, type Participant, type Performance } from "@/lib/karaoke";
+import { MusicSearch } from "@/components/karaoke/MusicSearch";
+import { PlaybackPlayer, type PlaybackPlayerRef } from "@/components/karaoke/PlaybackPlayer";
+import type { PlaybackSearchResult } from "@/lib/playback/types";
+
+export const Route = createFileRoute("/sessao/$id")({
+  ssr: false,
+  head: () => ({
+    meta: [
+      { title: "Sessão — Karaoke Arena" },
+      { name: "description", content: "Painel do operador: cantores, músicas e apresentações." },
+      { property: "og:title", content: "Sessão — Karaoke Arena" },
+      { property: "og:description", content: "Painel do operador do Karaoke Arena." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+      { name: "robots", content: "noindex" },
+    ],
+  }),
+  component: SessionPage,
+});
+
+function SessionPage() {
+  const { id } = Route.useParams();
+  const qc = useQueryClient();
+  const live = useSessionLive(id);
+  const [addOpen, setAddOpen] = useState(false);
+  const [picking, setPicking] = useState<Participant | null>(null);
+  const [confirm, setConfirm] = useState<PlaybackSearchResult | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [localPlayer, setLocalPlayer] = useState(false);
+  const playerRef = useRef<PlaybackPlayerRef>(null);
+  const stats = useQuery({ queryKey: ["api-stats"], queryFn: getApiStats, staleTime: Infinity });
+
+  const chRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+  useEffect(() => {
+    const ch = supabase.channel(commandChannel(id)).subscribe();
+    chRef.current = ch;
+    return () => { supabase.removeChannel(ch); };
+  }, [id]);
+  const sendTv = (action: "play" | "pause") => chRef.current?.send({ type: "broadcast", event: "command", payload: { action } });
+
+  const session = live.session.data;
+  const participants = live.participants.data ?? [];
+  const perfs = live.performances.data ?? [];
+  const active = live.active;
+  const nextQueued = live.queued[0] ?? null;
+
+  const perfFor = (p: Participant) => [...perfs].reverse().find((x) => x.participant_id === p.id);
+  const refresh = () => { qc.invalidateQueries({ queryKey: ["performances", id] }); qc.invalidateQueries({ queryKey: ["participants", id] }); };
+
+  async function act(fn: () => Promise<unknown>, ok?: string) {
+    setBusy(true);
+    try { await fn(); if (ok) toast.success(ok); refresh(); } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
+  }
+
+  if (live.session.isLoading) return <Centered>Carregando sessão…</Centered>;
+  if (live.error) return <Centered><p role="alert" className="text-destructive">Servidor indisponível. Verifique a internet e tente novamente.</p><Button className="mt-4" onClick={() => location.reload()}>Tentar novamente</Button></Centered>;
+  if (!session) return <Centered>Sessão não encontrada. <Link to="/" className="underline">Voltar</Link></Centered>;
+
+  return (
+    <main className="mx-auto flex w-full max-w-2xl flex-col gap-5 px-4 pb-28 pt-4 sm:px-6">
+      <header className="flex items-center justify-between gap-3">
+        <Link to="/" aria-label="Voltar" className="grid size-11 place-items-center rounded-full bg-secondary"><ArrowLeft className="size-5" /></Link>
+        <div className="min-w-0 flex-1">
+          <p className="font-display text-2xl leading-none">Karaoke Arena</p>
+          <p className="truncate text-sm text-muted-foreground">{session.name}</p>
+        </div>
+        <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold ${session.status === "active" ? "bg-success/15 text-success" : "bg-muted text-muted-foreground"}`}>
+          <span className={`size-2 rounded-full ${session.status === "active" ? "bg-success animate-pulse" : "bg-muted-foreground"}`} />
+          {session.status === "active" ? "Sessão ativa" : "Encerrada"}
+        </span>
+      </header>
+
+      {/* Current / next performance */}
+      <section aria-labelledby="now" className="rounded-2xl border bg-card p-4 sm:p-5">
+        <h2 id="now" className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">{active ? "Apresentação em andamento" : "Próxima apresentação"}</h2>
+        {active ? (
+          <ActivePanel perf={active} busy={busy} localPlayer={localPlayer} setLocalPlayer={setLocalPlayer} playerRef={playerRef}
+            onPlay={() => (localPlayer ? playerRef.current?.play() : sendTv("play"))}
+            onPause={() => (localPlayer ? playerRef.current?.pause() : sendTv("pause"))}
+            onEnd={() => act(() => setPerformanceStatus(active.id, "completed"), "Apresentação encerrada")}
+            onEnded={() => act(() => setPerformanceStatus(active.id, "completed"), "Música terminou — apresentação concluída")} />
+        ) : nextQueued ? (
+          <div className="mt-3">
+            <Singer perf={nextQueued} />
+            <Button size="lg" className="mt-4 h-14 w-full text-base font-semibold shadow-glow" disabled={busy} onClick={() => act(() => setPerformanceStatus(nextQueued.id, "active"), "Apresentação iniciada")}>
+              <Mic2 className="size-5" /> Iniciar apresentação
+            </Button>
+          </div>
+        ) : (
+          <p className="mt-3 text-muted-foreground">Cadastre um cantor e escolha uma música para começar.</p>
+        )}
+      </section>
+
+      <Button variant="secondary" asChild className="h-12">
+        <a href={`/karaoke-tv?session=${id}`} target="_blank" rel="noreferrer"><Tv className="size-4" /> Abrir tela da TV</a>
+      </Button>
+
+      {/* Queue */}
+      <section aria-labelledby="order">
+        <div className="mb-3 flex items-center justify-between">
+          <h2 id="order" className="font-display text-3xl">Ordem</h2>
+          <span className="text-sm text-muted-foreground">{participants.length} cantor(es)</span>
+        </div>
+        {participants.length === 0 && <p className="rounded-xl border border-dashed p-6 text-center text-muted-foreground">Nenhum cantor ainda.</p>}
+        <ol className="flex flex-col gap-2">
+          {participants.map((p) => {
+            const pf = perfFor(p);
+            return (
+              <li key={p.id} className="flex items-center gap-3 rounded-xl border bg-card p-3">
+                <span className="grid size-10 shrink-0 place-items-center rounded-lg bg-secondary font-display text-xl">{p.participant_number}</span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs text-muted-foreground">Cantor {p.participant_number}</p>
+                  <p className="truncate font-semibold">{displayName(p)}</p>
+                  {pf?.source && <p className="truncate text-xs text-muted-foreground"><Music className="mr-1 inline size-3" />{pf.source.title}</p>}
+                </div>
+                <StatusOrAction pf={pf} onPick={() => setPicking(p)} disabled={session.status !== "active"} />
+              </li>
+            );
+          })}
+        </ol>
+      </section>
+
+      {session.status === "active" && (
+        <Button variant="ghost" className="text-muted-foreground" disabled={busy || !!active} onClick={() => confirm_("Encerrar a sessão?") && act(() => finishSession(id), "Sessão encerrada")}>
+          Encerrar sessão
+        </Button>
+      )}
+
+      {import.meta.env.DEV && (
+        <aside className="rounded-xl border border-dashed p-3 text-xs text-muted-foreground">
+          <p className="font-semibold">YouTube API (dev)</p>
+          <p>Chamadas search.list hoje (sem cache): {stats.data?.todayCalls ?? "…"} · Cota estimada: {(stats.data?.todayCalls ?? 0) * 100} unidades</p>
+          <p>Última pesquisa: {stats.data?.last ? `"${stats.data.last.query}" às ${new Date(stats.data.last.created_at).toLocaleTimeString("pt-BR")}${stats.data.last.ok ? "" : ` (erro: ${stats.data.last.error})`}` : "—"}</p>
+        </aside>
+      )}
+
+      {session.status === "active" && (
+        <div className="fixed inset-x-0 bottom-0 z-10 border-t bg-background/90 p-3 backdrop-blur">
+          <Button size="lg" className="mx-auto flex h-14 w-full max-w-2xl text-base font-semibold" onClick={() => setAddOpen(true)}><Plus className="size-5" /> Novo cantor</Button>
+        </div>
+      )}
+
+      <AddSingerDialog open={addOpen} onOpenChange={setAddOpen} sessionId={id} onAdded={(p) => { refresh(); setPicking(p); }} />
+
+      <Sheet open={!!picking} onOpenChange={(o) => !o && (setPicking(null), setConfirm(null))}>
+        <SheetContent side="bottom" className="max-h-[92dvh] overflow-y-auto rounded-t-2xl">
+          <SheetHeader><SheetTitle>Música para {picking && displayName(picking)}</SheetTitle></SheetHeader>
+          <div className="px-4 pb-6">
+            {confirm ? (
+              <div className="flex flex-col gap-3">
+                {confirm.thumbnailUrl && <img src={confirm.thumbnailUrl} alt="" className="aspect-video w-full rounded-xl object-cover" />}
+                <p className="font-semibold">{confirm.title}</p>
+                <p className="text-sm text-muted-foreground">Canal: {confirm.channelName}</p>
+                <div className="grid grid-cols-2 gap-3">
+                  <Button variant="secondary" className="h-12" onClick={() => setConfirm(null)}>Voltar</Button>
+                  <Button className="h-12" disabled={busy} onClick={() => act(async () => { await createPerformance(id, picking!.id, confirm); setPicking(null); setConfirm(null); }, "Apresentação criada")}>
+                    <Check className="size-4" /> Confirmar
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <MusicSearch onPick={setConfirm} onSearched={() => stats.refetch()} />
+            )}
+          </div>
+        </SheetContent>
+      </Sheet>
+    </main>
+  );
+}
+
+function confirm_(m: string) { return typeof window !== "undefined" && window.confirm(m); }
+
+function StatusOrAction({ pf, onPick, disabled }: { pf: Performance | undefined; onPick: () => void; disabled: boolean }) {
+  if (pf?.status === "active") return <span className="rounded-full bg-primary/20 px-2.5 py-1 text-xs font-semibold text-primary">No palco</span>;
+  if (pf?.status === "queued") return <span className="rounded-full bg-secondary px-2.5 py-1 text-xs">Na fila</span>;
+  return (
+    <Button size="sm" variant={pf ? "secondary" : "default"} className="h-10" disabled={disabled} onClick={onPick}>
+      {pf?.status === "completed" && <Check className="size-4" />} {pf ? "Cantar de novo" : "Escolher música"}
+    </Button>
+  );
+}
+
+function Singer({ perf }: { perf: Performance }) {
+  return (
+    <div>
+      <p className="text-sm text-muted-foreground">Cantor {perf.participant?.participant_number}</p>
+      <p className="font-display text-5xl leading-none">{perf.participant && displayName(perf.participant)}</p>
+      <p className="mt-2 flex items-center gap-2 text-lg"><Music className="size-4 text-accent" /> <span className="line-clamp-2">{perf.source?.title}</span></p>
+    </div>
+  );
+}
+
+function ActivePanel(props: {
+  perf: Performance; busy: boolean; localPlayer: boolean; setLocalPlayer: (v: boolean) => void; playerRef: React.RefObject<PlaybackPlayerRef | null>;
+  onPlay: () => void; onPause: () => void; onEnd: () => void; onEnded: () => void;
+}) {
+  const { perf } = props;
+  return (
+    <div className="mt-3 flex flex-col gap-4">
+      <Singer perf={perf} />
+      <div className="grid grid-cols-2 gap-2 rounded-xl bg-secondary p-1" role="radiogroup" aria-label="Onde tocar">
+        <button role="radio" aria-checked={!props.localPlayer} onClick={() => props.setLocalPlayer(false)} className={`flex h-11 items-center justify-center gap-2 rounded-lg text-sm font-medium ${!props.localPlayer ? "bg-background" : "text-muted-foreground"}`}><Tv className="size-4" /> Na TV</button>
+        <button role="radio" aria-checked={props.localPlayer} onClick={() => props.setLocalPlayer(true)} className={`flex h-11 items-center justify-center gap-2 rounded-lg text-sm font-medium ${props.localPlayer ? "bg-background" : "text-muted-foreground"}`}><Smartphone className="size-4" /> Neste aparelho</button>
+      </div>
+      {props.localPlayer && perf.source && (
+        <PlaybackPlayer ref={props.playerRef} provider={perf.source.provider} externalId={perf.source.external_id} onState={(s) => s === "ended" && props.onEnded()} />
+      )}
+      <div className="grid grid-cols-2 gap-3">
+        <Button size="lg" className="h-14" onClick={props.onPlay}><Play className="size-5" /> Iniciar playback</Button>
+        <Button size="lg" variant="secondary" className="h-14" onClick={props.onPause}><Pause className="size-5" /> Pausar</Button>
+      </div>
+      <Button size="lg" variant="destructive" className="h-14 text-base font-semibold" disabled={props.busy} onClick={props.onEnd}><Square className="size-5" /> Encerrar apresentação</Button>
+    </div>
+  );
+}
+
+function AddSingerDialog({ open, onOpenChange, sessionId, onAdded }: { open: boolean; onOpenChange: (o: boolean) => void; sessionId: string; onAdded: (p: Participant) => void }) {
+  const [name, setName] = useState("");
+  const [stage, setStage] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!name.trim()) { setErr("Informe o nome do cantor."); return; }
+    setBusy(true); setErr(null);
+    try {
+      const p = await addParticipant(sessionId, name, stage);
+      toast.success(`✓ Cantor cadastrado — Cantor ${p.participant_number}: ${displayName(p)}`);
+      setName(""); setStage(""); onOpenChange(false); onAdded(p);
+    } catch (e) { setErr((e as Error).message); } finally { setBusy(false); }
+  }
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-[calc(100vw-2rem)] rounded-2xl sm:max-w-md">
+        <DialogHeader><DialogTitle className="font-display text-3xl">Novo cantor</DialogTitle></DialogHeader>
+        <form onSubmit={submit} className="flex flex-col gap-4">
+          <div><Label htmlFor="pn">Nome *</Label><Input id="pn" className="mt-2 h-12 text-base" value={name} onChange={(e) => setName(e.target.value)} autoFocus aria-invalid={!!err} /></div>
+          <div><Label htmlFor="ps">Nome artístico</Label><Input id="ps" className="mt-2 h-12 text-base" value={stage} onChange={(e) => setStage(e.target.value)} /></div>
+          {err && <p role="alert" className="text-sm text-destructive">{err}</p>}
+          <DialogFooter className="grid grid-cols-2 gap-3 sm:grid-cols-2">
+            <Button type="button" variant="secondary" className="h-12" onClick={() => onOpenChange(false)}>Cancelar</Button>
+            <Button type="submit" className="h-12" disabled={busy}>{busy ? "Salvando…" : "Cadastrar"}</Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function Centered({ children }: { children: React.ReactNode }) {
+  return <main className="grid min-h-dvh place-items-center p-6 text-center text-muted-foreground"><div>{children}</div></main>;
+}
