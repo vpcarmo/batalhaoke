@@ -14,7 +14,270 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      controllers: {
+        Row: {
+          created_at: string
+          device_code: string
+          firmware_version: string | null
+          id: string
+          last_seen: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          device_code: string
+          firmware_version?: string | null
+          id?: string
+          last_seen?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          device_code?: string
+          firmware_version?: string | null
+          id?: string
+          last_seen?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      participants: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          participant_number: number
+          session_id: string
+          stage_name: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          participant_number: number
+          session_id: string
+          stage_name?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          participant_number?: number
+          session_id?: string
+          stage_name?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "participants_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      performances: {
+        Row: {
+          created_at: string
+          ended_at: string | null
+          id: string
+          participant_id: string
+          playback_source_id: string
+          session_id: string
+          started_at: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          ended_at?: string | null
+          id?: string
+          participant_id: string
+          playback_source_id: string
+          session_id: string
+          started_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          ended_at?: string | null
+          id?: string
+          participant_id?: string
+          playback_source_id?: string
+          session_id?: string
+          started_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "performances_participant_id_fkey"
+            columns: ["participant_id"]
+            isOneToOne: false
+            referencedRelation: "participants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "performances_playback_source_id_fkey"
+            columns: ["playback_source_id"]
+            isOneToOne: false
+            referencedRelation: "playback_sources"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "performances_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      playback_sources: {
+        Row: {
+          channel_name: string | null
+          created_at: string
+          duration: string | null
+          external_id: string
+          id: string
+          metadata: Json
+          provider: string
+          thumbnail_url: string | null
+          title: string
+        }
+        Insert: {
+          channel_name?: string | null
+          created_at?: string
+          duration?: string | null
+          external_id: string
+          id?: string
+          metadata?: Json
+          provider: string
+          thumbnail_url?: string | null
+          title: string
+        }
+        Update: {
+          channel_name?: string | null
+          created_at?: string
+          duration?: string | null
+          external_id?: string
+          id?: string
+          metadata?: Json
+          provider?: string
+          thumbnail_url?: string | null
+          title?: string
+        }
+        Relationships: []
+      }
+      provider_api_calls: {
+        Row: {
+          cached: boolean
+          created_at: string
+          endpoint: string
+          error: string | null
+          id: string
+          ok: boolean
+          provider: string
+          query: string | null
+        }
+        Insert: {
+          cached?: boolean
+          created_at?: string
+          endpoint: string
+          error?: string | null
+          id?: string
+          ok?: boolean
+          provider: string
+          query?: string | null
+        }
+        Update: {
+          cached?: boolean
+          created_at?: string
+          endpoint?: string
+          error?: string | null
+          id?: string
+          ok?: boolean
+          provider?: string
+          query?: string | null
+        }
+        Relationships: []
+      }
+      sessions: {
+        Row: {
+          created_at: string
+          ended_at: string | null
+          id: string
+          name: string
+          started_at: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          ended_at?: string | null
+          id?: string
+          name: string
+          started_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          ended_at?: string | null
+          id?: string
+          name?: string
+          started_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      votes: {
+        Row: {
+          controller_id: string
+          created_at: string
+          id: string
+          performance_id: string
+          vote_type: string
+        }
+        Insert: {
+          controller_id: string
+          created_at?: string
+          id?: string
+          performance_id: string
+          vote_type: string
+        }
+        Update: {
+          controller_id?: string
+          created_at?: string
+          id?: string
+          performance_id?: string
+          vote_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "votes_controller_id_fkey"
+            columns: ["controller_id"]
+            isOneToOne: false
+            referencedRelation: "controllers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "votes_performance_id_fkey"
+            columns: ["performance_id"]
+            isOneToOne: false
+            referencedRelation: "performances"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
