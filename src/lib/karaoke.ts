@@ -37,6 +37,26 @@ export async function getSession(id: string): Promise<Session | null> {
   return data;
 }
 
+/** Public lookup by the permanent QR code (unique per session → establishments never mix). */
+export async function getSessionByCode(code: string): Promise<Session | null> {
+  const { data, error } = await supabase.from("sessions").select("*").eq("public_code", code).maybeSingle();
+  fail(error, "Erro ao carregar sessão");
+  return data;
+}
+
+export async function updateSessionDisplay(id: string, patch: { tv_enabled?: boolean; show_qr_on_tv?: boolean }) {
+  const { error } = await supabase.from("sessions").update(patch).eq("id", id);
+  fail(error, "Erro ao salvar configuração");
+}
+
+/** Anonymous per-browser voter token (no personal data). */
+export function getVoterToken(): string {
+  const k = "ka-voter-token";
+  let t = localStorage.getItem(k);
+  if (!t) { t = crypto.randomUUID().replace(/-/g, "") + crypto.randomUUID().replace(/-/g, ""); localStorage.setItem(k, t); }
+  return t;
+}
+
 export async function listParticipants(sessionId: string): Promise<Participant[]> {
   const { data, error } = await supabase.from("participants").select("*").eq("session_id", sessionId).order("participant_number");
   fail(error, "Erro ao carregar cantores");

@@ -87,6 +87,7 @@ export type Database = {
           created_at: string
           ended_at: string | null
           id: string
+          like_count: number
           participant_id: string
           playback_source_id: string
           session_id: string
@@ -98,6 +99,7 @@ export type Database = {
           created_at?: string
           ended_at?: string | null
           id?: string
+          like_count?: number
           participant_id: string
           playback_source_id: string
           session_id: string
@@ -109,6 +111,7 @@ export type Database = {
           created_at?: string
           ended_at?: string | null
           id?: string
+          like_count?: number
           participant_id?: string
           playback_source_id?: string
           session_id?: string
@@ -215,8 +218,11 @@ export type Database = {
           ended_at: string | null
           id: string
           name: string
+          public_code: string
+          show_qr_on_tv: boolean
           started_at: string | null
           status: string
+          tv_enabled: boolean
           updated_at: string
         }
         Insert: {
@@ -224,8 +230,11 @@ export type Database = {
           ended_at?: string | null
           id?: string
           name: string
+          public_code?: string
+          show_qr_on_tv?: boolean
           started_at?: string | null
           status?: string
+          tv_enabled?: boolean
           updated_at?: string
         }
         Update: {
@@ -233,33 +242,71 @@ export type Database = {
           ended_at?: string | null
           id?: string
           name?: string
+          public_code?: string
+          show_qr_on_tv?: boolean
           started_at?: string | null
           status?: string
+          tv_enabled?: boolean
           updated_at?: string
         }
         Relationships: []
       }
+      voter_sessions: {
+        Row: {
+          created_at: string
+          id: string
+          last_seen_at: string
+          session_id: string
+          voter_token_hash: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          last_seen_at?: string
+          session_id: string
+          voter_token_hash: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          last_seen_at?: string
+          session_id?: string
+          voter_token_hash?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "voter_sessions_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       votes: {
         Row: {
-          controller_id: string
+          controller_id: string | null
           created_at: string
           id: string
           performance_id: string
           vote_type: string
+          voter_session_id: string | null
         }
         Insert: {
-          controller_id: string
+          controller_id?: string | null
           created_at?: string
           id?: string
           performance_id: string
           vote_type: string
+          voter_session_id?: string | null
         }
         Update: {
-          controller_id?: string
+          controller_id?: string | null
           created_at?: string
           id?: string
           performance_id?: string
           vote_type?: string
+          voter_session_id?: string | null
         }
         Relationships: [
           {
@@ -274,6 +321,13 @@ export type Database = {
             columns: ["performance_id"]
             isOneToOne: false
             referencedRelation: "performances"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "votes_voter_session_id_fkey"
+            columns: ["voter_session_id"]
+            isOneToOne: false
+            referencedRelation: "voter_sessions"
             referencedColumns: ["id"]
           },
         ]

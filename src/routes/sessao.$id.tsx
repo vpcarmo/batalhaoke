@@ -1,18 +1,20 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Mic2, Music, Pause, Play, Plus, Square, Tv, Smartphone, Check } from "lucide-react";
+import { ArrowLeft, Mic2, Music, Pause, Play, Plus, Square, Tv, Smartphone, Check, QrCode, Copy, Download, Printer, ThumbsUp } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { supabase } from "@/integrations/supabase/client";
 import { useSessionLive } from "@/hooks/use-session-live";
-import { addParticipant, commandChannel, createPerformance, displayName, finishSession, getApiStats, setPerformanceStatus, type Participant, type Performance } from "@/lib/karaoke";
+import { addParticipant, commandChannel, createPerformance, displayName, finishSession, getApiStats, setPerformanceStatus, updateSessionDisplay, type Participant, type Performance } from "@/lib/karaoke";
 import { MusicSearch } from "@/components/karaoke/MusicSearch";
 import { PlaybackPlayer, type PlaybackPlayerRef } from "@/components/karaoke/PlaybackPlayer";
+import { SessionQr, voteUrl } from "@/components/karaoke/SessionQr";
 import type { PlaybackSearchResult } from "@/lib/playback/types";
 
 export const Route = createFileRoute("/sessao/$id")({
@@ -39,7 +41,8 @@ function SessionPage() {
   const [picking, setPicking] = useState<Participant | null>(null);
   const [confirm, setConfirm] = useState<PlaybackSearchResult | null>(null);
   const [busy, setBusy] = useState(false);
-  const [localPlayer, setLocalPlayer] = useState(false);
+  const [localPlayerChoice, setLocalPlayer] = useState(false);
+  const [qrOpen, setQrOpen] = useState(false);
   const playerRef = useRef<PlaybackPlayerRef>(null);
   const stats = useQuery({ queryKey: ["api-stats"], queryFn: getApiStats, staleTime: Infinity });
 
@@ -56,9 +59,11 @@ function SessionPage() {
   const perfs = live.performances.data ?? [];
   const active = live.active;
   const nextQueued = live.queued[0] ?? null;
+  // TV is optional: when disabled, playback always runs on this device.
+  const localPlayer = session?.tv_enabled === false ? true : localPlayerChoice;
 
   const perfFor = (p: Participant) => [...perfs].reverse().find((x) => x.participant_id === p.id);
-  const refresh = () => { qc.invalidateQueries({ queryKey: ["performances", id] }); qc.invalidateQueries({ queryKey: ["participants", id] }); };
+  const refresh = () => { qc.invalidateQueries({ queryKey: ["performances", id] }); qc.invalidateQueries({ queryKey: ["participants", id] }); qc.invalidateQueries({ queryKey: ["session", id] }); };
 
   async function act(fn: () => Promise<unknown>, ok?: string) {
     setBusy(true);
@@ -87,7 +92,7 @@ function SessionPage() {
       <section aria-labelledby="now" className="rounded-2xl border bg-card p-4 sm:p-5">
         <h2 id="now" className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">{active ? "Apresentação em andamento" : "Próxima apresentação"}</h2>
         {active ? (
-          <ActivePanel perf={active} busy={busy} localPlayer={localPlayer} setLocalPlayer={setLocalPlayer} playerRef={playerRef}
+          <ActivePanel perf={active} busy={busy} tvEnabled={session.tv_enabled} localPlayer={localPlayer} setLocalPlayer={setLocalPlayer} playerRef={playerRef}
             onPlay={() => (localPlayer ? playerRef.current?.play() : sendTv("play"))}
             onPause={() => (localPlayer ? playerRef.current?.pause() : sendTv("pause"))}
             onEnd={() => act(() => setPerformanceStatus(active.id, "completed"), "Apresentação encerrada")}
@@ -104,9 +109,28 @@ function SessionPage() {
         )}
       </section>
 
-      <Button variant="secondary" asChild className="h-12">
-        <a href={`/karaoke-tv?session=${id}`} target="_blank" rel="noreferrer"><Tv className="size-4" /> Abrir tela da TV</a>
-      </Button>
+      <div className={`grid gap-3 ${session.tv_enabled ? "grid-cols-2" : "grid-cols-1"}`}>
+        {session.tv_enabled && (
+          <Button variant="secondary" asChild className="h-12">
+            <a href={`/karaoke-tv?session=${id}`} target="_blank" rel="noreferrer"><Tv className="size-4" /> Abrir tela da TV</a>
+          </Button>
+        )}
+        <Button variant="secondary" className="h-12" onClick={() => setQrOpen(true)}><QrCode className="size-4" /> QR Code de votação</Button>
+      </div>
+
+      <section aria-labelledby="display" className="rounded-2xl border bg-card p-4">
+        <h2 id="display" className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Exibição pública</h2>
+        <div className="mt-3 flex flex-col gap-3">
+          <label className="flex min-h-11 items-center justify-between gap-3">
+            <span>Tela da TV ativa</span>
+            <Switch checked={session.tv_enabled} onCheckedChange={(v) => { if (!v) setLocalPlayer(true); act(() => updateSessionDisplay(id, { tv_enabled: v })); }} />
+          </label>
+          <label className={`flex min-h-11 items-center justify-between gap-3 ${session.tv_enabled ? "" : "opacity-50"}`}>
+            <span>Mostrar QR Code na TV</span>
+            <Switch checked={session.show_qr_on_tv} disabled={!session.tv_enabled} onCheckedChange={(v) => act(() => updateSessionDisplay(id, { show_qr_on_tv: v }))} />
+          </label>
+        </div>
+      </section>
 
       {/* Queue */}
       <section aria-labelledby="order">
@@ -177,6 +201,22 @@ function SessionPage() {
           </div>
         </SheetContent>
       </Sheet>
+
+      <Sheet open={qrOpen} onOpenChange={setQrOpen}>
+        <SheetContent side="bottom" className="max-h-[92dvh] overflow-y-auto rounded-t-2xl">
+          <SheetHeader><SheetTitle className="font-display text-3xl">QR Code de votação</SheetTitle></SheetHeader>
+          <div className="flex flex-col items-center gap-4 px-4 pb-6 text-center">
+            <SessionQr code={session.public_code} size={200} id="session-qr" />
+            <p className="text-muted-foreground">Escaneie com o celular para votar nas apresentações.</p>
+            <p className="w-full break-all rounded-lg bg-secondary px-3 py-2 text-xs">{voteUrl(session.public_code)}</p>
+            <div className="grid w-full grid-cols-1 gap-2 sm:grid-cols-3">
+              <Button className="h-12" onClick={() => navigator.clipboard.writeText(voteUrl(session.public_code)).then(() => toast.success("Link copiado"), () => toast.error("Não foi possível copiar"))}><Copy className="size-4" /> Copiar link</Button>
+              <Button variant="secondary" className="h-12" onClick={() => downloadQr(session.public_code)}><Download className="size-4" /> Baixar QR Code</Button>
+              <Button variant="secondary" asChild className="h-12"><a href={`/qr/${session.public_code}`} target="_blank" rel="noreferrer"><Printer className="size-4" /> Imprimir</a></Button>
+            </div>
+          </div>
+        </SheetContent>
+      </Sheet>
     </main>
   );
 }
@@ -184,9 +224,11 @@ function SessionPage() {
 function confirm_(m: string) { return typeof window !== "undefined" && window.confirm(m); }
 
 function StatusOrAction({ pf, onPick, disabled }: { pf: Performance | undefined; onPick: () => void; disabled: boolean }) {
-  if (pf?.status === "active") return <span className="rounded-full bg-primary/20 px-2.5 py-1 text-xs font-semibold text-primary">No palco</span>;
+  if (pf?.status === "active") return <span className="rounded-full bg-primary/20 px-2.5 py-1 text-xs font-semibold text-primary">No palco · 👍 {pf.like_count}</span>;
   if (pf?.status === "queued") return <span className="rounded-full bg-secondary px-2.5 py-1 text-xs">Na fila</span>;
   return (
+    <div className="flex shrink-0 flex-col items-end gap-1">
+    {pf?.status === "completed" && <span className="text-xs text-muted-foreground">👍 {pf.like_count} votos</span>}
     <Button size="sm" variant={pf ? "secondary" : "default"} className="h-10" disabled={disabled} onClick={onPick}>
       {pf?.status === "completed" && <Check className="size-4" />} {pf ? "Cantar de novo" : "Escolher música"}
     </Button>
