@@ -104,9 +104,28 @@ function SessionPage() {
         )}
       </section>
 
-      <Button variant="secondary" asChild className="h-12">
-        <a href={`/karaoke-tv?session=${id}`} target="_blank" rel="noreferrer"><Tv className="size-4" /> Abrir tela da TV</a>
-      </Button>
+      <div className={`grid gap-3 ${session.tv_enabled ? "grid-cols-2" : "grid-cols-1"}`}>
+        {session.tv_enabled && (
+          <Button variant="secondary" asChild className="h-12">
+            <a href={`/karaoke-tv?session=${id}`} target="_blank" rel="noreferrer"><Tv className="size-4" /> Abrir tela da TV</a>
+          </Button>
+        )}
+        <Button variant="secondary" className="h-12" onClick={() => setQrOpen(true)}><QrCode className="size-4" /> QR Code de votação</Button>
+      </div>
+
+      <section aria-labelledby="display" className="rounded-2xl border bg-card p-4">
+        <h2 id="display" className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Exibição pública</h2>
+        <div className="mt-3 flex flex-col gap-3">
+          <label className="flex min-h-11 items-center justify-between gap-3">
+            <span>Tela da TV ativa</span>
+            <Switch checked={session.tv_enabled} onCheckedChange={(v) => { if (!v) setLocalPlayer(true); act(() => updateSessionDisplay(id, { tv_enabled: v })); }} />
+          </label>
+          <label className={`flex min-h-11 items-center justify-between gap-3 ${session.tv_enabled ? "" : "opacity-50"}`}>
+            <span>Mostrar QR Code na TV</span>
+            <Switch checked={session.show_qr_on_tv} disabled={!session.tv_enabled} onCheckedChange={(v) => act(() => updateSessionDisplay(id, { show_qr_on_tv: v }))} />
+          </label>
+        </div>
+      </section>
 
       {/* Queue */}
       <section aria-labelledby="order">
