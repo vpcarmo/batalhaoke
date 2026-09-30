@@ -120,3 +120,12 @@
 
 @utility font-display { font-family: var(--font-display); letter-spacing: 0.02em; }
 @utility shadow-glow { box-shadow: var(--shadow-glow); }
+
+/* Clean print sheet for the voting QR (A4 / table display) */
+@media print {
+  @page { size: A4 portrait; margin: 15mm; }
+  body { background: #fff !important; color: #000 !important; }
+  .no-print { display: none !important; }
+  .print-sheet { min-height: auto; max-width: none; padding: 0; }
+  .print-card { border-color: #000 !important; color: #000 !important; break-inside: avoid; margin-top: 20mm; }
+}
