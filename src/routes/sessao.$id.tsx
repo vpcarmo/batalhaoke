@@ -92,7 +92,7 @@ function SessionPage() {
       <section aria-labelledby="now" className="rounded-2xl border bg-card p-4 sm:p-5">
         <h2 id="now" className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">{active ? "Apresentação em andamento" : "Próxima apresentação"}</h2>
         {active ? (
-          <ActivePanel perf={active} busy={busy} localPlayer={localPlayer} setLocalPlayer={setLocalPlayer} playerRef={playerRef}
+          <ActivePanel perf={active} busy={busy} tvEnabled={session.tv_enabled} localPlayer={localPlayer} setLocalPlayer={setLocalPlayer} playerRef={playerRef}
             onPlay={() => (localPlayer ? playerRef.current?.play() : sendTv("play"))}
             onPause={() => (localPlayer ? playerRef.current?.pause() : sendTv("pause"))}
             onEnd={() => act(() => setPerformanceStatus(active.id, "completed"), "Apresentação encerrada")}
@@ -201,6 +201,22 @@ function SessionPage() {
           </div>
         </SheetContent>
       </Sheet>
+
+      <Sheet open={qrOpen} onOpenChange={setQrOpen}>
+        <SheetContent side="bottom" className="max-h-[92dvh] overflow-y-auto rounded-t-2xl">
+          <SheetHeader><SheetTitle className="font-display text-3xl">QR Code de votação</SheetTitle></SheetHeader>
+          <div className="flex flex-col items-center gap-4 px-4 pb-6 text-center">
+            <SessionQr code={session.public_code} size={200} id="session-qr" />
+            <p className="text-muted-foreground">Escaneie com o celular para votar nas apresentações.</p>
+            <p className="w-full break-all rounded-lg bg-secondary px-3 py-2 text-xs">{voteUrl(session.public_code)}</p>
+            <div className="grid w-full grid-cols-1 gap-2 sm:grid-cols-3">
+              <Button className="h-12" onClick={() => navigator.clipboard.writeText(voteUrl(session.public_code)).then(() => toast.success("Link copiado"), () => toast.error("Não foi possível copiar"))}><Copy className="size-4" /> Copiar link</Button>
+              <Button variant="secondary" className="h-12" onClick={() => downloadQr(session.public_code)}><Download className="size-4" /> Baixar QR Code</Button>
+              <Button variant="secondary" asChild className="h-12"><a href={`/qr/${session.public_code}`} target="_blank" rel="noreferrer"><Printer className="size-4" /> Imprimir</a></Button>
+            </div>
+          </div>
+        </SheetContent>
+      </Sheet>
     </main>
   );
 }
@@ -208,9 +224,11 @@ function SessionPage() {
 function confirm_(m: string) { return typeof window !== "undefined" && window.confirm(m); }
 
 function StatusOrAction({ pf, onPick, disabled }: { pf: Performance | undefined; onPick: () => void; disabled: boolean }) {
-  if (pf?.status === "active") return <span className="rounded-full bg-primary/20 px-2.5 py-1 text-xs font-semibold text-primary">No palco</span>;
+  if (pf?.status === "active") return <span className="rounded-full bg-primary/20 px-2.5 py-1 text-xs font-semibold text-primary">No palco · 👍 {pf.like_count}</span>;
   if (pf?.status === "queued") return <span className="rounded-full bg-secondary px-2.5 py-1 text-xs">Na fila</span>;
   return (
+    <div className="flex shrink-0 flex-col items-end gap-1">
+    {pf?.status === "completed" && <span className="text-xs text-muted-foreground">👍 {pf.like_count} votos</span>}
     <Button size="sm" variant={pf ? "secondary" : "default"} className="h-10" disabled={disabled} onClick={onPick}>
       {pf?.status === "completed" && <Check className="size-4" />} {pf ? "Cantar de novo" : "Escolher música"}
     </Button>
