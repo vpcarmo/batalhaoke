@@ -1,18 +1,20 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Mic2, Music, Pause, Play, Plus, Square, Tv, Smartphone, Check } from "lucide-react";
+import { ArrowLeft, Mic2, Music, Pause, Play, Plus, Square, Tv, Smartphone, Check, QrCode, Copy, Download, Printer, ThumbsUp } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { supabase } from "@/integrations/supabase/client";
 import { useSessionLive } from "@/hooks/use-session-live";
-import { addParticipant, commandChannel, createPerformance, displayName, finishSession, getApiStats, setPerformanceStatus, type Participant, type Performance } from "@/lib/karaoke";
+import { addParticipant, commandChannel, createPerformance, displayName, finishSession, getApiStats, setPerformanceStatus, updateSessionDisplay, type Participant, type Performance } from "@/lib/karaoke";
 import { MusicSearch } from "@/components/karaoke/MusicSearch";
 import { PlaybackPlayer, type PlaybackPlayerRef } from "@/components/karaoke/PlaybackPlayer";
+import { SessionQr, voteUrl } from "@/components/karaoke/SessionQr";
 import type { PlaybackSearchResult } from "@/lib/playback/types";
 
 export const Route = createFileRoute("/sessao/$id")({
@@ -39,7 +41,8 @@ function SessionPage() {
   const [picking, setPicking] = useState<Participant | null>(null);
   const [confirm, setConfirm] = useState<PlaybackSearchResult | null>(null);
   const [busy, setBusy] = useState(false);
-  const [localPlayer, setLocalPlayer] = useState(false);
+  const [localPlayerChoice, setLocalPlayer] = useState(false);
+  const [qrOpen, setQrOpen] = useState(false);
   const playerRef = useRef<PlaybackPlayerRef>(null);
   const stats = useQuery({ queryKey: ["api-stats"], queryFn: getApiStats, staleTime: Infinity });
 
@@ -56,9 +59,11 @@ function SessionPage() {
   const perfs = live.performances.data ?? [];
   const active = live.active;
   const nextQueued = live.queued[0] ?? null;
+  // TV is optional: when disabled, playback always runs on this device.
+  const localPlayer = session?.tv_enabled === false ? true : localPlayerChoice;
 
   const perfFor = (p: Participant) => [...perfs].reverse().find((x) => x.participant_id === p.id);
-  const refresh = () => { qc.invalidateQueries({ queryKey: ["performances", id] }); qc.invalidateQueries({ queryKey: ["participants", id] }); };
+  const refresh = () => { qc.invalidateQueries({ queryKey: ["performances", id] }); qc.invalidateQueries({ queryKey: ["participants", id] }); qc.invalidateQueries({ queryKey: ["session", id] }); };
 
   async function act(fn: () => Promise<unknown>, ok?: string) {
     setBusy(true);
