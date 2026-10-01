@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Mic2, Music, Pause, Play, Plus, Square, Tv, Smartphone, Check, QrCode, Copy, Download, Printer, ThumbsUp } from "lucide-react";
+import { ArrowLeft, Mic2, Music, Pause, Play, Plus, Square, Tv, Smartphone, Check, QrCode, Copy, Download, Printer, ThumbsDown, ThumbsUp } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -92,7 +92,7 @@ function SessionPage() {
       <section aria-labelledby="now" className="rounded-2xl border bg-card p-4 sm:p-5">
         <h2 id="now" className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">{active ? "Apresentação em andamento" : "Próxima apresentação"}</h2>
         {active ? (
-          <ActivePanel perf={active} busy={busy} tvEnabled={session.tv_enabled} localPlayer={localPlayer} setLocalPlayer={setLocalPlayer} playerRef={playerRef}
+          <ActivePanel perf={active} votingMode={session.voting_mode} busy={busy} tvEnabled={session.tv_enabled} localPlayer={localPlayer} setLocalPlayer={setLocalPlayer} playerRef={playerRef}
             onPlay={() => (localPlayer ? playerRef.current?.play() : sendTv("play"))}
             onPause={() => (localPlayer ? playerRef.current?.pause() : sendTv("pause"))}
             onEnd={() => act(() => setPerformanceStatus(active.id, "completed"), "Apresentação encerrada")}
@@ -129,6 +129,13 @@ function SessionPage() {
             <span>Mostrar QR Code na TV</span>
             <Switch checked={session.show_qr_on_tv} disabled={!session.tv_enabled} onCheckedChange={(v) => act(() => updateSessionDisplay(id, { show_qr_on_tv: v }))} />
           </label>
+          <div>
+            <p className="mb-2">Modo de votação</p>
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2" role="radiogroup" aria-label="Modo de votação">
+              <Button variant={session.voting_mode === "like_only" ? "default" : "secondary"} className="h-auto min-h-11 whitespace-normal py-2" disabled={busy} role="radio" aria-checked={session.voting_mode === "like_only"} onClick={() => session.voting_mode !== "like_only" && act(() => updateSessionDisplay(id, { voting_mode: "like_only" }))}>👍 Apenas Gostei</Button>
+              <Button variant={session.voting_mode === "like_dislike" ? "default" : "secondary"} className="h-auto min-h-11 whitespace-normal py-2" disabled={busy} role="radio" aria-checked={session.voting_mode === "like_dislike"} onClick={() => session.voting_mode !== "like_dislike" && act(() => updateSessionDisplay(id, { voting_mode: "like_dislike" }))}>👍 Gostei / 👎 Não gostei</Button>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -258,14 +265,14 @@ function Singer({ perf }: { perf: Performance }) {
 }
 
 function ActivePanel(props: {
-  perf: Performance; busy: boolean; tvEnabled: boolean; localPlayer: boolean; setLocalPlayer: (v: boolean) => void; playerRef: React.RefObject<PlaybackPlayerRef | null>;
+  perf: Performance; votingMode: "like_only" | "like_dislike"; busy: boolean; tvEnabled: boolean; localPlayer: boolean; setLocalPlayer: (v: boolean) => void; playerRef: React.RefObject<PlaybackPlayerRef | null>;
   onPlay: () => void; onPause: () => void; onEnd: () => void; onEnded: () => void;
 }) {
   const { perf } = props;
   return (
     <div className="mt-3 flex flex-col gap-4">
       <Singer perf={perf} />
-      <p className="flex items-center gap-2 font-display text-3xl text-primary" aria-live="polite"><ThumbsUp className="size-6" /> {perf.like_count} {perf.like_count === 1 ? "voto" : "votos"}</p>
+      <p className="flex items-center gap-2 font-display text-3xl text-primary" aria-live="polite"><ThumbsUp className="size-6" /> {perf.like_count} {perf.like_count === 1 ? "voto" : "votos"}{props.votingMode === "like_dislike" && <><span className="mx-1">·</span><ThumbsDown className="size-6" /> {perf.dislike_count}</>}</p>
       {props.tvEnabled && (
       <div className="grid grid-cols-2 gap-2 rounded-xl bg-secondary p-1" role="radiogroup" aria-label="Onde tocar">
         <button role="radio" aria-checked={!props.localPlayer} onClick={() => props.setLocalPlayer(false)} className={`flex h-11 items-center justify-center gap-2 rounded-lg text-sm font-medium ${!props.localPlayer ? "bg-background" : "text-muted-foreground"}`}><Tv className="size-4" /> Na TV</button>
