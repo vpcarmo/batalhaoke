@@ -22,7 +22,7 @@ export const PlaybackPlayer = forwardRef<PlaybackPlayerRef, Props>(function Play
 
   useImperativeHandle(ref, () => ({ play: () => handle.current?.play(), pause: () => handle.current?.pause() }), []);
 
-  useEffect(() => {
+  /* useEffect(() => {
     let alive = true;
     setError(null);
     setLoading(true);
@@ -38,7 +38,52 @@ export const PlaybackPlayer = forwardRef<PlaybackPlayerRef, Props>(function Play
       .catch((e) => alive && setError(e.message || "Player indisponível."));
     return () => { alive = false; clearTimeout(t); handle.current?.destroy(); handle.current = null; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [provider, externalId]);
+  }, [provider, externalId]); */
+
+  useEffect(() => {
+  let alive = true;
+  setError(null);
+  setLoading(true);
+  let isReady = false;
+  const p = getProvider(provider);
+  const t = setTimeout(() => alive && !isReady && setError("O player demorou demais para carregar. Verifique a internet."), 15000);
+
+  if (!box.current) return;
+
+  // 1. Criar nó dedicado para esta montagem específica
+  const host = document.createElement("div");
+  host.style.width = "100%";
+  host.style.height = "100%";
+  box.current.innerHTML = "";
+  box.current.appendChild(host);
+
+  // 2. Montar no host dedicado em vez de passar o box.current compartilhado
+  p.mount(host, externalId, {
+    onReady: () => { isReady = true; clearTimeout(t); if (alive) setLoading(false); },
+    onStateChange: (s) => cb.current?.(s),
+    onError: (m) => { isReady = true; clearTimeout(t); if (alive) setError(m); },
+  })
+    .then((h) => {
+      if (!alive) {
+        h.destroy();
+        host.remove();
+      } else {
+        handle.current = h;
+      }
+    })
+    .catch((e) => alive && setError(e.message || "Player indisponível."));
+
+  // 3. Cleanup limpa apenas o seu host e o handle
+  return () => {
+    alive = false;
+    clearTimeout(t);
+    handle.current?.destroy();
+    handle.current = null;
+    host.remove();
+  };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+}, [provider, externalId]);
+
 
   const attribution = getProvider(provider).attribution;
   return (
