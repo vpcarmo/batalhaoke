@@ -34,14 +34,28 @@ export const youtubeSearch = createServerFn({ method: "POST" })
   .handler(async ({ data }): Promise<SearchResponse> => {
     const key = process.env["YOUTUBE_API_KEY"];
     if (!key) return { ok: false, code: "missing_key", message: "A chave da YouTube API não está configurada." };
-    const q = data.query.toLowerCase();
+    /* const q = data.query.toLowerCase();
     const hit = cache.get(q);
     if (hit && Date.now() - hit.at < TTL) {
       await logCall("search.list", q, true, true);
       return { ok: true, results: hit.results, cached: true };
     }
     try {
-      const sp = new URLSearchParams({ part: "snippet", q: data.query, type: "video", videoEmbeddable: "true", maxResults: String(MAX_RESULTS), key });
+      const sp = new URLSearchParams({ part: "snippet", q: data.query, type: "video", videoEmbeddable: "true", maxResults: String(MAX_RESULTS), key }); */
+          // Adiciona "karaoke" automaticamente se o operador não tiver digitado
+    const rawQuery = data.query.trim();
+    const jaTemTermo = /\b(karaok[eê]|playback)\b/i.test(rawQuery);
+    const searchQuery = jaTemTermo ? rawQuery : `${rawQuery} karaoke`;
+
+    const q = searchQuery.toLowerCase();
+    const hit = cache.get(q);
+    if (hit && Date.now() - hit.at < TTL) {
+      await logCall("search.list", q, true, true);
+      return { ok: true, results: hit.results, cached: true };
+    }
+    try {
+      const sp = new URLSearchParams({ part: "snippet", q: searchQuery, type: "video", videoEmbeddable: "true", maxResults: String(MAX_RESULTS), key });
+
       const r = await fetch(`https://www.googleapis.com/youtube/v3/search?${sp}`);
       const j: any = await r.json();
       if (!r.ok) {

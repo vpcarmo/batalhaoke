@@ -30,7 +30,7 @@ export function MusicSearch({ onPick, onSearched }: { onPick: (r: PlaybackSearch
     <div className="flex flex-col gap-4">
       <form onSubmit={run} className="flex flex-col gap-2 sm:flex-row">
         <label htmlFor="q" className="sr-only">Música</label>
-        <Input id="q" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Ex.: Evidências karaoke" className="h-12 text-base" autoComplete="off" />
+        <Input id="q" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Ex.: Evidências, Menina Veneno, Leão..." className="h-12 text-base" autoComplete="off" />
         <Button type="submit" className="h-12 shrink-0" disabled={!q.trim() || loading || q.trim() === lastQ}>
           <Search className="size-4" /> {loading ? "Pesquisando…" : q.trim() ? `Pesquisar "${q.trim().slice(0, 18)}"` : "Pesquisar"}
         </Button>
