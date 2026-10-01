@@ -9,7 +9,7 @@
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
 
-# Karaoke Arena — architecture rules
+# BatalhaOkê — architecture rules
 
 - Playback goes through `src/lib/playback` (PlaybackProvider + registry); never reference YouTube outside `youtube-*` files — so a licensed provider can replace it.
 - Performances reference `playback_sources` (provider + external_id), never a raw video id — provider-independent data model.

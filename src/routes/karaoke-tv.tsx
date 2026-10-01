@@ -15,9 +15,9 @@ export const Route = createFileRoute("/karaoke-tv")({
   validateSearch: zodValidator(z.object({ session: fallback(z.string(), "").default("") })),
   head: () => ({
     meta: [
-      { title: "Karaoke Arena — Tela pública" },
-      { name: "description", content: "Tela pública do Karaoke Arena: cantor atual, música e player." },
-      { property: "og:title", content: "Karaoke Arena — TV" },
+      { title: "BatalhaOkê — Tela pública" },
+      { name: "description", content: "Tela pública do BatalhaOkê: cantor atual, música e player." },
+      { property: "og:title", content: "BatalhaOkê — TV" },
       { property: "og:description", content: "Acompanhe a apresentação ao vivo." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -50,7 +50,7 @@ function TvPage() {
   const brand = (
     <header className="flex items-center justify-center gap-3 lg:justify-start">
       <Mic2 className="size-8 text-primary lg:size-10" aria-hidden />
-      <p className="font-display text-4xl lg:text-5xl">Karaoke Arena</p>
+      <p className="font-display text-4xl lg:text-5xl">BatalhaOkê</p>
     </header>
   );
 

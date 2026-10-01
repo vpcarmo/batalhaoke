@@ -21,10 +21,10 @@ export const Route = createFileRoute("/sessao/$id")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "Sessão — Karaoke Arena" },
+      { title: "Sessão — BatalhaOkê" },
       { name: "description", content: "Painel do operador: cantores, músicas e apresentações." },
-      { property: "og:title", content: "Sessão — Karaoke Arena" },
-      { property: "og:description", content: "Painel do operador do Karaoke Arena." },
+      { property: "og:title", content: "Sessão — BatalhaOkê" },
+      { property: "og:description", content: "Painel do operador do BatalhaOkê." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "robots", content: "noindex" },
@@ -79,7 +79,7 @@ function SessionPage() {
       <header className="flex items-center justify-between gap-3">
         <Link to="/" aria-label="Voltar" className="grid size-11 place-items-center rounded-full bg-secondary"><ArrowLeft className="size-5" /></Link>
         <div className="min-w-0 flex-1">
-          <p className="font-display text-2xl leading-none">Karaoke Arena</p>
+          <p className="font-display text-2xl leading-none">BatalhaOkê</p>
           <p className="truncate text-sm text-muted-foreground">{session.name}</p>
         </div>
         <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold ${session.status === "active" ? "bg-success/15 text-success" : "bg-muted text-muted-foreground"}`}>
@@ -242,7 +242,7 @@ function downloadQr(code: string) {
   const blob = new Blob([new XMLSerializer().serializeToString(svg)], { type: "image/svg+xml" });
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
-  a.download = `karaoke-arena-qr-${code}.svg`;
+  a.download = `batalhaoke-qr-${code}.svg`;
   a.click();
   setTimeout(() => URL.revokeObjectURL(a.href), 1000);
 }

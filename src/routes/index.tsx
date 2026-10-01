@@ -10,9 +10,9 @@ import { createSession, getActiveSession } from "@/lib/karaoke";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Karaoke Arena — O público decide quem continua" },
+      { title: "BatalhaOkê — O público decide quem continua" },
       { name: "description", content: "Karaokê interativo para bares, festas e eventos: cantores, apresentações e votação do público." },
-      { property: "og:title", content: "Karaoke Arena" },
+      { property: "og:title", content: "BatalhaOkê" },
       { property: "og:description", content: "Karaokê interativo com votação do público em tempo real." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -23,7 +23,7 @@ export const Route = createFileRoute("/")({
 
 function defaultName() {
   const d = new Date().toLocaleDateString("pt-BR", { weekday: "long" });
-  return `Karaoke Arena · ${d.charAt(0).toUpperCase() + d.slice(1)}`;
+  return `BatalhaOkê · ${d.charAt(0).toUpperCase() + d.slice(1)}`;
 }
 
 function Home() {
@@ -48,7 +48,7 @@ function Home() {
         <div className="mx-auto mb-4 grid size-16 place-items-center rounded-2xl bg-primary text-primary-foreground shadow-glow animate-in zoom-in-50 duration-500">
           <Mic2 className="size-8" aria-hidden />
         </div>
-        <h1 className="font-display text-6xl leading-none sm:text-7xl">Karaoke Arena</h1>
+        <h1 className="font-display text-6xl leading-none sm:text-7xl">BatalhaOkê</h1>
         <p className="mt-3 text-lg text-muted-foreground">O público decide quem continua.</p>
       </header>
 

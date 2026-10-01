@@ -7,9 +7,9 @@ export const Route = createFileRoute("/qr/$code")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "QR Code de votação — Karaoke Arena" },
+      { title: "QR Code de votação — BatalhaOkê" },
       { name: "description", content: "Versão para impressão do QR Code de votação da sessão." },
-      { property: "og:title", content: "QR Code de votação — Karaoke Arena" },
+      { property: "og:title", content: "QR Code de votação — BatalhaOkê" },
       { property: "og:description", content: "Imprima e deixe nas mesas para o público votar." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -27,7 +27,7 @@ function PrintPage() {
         <Button size="lg" className="h-12" onClick={() => window.print()}><Printer className="size-5" /> Imprimir</Button>
       </div>
       <article className="print-card flex w-full flex-col items-center gap-5 rounded-2xl border-2 p-8 text-center">
-        <p className="font-display text-4xl">🎤 Karaoke Arena</p>
+        <p className="font-display text-4xl">🎤 BatalhaOkê</p>
         <p className="font-display text-5xl">Participe!</p>
         <SessionQr code={code} size={240} />
         <p className="font-display text-3xl">Escaneie para votar</p>
