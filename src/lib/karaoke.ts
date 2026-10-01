@@ -1,8 +1,9 @@
 import { supabase } from "@/integrations/supabase/client";
-import type { Tables } from "@/integrations/supabase/types";
+import type { SessionType, Tables } from "@/integrations/supabase/types";
 import type { PlaybackSearchResult } from "@/lib/playback/types";
 
 export type Session = Tables<"sessions">;
+export type VotingMode = "like_only" | "like_dislike";
 export type Participant = Tables<"participants">;
 export type PlaybackSource = Tables<"playback_sources">;
 export type Performance = Tables<"performances"> & { participant: Participant | null; source: PlaybackSource | null };
@@ -19,9 +20,14 @@ export async function getActiveSession(): Promise<Session | null> {
   return data;
 }
 
-export async function createSession(name: string): Promise<Session> {
+export async function createSession(name: string, options: { sessionType?: SessionType; votingMode?: VotingMode } = {}): Promise<Session> {
+  const sessionType = options.sessionType ?? "free";
+  if (sessionType !== "free" && options.votingMode === "like_only") {
+    throw new Error("Este formato exige votação com Gostei / Não gostei");
+  }
+  const votingMode = sessionType === "free" ? options.votingMode ?? "like_only" : "like_dislike";
   const now = new Date().toISOString();
-  const { data, error } = await supabase.from("sessions").insert({ name, status: "active", started_at: now }).select().single();
+  const { data, error } = await supabase.from("sessions").insert({ name, status: "active", started_at: now, session_type: sessionType, voting_mode: votingMode }).select().single();
   fail(error, "Erro ao criar sessão");
   return data!;
 }
@@ -44,7 +50,16 @@ export async function getSessionByCode(code: string): Promise<Session | null> {
   return data;
 }
 
-export async function updateSessionDisplay(id: string, patch: { tv_enabled?: boolean; show_qr_on_tv?: boolean; voting_mode?: "like_only" | "like_dislike" }) {
+export async function updateSessionDisplay(id: string, patch: { tv_enabled?: boolean; show_qr_on_tv?: boolean; voting_mode?: VotingMode }) {
+  if (patch.voting_mode) {
+    const { data: session, error: sessionError } = await supabase.from("sessions").select("session_type, status").eq("id", id).maybeSingle();
+    fail(sessionError, "Erro ao carregar sessão");
+    if (!session) throw new Error("Sessão não encontrada");
+    if (session.status !== "draft") throw new Error("O modo de votação não pode ser alterado após o início da sessão");
+    if (session.session_type !== "free" && patch.voting_mode !== "like_dislike") {
+      throw new Error("Este formato exige votação com Gostei / Não gostei");
+    }
+  }
   const { error } = await supabase.from("sessions").update(patch).eq("id", id);
   fail(error, "Erro ao salvar configuração");
 }
