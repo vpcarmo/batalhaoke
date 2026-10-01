@@ -37,6 +37,11 @@ function Home() {
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
+  function selectSessionType(type: SessionType) {
+    setSessionType(type);
+    if (type === "x1" || type === "championship") setVotingMode("like_dislike");
+  }
+
   async function start() {
     setBusy(true); setErr(null);
     try {
@@ -76,9 +81,9 @@ function Home() {
             <div className="mt-4">
               <p className="mb-2 text-sm font-medium">Formato</p>
               <div className="grid gap-2" role="radiogroup" aria-label="Formato da sessão">
-                <Button variant={sessionType === "free" ? "default" : "secondary"} className="h-11 justify-start" role="radio" aria-checked={sessionType === "free"} onClick={() => setSessionType("free")}>🎤 BatalhaOkê Livre</Button>
-                <Button variant={sessionType === "x1" ? "default" : "secondary"} className="h-11 justify-start" role="radio" aria-checked={sessionType === "x1"} onClick={() => setSessionType("x1")}>⚔️ BatalhaOkê X1</Button>
-                <Button variant={sessionType === "championship" ? "default" : "secondary"} className="h-11 justify-start" role="radio" aria-checked={sessionType === "championship"} onClick={() => setSessionType("championship")}>🏆 BatalhaOkê Campeonato</Button>
+                <Button variant={sessionType === "free" ? "default" : "secondary"} className="h-11 justify-start" role="radio" aria-checked={sessionType === "free"} onClick={() => selectSessionType("free")}>🎤 BatalhaOkê Livre</Button>
+                <Button variant={sessionType === "x1" ? "default" : "secondary"} className="h-11 justify-start" role="radio" aria-checked={sessionType === "x1"} onClick={() => selectSessionType("x1")}>⚔️ BatalhaOkê X1</Button>
+                <Button variant={sessionType === "championship" ? "default" : "secondary"} className="h-11 justify-start" role="radio" aria-checked={sessionType === "championship"} onClick={() => selectSessionType("championship")}>🏆 BatalhaOkê Campeonato</Button>
               </div>
             </div>
             {sessionType === "free" ? (
