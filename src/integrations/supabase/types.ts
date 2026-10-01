@@ -85,9 +85,9 @@ export type Database = {
       performances: {
         Row: {
           created_at: string
+          dislike_count: number
           ended_at: string | null
           id: string
-          dislike_count: number
           like_count: number
           participant_id: string
           playback_source_id: string
@@ -98,9 +98,9 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          dislike_count?: number
           ended_at?: string | null
           id?: string
-          dislike_count?: number
           like_count?: number
           participant_id: string
           playback_source_id: string
@@ -111,9 +111,9 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          dislike_count?: number
           ended_at?: string | null
           id?: string
-          dislike_count?: number
           like_count?: number
           participant_id?: string
           playback_source_id?: string
@@ -226,8 +226,8 @@ export type Database = {
           started_at: string | null
           status: string
           tv_enabled: boolean
-          voting_mode: "like_only" | "like_dislike"
           updated_at: string
+          voting_mode: string
         }
         Insert: {
           created_at?: string
@@ -239,8 +239,8 @@ export type Database = {
           started_at?: string | null
           status?: string
           tv_enabled?: boolean
-          voting_mode?: "like_only" | "like_dislike"
           updated_at?: string
+          voting_mode?: string
         }
         Update: {
           created_at?: string
@@ -252,8 +252,8 @@ export type Database = {
           started_at?: string | null
           status?: string
           tv_enabled?: boolean
-          voting_mode?: "like_only" | "like_dislike"
           updated_at?: string
+          voting_mode?: string
         }
         Relationships: []
       }
