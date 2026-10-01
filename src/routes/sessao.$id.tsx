@@ -232,7 +232,19 @@ function StatusOrAction({ pf, onPick, disabled }: { pf: Performance | undefined;
     <Button size="sm" variant={pf ? "secondary" : "default"} className="h-10" disabled={disabled} onClick={onPick}>
       {pf?.status === "completed" && <Check className="size-4" />} {pf ? "Cantar de novo" : "Escolher música"}
     </Button>
+    </div>
   );
+}
+
+function downloadQr(code: string) {
+  const svg = document.getElementById("session-qr");
+  if (!svg) return;
+  const blob = new Blob([new XMLSerializer().serializeToString(svg)], { type: "image/svg+xml" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `karaoke-arena-qr-${code}.svg`;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
 }
 
 function Singer({ perf }: { perf: Performance }) {
@@ -246,17 +258,20 @@ function Singer({ perf }: { perf: Performance }) {
 }
 
 function ActivePanel(props: {
-  perf: Performance; busy: boolean; localPlayer: boolean; setLocalPlayer: (v: boolean) => void; playerRef: React.RefObject<PlaybackPlayerRef | null>;
+  perf: Performance; busy: boolean; tvEnabled: boolean; localPlayer: boolean; setLocalPlayer: (v: boolean) => void; playerRef: React.RefObject<PlaybackPlayerRef | null>;
   onPlay: () => void; onPause: () => void; onEnd: () => void; onEnded: () => void;
 }) {
   const { perf } = props;
   return (
     <div className="mt-3 flex flex-col gap-4">
       <Singer perf={perf} />
+      <p className="flex items-center gap-2 font-display text-3xl text-primary" aria-live="polite"><ThumbsUp className="size-6" /> {perf.like_count} {perf.like_count === 1 ? "voto" : "votos"}</p>
+      {props.tvEnabled && (
       <div className="grid grid-cols-2 gap-2 rounded-xl bg-secondary p-1" role="radiogroup" aria-label="Onde tocar">
         <button role="radio" aria-checked={!props.localPlayer} onClick={() => props.setLocalPlayer(false)} className={`flex h-11 items-center justify-center gap-2 rounded-lg text-sm font-medium ${!props.localPlayer ? "bg-background" : "text-muted-foreground"}`}><Tv className="size-4" /> Na TV</button>
         <button role="radio" aria-checked={props.localPlayer} onClick={() => props.setLocalPlayer(true)} className={`flex h-11 items-center justify-center gap-2 rounded-lg text-sm font-medium ${props.localPlayer ? "bg-background" : "text-muted-foreground"}`}><Smartphone className="size-4" /> Neste aparelho</button>
       </div>
+      )}
       {props.localPlayer && perf.source && (
         <PlaybackPlayer ref={props.playerRef} provider={perf.source.provider} externalId={perf.source.external_id} onState={(s) => s === "ended" && props.onEnded()} />
       )}
