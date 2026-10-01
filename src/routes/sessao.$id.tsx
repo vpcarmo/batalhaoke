@@ -17,6 +17,12 @@ import { PlaybackPlayer, type PlaybackPlayerRef } from "@/components/karaoke/Pla
 import { SessionQr, voteUrl } from "@/components/karaoke/SessionQr";
 import type { PlaybackSearchResult } from "@/lib/playback/types";
 
+const sessionTypeLabels = {
+  free: "BatalhaOkê Livre",
+  x1: "BatalhaOkê X1",
+  championship: "BatalhaOkê Campeonato",
+} as const;
+
 export const Route = createFileRoute("/sessao/$id")({
   ssr: false,
   head: () => ({
@@ -62,6 +68,7 @@ function SessionPage() {
   const nextQueued = live.queued[0] ?? null;
   // TV is optional: when disabled, playback always runs on this device.
   const localPlayer = session?.tv_enabled === false ? true : localPlayerChoice;
+  const votingModeLocked = !!session && (session.status !== "draft" || session.session_type !== "free");
 
   const perfFor = (p: Participant) => [...perfs].reverse().find((x) => x.participant_id === p.id);
   const refresh = () => { qc.invalidateQueries({ queryKey: ["performances", id] }); qc.invalidateQueries({ queryKey: ["participants", id] }); qc.invalidateQueries({ queryKey: ["session", id] }); };
@@ -131,11 +138,17 @@ function SessionPage() {
             <Switch checked={session.show_qr_on_tv} disabled={!session.tv_enabled} onCheckedChange={(v) => act(() => updateSessionDisplay(id, { show_qr_on_tv: v }))} />
           </label>
           <div>
+            <p className="mb-1">Formato</p>
+            <p className="text-sm text-muted-foreground">{sessionTypeLabels[session.session_type]}</p>
+          </div>
+          <div>
             <p className="mb-2">Modo de votação</p>
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-2" role="radiogroup" aria-label="Modo de votação">
-              <Button variant={session.voting_mode === "like_only" ? "default" : "secondary"} className="h-auto min-h-11 whitespace-normal py-2" disabled={busy} role="radio" aria-checked={session.voting_mode === "like_only"} onClick={() => session.voting_mode !== "like_only" && act(() => updateSessionDisplay(id, { voting_mode: "like_only" }))}>👍 Apenas Gostei</Button>
-              <Button variant={session.voting_mode === "like_dislike" ? "default" : "secondary"} className="h-auto min-h-11 whitespace-normal py-2" disabled={busy} role="radio" aria-checked={session.voting_mode === "like_dislike"} onClick={() => session.voting_mode !== "like_dislike" && act(() => updateSessionDisplay(id, { voting_mode: "like_dislike" }))}>👍 Gostei / 👎 Não gostei</Button>
+              {session.session_type === "free" && <Button variant={session.voting_mode === "like_only" ? "default" : "secondary"} className="h-auto min-h-11 whitespace-normal py-2" disabled={busy || votingModeLocked} role="radio" aria-checked={session.voting_mode === "like_only"} onClick={() => session.voting_mode !== "like_only" && act(() => updateSessionDisplay(id, { voting_mode: "like_only" }))}>👍 Apenas Gostei</Button>}
+              <Button variant={session.voting_mode === "like_dislike" ? "default" : "secondary"} className="h-auto min-h-11 whitespace-normal py-2" disabled={busy || votingModeLocked} role="radio" aria-checked={session.voting_mode === "like_dislike"} onClick={() => session.voting_mode !== "like_dislike" && act(() => updateSessionDisplay(id, { voting_mode: "like_dislike" }))}>👍 Gostei / 👎 Não gostei</Button>
             </div>
+            {session.session_type !== "free" && <p className="mt-2 text-sm text-muted-foreground">Obrigatório para este formato.</p>}
+            {session.session_type === "free" && session.status !== "draft" && <p className="mt-2 text-sm text-muted-foreground">O modo de votação não pode ser alterado após o início da sessão.</p>}
           </div>
         </div>
       </section>
