@@ -86,7 +86,7 @@ function TvPage() {
             <p className="mt-6 inline-flex items-center gap-3 rounded-full bg-accent/15 px-5 py-2 text-lg font-semibold uppercase tracking-widest text-accent lg:text-2xl">
               <span className="size-3 animate-pulse rounded-full bg-accent" /> Apresentação em andamento
             </p>
-            <p className="mt-6 font-display text-5xl lg:text-7xl" aria-live="polite">👍 {active.like_count} {active.like_count === 1 ? "voto" : "votos"}</p>
+            <p className="mt-6 font-display text-5xl lg:text-7xl" aria-live="polite">👍 {active.like_count} {active.like_count === 1 ? "voto" : "votos"}{session?.voting_mode === "like_dislike" && <>   👎 {active.dislike_count}</>}</p>
           </section>
           <section className="w-full">
             <PlaybackPlayer key={active.id} ref={playerRef} provider={active.source.provider} externalId={active.source.external_id}
