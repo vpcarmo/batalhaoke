@@ -29,6 +29,20 @@
       "when": 1790900000000,
       "tag": "0003_session_type",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1791000000000,
+      "tag": "0004_x1_matches",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1791100000000,
+      "tag": "0005_session_format_guards",
+      "breakpoints": true
     }
   ]
 }

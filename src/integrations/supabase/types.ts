@@ -7,6 +7,8 @@ export type Json =
   | Json[]
 
 export type SessionType = "free" | "x1" | "championship"
+export type VotingMode = "like_only" | "like_dislike"
+export type MatchStatus = "scheduled" | "in_progress" | "completed" | "cancelled"
 
 export type Database = {
   // Allows to automatically instantiate createClient with right options
@@ -84,6 +86,14 @@ export type Database = {
           },
         ]
       }
+      matches: {
+        Row: { created_at: string; id: string; participant_a_id: string; participant_b_id: string; session_id: string; status: MatchStatus; updated_at: string; winner_participant_id: string | null }
+        Insert: { created_at?: string; id?: string; participant_a_id: string; participant_b_id: string; session_id: string; status?: MatchStatus; updated_at?: string; winner_participant_id?: string | null }
+        Update: { created_at?: string; id?: string; participant_a_id?: string; participant_b_id?: string; session_id?: string; status?: MatchStatus; updated_at?: string; winner_participant_id?: string | null }
+        Relationships: [
+          { foreignKeyName: "matches_session_id_fkey"; columns: ["session_id"]; isOneToOne: false; referencedRelation: "sessions"; referencedColumns: ["id"] },
+        ]
+      }
       performances: {
         Row: {
           created_at: string
@@ -91,6 +101,8 @@ export type Database = {
           ended_at: string | null
           id: string
           like_count: number
+          match_id: string | null
+          match_slot: string | null
           participant_id: string
           playback_source_id: string
           session_id: string
@@ -104,6 +116,8 @@ export type Database = {
           ended_at?: string | null
           id?: string
           like_count?: number
+          match_id?: string | null
+          match_slot?: string | null
           participant_id: string
           playback_source_id: string
           session_id: string
@@ -117,6 +131,8 @@ export type Database = {
           ended_at?: string | null
           id?: string
           like_count?: number
+          match_id?: string | null
+          match_slot?: string | null
           participant_id?: string
           playback_source_id?: string
           session_id?: string
@@ -125,6 +141,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "performances_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: false
+            referencedRelation: "matches"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "performances_participant_id_fkey"
             columns: ["participant_id"]
@@ -230,7 +253,7 @@ export type Database = {
           status: string
           tv_enabled: boolean
           updated_at: string
-          voting_mode: string
+          voting_mode: VotingMode
         }
         Insert: {
           created_at?: string
@@ -244,7 +267,7 @@ export type Database = {
           status?: string
           tv_enabled?: boolean
           updated_at?: string
-          voting_mode?: string
+          voting_mode?: VotingMode
         }
         Update: {
           created_at?: string
@@ -258,7 +281,7 @@ export type Database = {
           status?: string
           tv_enabled?: boolean
           updated_at?: string
-          voting_mode?: string
+          voting_mode?: VotingMode
         }
         Relationships: []
       }
