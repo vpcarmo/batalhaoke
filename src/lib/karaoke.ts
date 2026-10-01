@@ -1,10 +1,13 @@
 import { supabase } from "@/integrations/supabase/client";
-import type { SessionType, Tables } from "@/integrations/supabase/types";
+import type { MatchStatus as DatabaseMatchStatus, SessionType, Tables, VotingMode as DatabaseVotingMode } from "@/integrations/supabase/types";
 import type { PlaybackSearchResult } from "@/lib/playback/types";
 
 export type Session = Tables<"sessions">;
-export type VotingMode = "like_only" | "like_dislike";
+export type VotingMode = DatabaseVotingMode;
 export type Participant = Tables<"participants">;
+export type Match = Tables<"matches">;
+export type MatchStatus = DatabaseMatchStatus;
+export type MatchSlot = "a" | "b";
 export type PlaybackSource = Tables<"playback_sources">;
 export type Performance = Tables<"performances"> & { participant: Participant | null; source: PlaybackSource | null };
 
