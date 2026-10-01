@@ -6,6 +6,8 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[]
 
+export type SessionType = "free" | "x1" | "championship"
+
 export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
@@ -223,6 +225,7 @@ export type Database = {
           name: string
           public_code: string
           show_qr_on_tv: boolean
+          session_type: SessionType
           started_at: string | null
           status: string
           tv_enabled: boolean
@@ -236,6 +239,7 @@ export type Database = {
           name: string
           public_code?: string
           show_qr_on_tv?: boolean
+          session_type?: SessionType
           started_at?: string | null
           status?: string
           tv_enabled?: boolean
@@ -249,6 +253,7 @@ export type Database = {
           name?: string
           public_code?: string
           show_qr_on_tv?: boolean
+          session_type?: SessionType
           started_at?: string | null
           status?: string
           tv_enabled?: boolean

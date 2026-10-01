@@ -5,7 +5,8 @@ import { Mic2, Tv, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { createSession, getActiveSession } from "@/lib/karaoke";
+import { createSession, getActiveSession, type VotingMode } from "@/lib/karaoke";
+import type { SessionType } from "@/integrations/supabase/types";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -31,13 +32,15 @@ function Home() {
   const active = useQuery({ queryKey: ["active-session"], queryFn: getActiveSession, retry: 1 });
   const [creating, setCreating] = useState(false);
   const [name, setName] = useState(defaultName);
+  const [sessionType, setSessionType] = useState<SessionType>("free");
+  const [votingMode, setVotingMode] = useState<VotingMode>("like_only");
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
   async function start() {
     setBusy(true); setErr(null);
     try {
-      const s = await createSession(name.trim() || defaultName());
+      const s = await createSession(name.trim() || defaultName(), { sessionType, votingMode });
       nav({ to: "/sessao/$id", params: { id: s.id } });
     } catch (e) { setErr((e as Error).message); setBusy(false); }
   }
@@ -70,6 +73,25 @@ function Home() {
           <div className="rounded-2xl border bg-card p-4 animate-in fade-in slide-in-from-bottom-2">
             <Label htmlFor="sname">Nome da sessão</Label>
             <Input id="sname" className="mt-2 h-12 text-base" value={name} onChange={(e) => setName(e.target.value)} />
+            <div className="mt-4">
+              <p className="mb-2 text-sm font-medium">Formato</p>
+              <div className="grid gap-2" role="radiogroup" aria-label="Formato da sessão">
+                <Button variant={sessionType === "free" ? "default" : "secondary"} className="h-11 justify-start" role="radio" aria-checked={sessionType === "free"} onClick={() => setSessionType("free")}>🎤 BatalhaOkê Livre</Button>
+                <Button variant={sessionType === "x1" ? "default" : "secondary"} className="h-11 justify-start" role="radio" aria-checked={sessionType === "x1"} onClick={() => setSessionType("x1")}>⚔️ BatalhaOkê X1</Button>
+                <Button variant={sessionType === "championship" ? "default" : "secondary"} className="h-11 justify-start" role="radio" aria-checked={sessionType === "championship"} onClick={() => setSessionType("championship")}>🏆 BatalhaOkê Campeonato</Button>
+              </div>
+            </div>
+            {sessionType === "free" ? (
+              <div className="mt-4">
+                <p className="mb-2 text-sm font-medium">Modo de votação</p>
+                <div className="grid gap-2" role="radiogroup" aria-label="Modo de votação">
+                  <Button variant={votingMode === "like_only" ? "default" : "secondary"} className="h-11 justify-start" role="radio" aria-checked={votingMode === "like_only"} onClick={() => setVotingMode("like_only")}>👍 Apenas Gostei</Button>
+                  <Button variant={votingMode === "like_dislike" ? "default" : "secondary"} className="h-11 justify-start" role="radio" aria-checked={votingMode === "like_dislike"} onClick={() => setVotingMode("like_dislike")}>👍 Gostei / 👎 Não gostei</Button>
+                </div>
+              </div>
+            ) : (
+              <p className="mt-4 rounded-lg bg-secondary px-3 py-2 text-sm">Votação obrigatória: <strong>👍 Gostei / 👎 Não gostei</strong></p>
+            )}
             <div className="mt-4 grid grid-cols-2 gap-3">
               <Button variant="secondary" className="h-12" onClick={() => setCreating(false)}>Cancelar</Button>
               <Button className="h-12" disabled={busy} onClick={start}>{busy ? "Criando…" : "Iniciar"}</Button>
