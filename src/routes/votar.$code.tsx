@@ -11,9 +11,9 @@ export const Route = createFileRoute("/votar/$code")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "Votar — Karaoke Arena" },
+      { title: "Votar — BatalhaOkê" },
       { name: "description", content: "Vote pelo celular na apresentação que está acontecendo agora." },
-      { property: "og:title", content: "Vote no Karaoke Arena" },
+      { property: "og:title", content: "Vote no BatalhaOkê" },
       { property: "og:description", content: "Escaneou o QR? Toque em GOSTEI e apoie quem está cantando." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -59,7 +59,7 @@ function VotePage() {
     <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col gap-8 px-5 py-8 text-center">
       <header className="flex items-center justify-center gap-2">
         <Mic2 className="size-6 text-primary" aria-hidden />
-        <p className="font-display text-3xl">Karaoke Arena</p>
+        <p className="font-display text-3xl">BatalhaOkê</p>
       </header>
       <section className="flex flex-1 flex-col items-center justify-center gap-6">
         {sessionQ.isLoading ? (
