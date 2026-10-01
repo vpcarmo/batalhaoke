@@ -87,6 +87,7 @@ export type Database = {
           created_at: string
           ended_at: string | null
           id: string
+          dislike_count: number
           like_count: number
           participant_id: string
           playback_source_id: string
@@ -99,6 +100,7 @@ export type Database = {
           created_at?: string
           ended_at?: string | null
           id?: string
+          dislike_count?: number
           like_count?: number
           participant_id: string
           playback_source_id: string
@@ -111,6 +113,7 @@ export type Database = {
           created_at?: string
           ended_at?: string | null
           id?: string
+          dislike_count?: number
           like_count?: number
           participant_id?: string
           playback_source_id?: string
@@ -223,6 +226,7 @@ export type Database = {
           started_at: string | null
           status: string
           tv_enabled: boolean
+          voting_mode: "like_only" | "like_dislike"
           updated_at: string
         }
         Insert: {
@@ -235,6 +239,7 @@ export type Database = {
           started_at?: string | null
           status?: string
           tv_enabled?: boolean
+          voting_mode?: "like_only" | "like_dislike"
           updated_at?: string
         }
         Update: {
@@ -247,6 +252,7 @@ export type Database = {
           started_at?: string | null
           status?: string
           tv_enabled?: boolean
+          voting_mode?: "like_only" | "like_dislike"
           updated_at?: string
         }
         Relationships: []

@@ -15,6 +15,13 @@
       "when": 1790726533403,
       "tag": "0001_public_voting",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1790861915885,
+      "tag": "0002_session_voting_mode",
+      "breakpoints": true
     }
   ]
 }

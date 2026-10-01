@@ -44,7 +44,7 @@ export async function getSessionByCode(code: string): Promise<Session | null> {
   return data;
 }
 
-export async function updateSessionDisplay(id: string, patch: { tv_enabled?: boolean; show_qr_on_tv?: boolean }) {
+export async function updateSessionDisplay(id: string, patch: { tv_enabled?: boolean; show_qr_on_tv?: boolean; voting_mode?: "like_only" | "like_dislike" }) {
   const { error } = await supabase.from("sessions").update(patch).eq("id", id);
   fail(error, "Erro ao salvar configuração");
 }

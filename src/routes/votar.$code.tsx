@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Check, Mic2, ThumbsUp } from "lucide-react";
+import { Check, Mic2, ThumbsDown, ThumbsUp } from "lucide-react";
 import { useSessionLive } from "@/hooks/use-session-live";
 import { displayName, getSessionByCode, getVoterToken } from "@/lib/karaoke";
 import { castVote, getVoterStatus } from "@/lib/votes.functions";
@@ -39,17 +39,18 @@ function VotePage() {
 
   const statusQ = useQuery({
     queryKey: ["voter-status", code, active?.id],
-    queryFn: () => status({ data: { code, token: token! } }),
+    queryFn: () => status({ data: { code, token: token!, voteType: "like" } }),
     enabled: !!token && !!active?.id,
   });
   const hasVoted = !!active && (voted[active.id] || (statusQ.data?.performanceId === active.id && statusQ.data.hasVoted));
 
-  async function onVote() {
+  async function onVote(voteType: "like" | "dislike") {
     if (!token || busy) return;
     setBusy(true); setErr(null);
     try {
-      const r = await vote({ data: { code, token } });
+      const r = await vote({ data: { code, token, voteType } });
       if (r.result === "ok" || r.result === "already_voted") setVoted((v) => ({ ...v, [r.performanceId]: true }));
+      else if (r.result === "vote_not_allowed") setErr("Esta sessão aceita apenas votos de gostei.");
       else if (r.result === "no_performance") setErr("A apresentação terminou. Aguarde o próximo cantor.");
       else setErr("Esta sessão não está mais aceitando votos.");
     } catch (e) { setErr((e as Error).message); } finally { setBusy(false); }
@@ -89,11 +90,17 @@ function VotePage() {
               </div>
             ) : (
               <>
-                <p className="text-xl text-muted-foreground">Você gostou?</p>
-                <button onClick={onVote} disabled={busy || !token || statusQ.isLoading}
-                  className="flex h-40 w-full items-center justify-center gap-4 rounded-3xl bg-primary font-display text-5xl text-primary-foreground shadow-glow transition active:scale-95 disabled:opacity-60 focus-visible:outline-2 focus-visible:outline-ring">
-                  <ThumbsUp className="size-12" aria-hidden /> {busy ? "…" : "Gostei"}
-                </button>
+                <p className="text-xl text-muted-foreground">{session.voting_mode === "like_dislike" ? "O que você achou?" : "Você gostou?"}</p>
+                <div className={`grid w-full gap-3 ${session.voting_mode === "like_dislike" ? "grid-cols-2" : "grid-cols-1"}`}>
+                  <button onClick={() => onVote("like")} disabled={busy || !token || statusQ.isLoading}
+                    className="flex h-40 w-full items-center justify-center gap-4 rounded-3xl bg-primary font-display text-5xl text-primary-foreground shadow-glow transition active:scale-95 disabled:opacity-60 focus-visible:outline-2 focus-visible:outline-ring">
+                    <ThumbsUp className="size-12" aria-hidden /> {busy ? "…" : "Gostei"}
+                  </button>
+                  {session.voting_mode === "like_dislike" && <button onClick={() => onVote("dislike")} disabled={busy || !token || statusQ.isLoading}
+                    className="flex h-40 w-full items-center justify-center gap-3 rounded-3xl bg-secondary font-display text-3xl shadow-glow transition active:scale-95 disabled:opacity-60 focus-visible:outline-2 focus-visible:outline-ring">
+                    <ThumbsDown className="size-10" aria-hidden /> {busy ? "…" : "Não gostei"}
+                  </button>}
+                </div>
               </>
             )}
             {err && <p role="alert" className="text-destructive">{err}</p>}

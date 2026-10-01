@@ -4,6 +4,7 @@ import { z } from "zod";
 const Input = z.object({
   code: z.string().trim().min(4).max(40).regex(/^[a-zA-Z0-9_-]+$/),
   token: z.string().min(16).max(128).regex(/^[a-zA-Z0-9_-]+$/),
+  voteType: z.enum(["like", "dislike"]).default("like"),
 });
 
 async function hashToken(sessionId: string, token: string) {
@@ -28,16 +29,17 @@ export const getVoterStatus = createServerFn({ method: "POST" })
   });
 
 /**
- * Registers a 👍 like. The client never chooses the performance: the server
+ * Registers a vote. The client never chooses the performance: the server
  * resolves the session's currently active performance from the public code.
  */
 export const castVote = createServerFn({ method: "POST" })
   .inputValidator((d) => Input.parse(d))
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: s } = await supabaseAdmin.from("sessions").select("id, status").eq("public_code", data.code).maybeSingle();
+    const { data: s } = await supabaseAdmin.from("sessions").select("id, status, voting_mode").eq("public_code", data.code).maybeSingle();
     if (!s) return { result: "invalid_session" as const };
     if (s.status !== "active") return { result: "session_closed" as const };
+    if (data.voteType === "dislike" && s.voting_mode !== "like_dislike") return { result: "vote_not_allowed" as const };
     const { data: perf } = await supabaseAdmin.from("performances").select("id").eq("session_id", s.id).eq("status", "active").limit(1).maybeSingle();
     if (!perf) return { result: "no_performance" as const };
 
@@ -50,7 +52,7 @@ export const castVote = createServerFn({ method: "POST" })
       .single();
     if (vErr || !voter) throw new Error("Não foi possível registrar o voto. Tente novamente.");
 
-    const { error } = await supabaseAdmin.from("votes").insert({ performance_id: perf.id, voter_session_id: voter.id, vote_type: "like" });
+    const { error } = await supabaseAdmin.from("votes").insert({ performance_id: perf.id, voter_session_id: voter.id, vote_type: data.voteType });
     if (error) {
       if (error.code === "23505") return { result: "already_voted" as const, performanceId: perf.id };
       throw new Error("Não foi possível registrar o voto. Tente novamente.");
