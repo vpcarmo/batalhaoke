@@ -43,6 +43,7 @@ function SessionPage() {
   const [busy, setBusy] = useState(false);
   const [localPlayerChoice, setLocalPlayer] = useState(false);
   const [qrOpen, setQrOpen] = useState(false);
+  const [finishOpen, setFinishOpen] = useState(false);
   const playerRef = useRef<PlaybackPlayerRef>(null);
   const stats = useQuery({ queryKey: ["api-stats"], queryFn: getApiStats, staleTime: Infinity });
 
@@ -164,8 +165,14 @@ function SessionPage() {
         </ol>
       </section>
 
-      {session.status === "active" && (
+      {/* {session.status === "active" && (
         <Button variant="ghost" className="text-muted-foreground" disabled={busy || !!active} onClick={() => confirm_("Encerrar a sessão?") && act(() => finishSession(id), "Sessão encerrada")}>
+          Encerrar sessão
+        </Button>
+      )} */}
+
+       {session.status === "active" && (
+        <Button variant="ghost" className="text-muted-foreground" disabled={busy || !!active} onClick={() => setFinishOpen(true)}>
           Encerrar sessão
         </Button>
       )}
@@ -185,6 +192,35 @@ function SessionPage() {
       )}
 
       <AddSingerDialog open={addOpen} onOpenChange={setAddOpen} sessionId={id} onAdded={(p) => { refresh(); setPicking(p); }} />
+
+      <Dialog open={finishOpen} onOpenChange={setFinishOpen}>
+        <DialogContent className="max-w-[calc(100vw-2rem)] rounded-2xl sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="font-display text-2xl text-destructive">Encerrar sessão do evento?</DialogTitle>
+          </DialogHeader>
+          <div className="py-2 text-sm text-muted-foreground">
+            <p>Isso finalizará o evento da noite. O QR Code atual será desativado para novas votações e nenhuma nova música poderá ser adicionada.</p>
+            <p className="mt-2 font-medium text-foreground">Deseja realmente finalizar?</p>
+          </div>
+          <DialogFooter className="grid grid-cols-2 gap-3 sm:grid-cols-2">
+            <Button type="button" variant="secondary" className="h-12" onClick={() => setFinishOpen(false)}>
+              Voltar
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              className="h-12 font-semibold"
+              disabled={busy}
+              onClick={() => {
+                setFinishOpen(false);
+                act(() => finishSession(id), "Sessão encerrada");
+              }}
+            >
+              Sim, encerrar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Sheet open={!!picking} onOpenChange={(o) => !o && (setPicking(null), setConfirm(null))}>
         <SheetContent side="bottom" className="max-h-[92dvh] overflow-y-auto rounded-t-2xl">
