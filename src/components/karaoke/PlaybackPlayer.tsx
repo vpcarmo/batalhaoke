@@ -26,12 +26,13 @@ export const PlaybackPlayer = forwardRef<PlaybackPlayerRef, Props>(function Play
     let alive = true;
     setError(null);
     setLoading(true);
+    let isReady = false;
     const p = getProvider(provider);
-    const t = setTimeout(() => alive && loading && setError("O player demorou demais para carregar. Verifique a internet."), 15000);
+    const t = setTimeout(() => alive && !isReady && setError("O player demorou demais para carregar. Verifique a internet."), 15000);
     p.mount(box.current!, externalId, {
-      onReady: () => alive && setLoading(false),
+      onReady: () => { isReady = true; clearTimeout(t); if (alive) setLoading(false); },
       onStateChange: (s) => cb.current?.(s),
-      onError: (m) => alive && setError(m),
+      onError: (m) => { isReady = true; clearTimeout(t); if (alive) setError(m); },
     })
       .then((h) => { if (!alive) h.destroy(); else handle.current = h; })
       .catch((e) => alive && setError(e.message || "Player indisponível."));
