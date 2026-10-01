@@ -17,5 +17,8 @@
 - Only search metadata is cached (in-memory, 10 min); no media stored — YouTube policy compliance.
 - Nothing is ever rendered over the provider player; attribution sits below it — YouTube RMF.
 - Operator → TV sync uses Realtime (postgres_changes + broadcast `session-cmd:<id>`), no polling.
-- MVP has no login: RLS policies are open for sessions/participants/performances/playback_sources; controllers/votes have no client policies (ESP32 phase will write via server API). Replace with auth-scoped policies when login is added.
+- MVP has no login: RLS open for sessions/participants/performances/playback_sources. votes/voter_sessions/controllers have no client policies; votes are written only by the `castVote` server fn (admin client) which resolves the active performance from `sessions.public_code` — client never picks the target.
+- Public voting: one permanent QR per session (`/votar/<public_code>`); anonymous browser token, stored only as SHA-256(session_id:token) in `voter_sessions`; unique (performance_id, voter_session_id) — 1 like per device per performance.
+- `performances.like_count` is maintained by a trigger on votes and protected from client edits; Realtime on performances delivers counts to TV/operator/voter.
+- ESP32/controllers are out of the MVP flow; `controllers` table and `votes.controller_id` (now nullable) are kept for the future.
 - Every YouTube API call is logged in `provider_api_calls` for quota tracking.
