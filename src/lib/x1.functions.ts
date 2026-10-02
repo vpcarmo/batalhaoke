@@ -13,6 +13,7 @@ const Playback = z.object({
 });
 const MatchInput = z.object({ sessionId: Id, participantAId: Id, participantBId: Id, playbackA: Playback, playbackB: Playback });
 const MatchIdInput = z.object({ matchId: Id });
+const CancelMatchInput = z.object({ matchId: Id, withdrawnSlot: z.enum(["a", "b", "both"]) });
 const Slot = z.enum(["a", "b"]);
 
 function fail(message: string): never {
@@ -257,15 +258,49 @@ export const confirmMatchWinner = createServerFn({ method: "POST" })
   });
 
 export const cancelMatch = createServerFn({ method: "POST" })
-  .inputValidator((d) => MatchIdInput.parse(d))
+  .inputValidator((d) => CancelMatchInput.parse(d))
   .handler(async ({ data }) => {
     const { supabaseAdmin, match } = await getX1Match(data.matchId);
-    if (match.status !== "scheduled" && match.status !== "in_progress")
-      fail("Um confronto concluído não pode ser cancelado");
-    const { error } = await supabaseAdmin
+    if (match.status !== "scheduled")
+      fail("Apenas confrontos agendados podem ser cancelados por desistência");
+    const { data: cancelledMatch, error: matchError } = await supabaseAdmin
       .from("matches")
       .update({ status: "cancelled", winner_participant_id: null })
       .eq("id", match.id)
-      .in("status", ["scheduled", "in_progress"]);
-    if (error) fail("Não foi possível cancelar o confronto");
+      .eq("status", "scheduled")
+      .select("id")
+      .maybeSingle();
+    if (matchError || !cancelledMatch) fail("Não foi possível cancelar o confronto");
+
+    const cancelPerformance = async (slot: "a" | "b") => {
+      const { data: performance, error } = await supabaseAdmin
+        .from("performances")
+        .update({ status: "cancelled" })
+        .eq("match_id", match.id)
+        .eq("match_slot", slot)
+        .select("id")
+        .maybeSingle();
+      if (error || !performance) fail("Não foi possível registrar a desistência");
+    };
+    const removePerformance = async (slot: "a" | "b") => {
+      const { data: performance, error } = await supabaseAdmin
+        .from("performances")
+        .delete()
+        .eq("match_id", match.id)
+        .eq("match_slot", slot)
+        .select("id")
+        .maybeSingle();
+      if (error || !performance) fail("Não foi possível remover a apresentação do confronto");
+    };
+
+    if (data.withdrawnSlot === "a") {
+      await cancelPerformance("a");
+      await removePerformance("b");
+    } else if (data.withdrawnSlot === "b") {
+      await cancelPerformance("b");
+      await removePerformance("a");
+    } else {
+      await cancelPerformance("a");
+      await cancelPerformance("b");
+    }
   });
