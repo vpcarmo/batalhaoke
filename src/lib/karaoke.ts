@@ -1,8 +1,13 @@
 import { supabase } from "@/integrations/supabase/client";
-import type { MatchStatus as DatabaseMatchStatus, SessionType, Tables, VotingMode as DatabaseVotingMode } from "@/integrations/supabase/types";
+import type { Tables } from "@/integrations/supabase/types";
+
+// Narrowed DB enums (values are enforced by database CHECK constraints).
+export type SessionType = "free" | "x1" | "championship";
+type DatabaseVotingMode = "like_only" | "like_dislike";
+type DatabaseMatchStatus = "scheduled" | "in_progress" | "completed" | "cancelled";
 import type { PlaybackSearchResult } from "@/lib/playback/types";
 
-export type Session = Tables<"sessions">;
+export type Session = Omit<Tables<"sessions">, "session_type" | "voting_mode"> & { session_type: SessionType; voting_mode: DatabaseVotingMode };
 export type VotingMode = DatabaseVotingMode;
 export type Participant = Tables<"participants">;
 export type Match = Tables<"matches">;

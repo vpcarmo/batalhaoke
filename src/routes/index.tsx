@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { createSession, getActiveSession, type VotingMode } from "@/lib/karaoke";
-import type { SessionType } from "@/integrations/supabase/types";
+import type { SessionType } from "@/lib/karaoke";
 
 export const Route = createFileRoute("/")({
   head: () => ({
