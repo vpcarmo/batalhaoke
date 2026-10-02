@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { displayName, type Match, type MatchSlot, type Participant, type Performance } from "@/lib/karaoke";
-import { cancelMatch, createMatch, startMatch, startMatchPerformance } from "@/lib/x1.functions";
+import { cancelMatch, confirmMatchWinner, createMatch, startMatch, startMatchPerformance } from "@/lib/x1.functions";
 import { MusicSearch } from "@/components/karaoke/MusicSearch";
 import type { PlaybackSearchResult } from "@/lib/playback/types";
 
@@ -67,7 +67,8 @@ export function X1Matches(props: {
                   <SlotRow label="A" p={a} perf={pa} />
                   <SlotRow label="B" p={b} perf={pb} />
                   {done ? (
-                    <p className="mt-1 rounded-lg bg-secondary px-3 py-2 text-center font-semibold">Aguardando resultado</p>
+                    <MatchResult match={m} participantA={a} participantB={b} performanceA={pa} performanceB={pb} busy={props.busy}
+                      onConfirm={(winnerParticipantId) => props.act(() => confirmMatchWinner({ data: { matchId: m.id, winnerParticipantId } }), "Vencedor confirmado")} />
                   ) : !pa ? (
                     <Button size="lg" className="mt-1 h-14 text-base font-semibold" disabled={props.busy || props.hasActive || !a} onClick={() => a && props.onPickSong(m, "a", a)}><Mic2 className="size-5" /> Iniciar Cantor A</Button>
                   ) : pa.status === "queued" ? (
@@ -77,6 +78,13 @@ export function X1Matches(props: {
                   ) : pa.status === "completed" && pb?.status === "queued" ? (
                     <Button size="lg" className="mt-1 h-14 text-base font-semibold" disabled={props.busy || props.hasActive} onClick={() => props.act(() => startMatchPerformance({ data: { performanceId: pb.id } }), "Cantor B no palco")}><Mic2 className="size-5" /> Iniciar Cantor B</Button>
                   ) : null}
+                </div>
+              )}
+              {m.status === "completed" && done && (
+                <div className="mt-4 flex flex-col gap-2">
+                  <SlotRow label="A" p={a} perf={pa} />
+                  <SlotRow label="B" p={b} perf={pb} />
+                  <MatchResult match={m} participantA={a} participantB={b} performanceA={pa} performanceB={pb} busy={props.busy} />
                 </div>
               )}
               {m.status === "scheduled" && props.sessionActive && (
@@ -93,6 +101,48 @@ export function X1Matches(props: {
       <NewMatchDialog open={open} onOpenChange={setOpen} participants={participants} busy={props.busy} preparedSongs={props.preparedSongs}
         onCreate={(aId, bId, playbackA, playbackB) => props.act(async () => { await createMatch({ data: { sessionId, participantAId: aId, participantBId: bId, playbackA, playbackB } }); setOpen(false); }, "Confronto criado")} />
     </section>
+  );
+}
+
+function MatchResult({ match, participantA, participantB, performanceA, performanceB, busy, onConfirm }: {
+  match: Match; participantA: Participant | undefined; participantB: Participant | undefined;
+  performanceA: Performance; performanceB: Performance; busy: boolean;
+  onConfirm?: (winnerParticipantId: string) => void;
+}) {
+  const totalA = performanceA.like_count + performanceA.dislike_count;
+  const saldoA = performanceA.like_count - performanceA.dislike_count;
+  const totalB = performanceB.like_count + performanceB.dislike_count;
+  const saldoB = performanceB.like_count - performanceB.dislike_count;
+  const totalGeral = totalA + totalB;
+  const tied = totalGeral > 0 && saldoA === saldoB;
+  const suggestedA = saldoA > saldoB;
+  const suggested = suggestedA ? participantA : participantB;
+  const other = suggestedA ? participantB : participantA;
+  const saldo = (value: number) => value > 0 ? `+${value}` : String(value);
+  const winner = match.winner_participant_id ? (match.winner_participant_id === participantA?.id ? participantA : participantB) : undefined;
+
+  return (
+    <div className="mt-1 rounded-lg bg-secondary px-3 py-3 text-center">
+      {match.status === "completed" ? <p className="font-semibold">Vencedor: {winner ? displayName(winner) : "—"}</p>
+        : totalGeral === 0 ? <p className="font-semibold">Nenhum voto registrado pelo público</p>
+        : tied ? <p className="font-semibold">Empate no saldo</p>
+        : <p className="font-semibold">Vencedor sugerido: {suggested ? displayName(suggested) : "—"}</p>}
+      <div className="mt-2 text-sm text-muted-foreground">
+        <p>Cantor A: 👍 {performanceA.like_count} · 👎 {performanceA.dislike_count} · Saldo {saldo(saldoA)}</p>
+        <p>Cantor B: 👍 {performanceB.like_count} · 👎 {performanceB.dislike_count} · Saldo {saldo(saldoB)}</p>
+      </div>
+      {onConfirm && (totalGeral === 0 || tied ? (
+        <div className="mt-3 grid grid-cols-2 gap-2">
+          <Button disabled={busy || !participantA} onClick={() => participantA && onConfirm(participantA.id)}>Declarar Cantor A vencedor</Button>
+          <Button disabled={busy || !participantB} onClick={() => participantB && onConfirm(participantB.id)}>Declarar Cantor B vencedor</Button>
+        </div>
+      ) : (
+        <div className="mt-3 flex flex-col gap-2">
+          <Button disabled={busy || !suggested} onClick={() => suggested && onConfirm(suggested.id)}>Confirmar vitória de {suggested ? displayName(suggested) : "—"}</Button>
+          <Button variant="secondary" disabled={busy || !other} onClick={() => other && onConfirm(other.id)}>Declarar vitória de {other ? displayName(other) : "—"}</Button>
+        </div>
+      ))}
+    </div>
   );
 }
 
