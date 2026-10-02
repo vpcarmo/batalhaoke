@@ -51,6 +51,7 @@ function SessionPage() {
   const [picking, setPicking] = useState<Participant | null>(null);
   const [matchPick, setMatchPick] = useState<{ match: Match; slot: MatchSlot } | null>(null);
   const [confirm, setConfirm] = useState<PlaybackSearchResult | null>(null);
+  const [preparedSongs, setPreparedSongs] = useState<Record<string, PlaybackSearchResult>>({});
   const [busy, setBusy] = useState(false);
   const [localPlayerChoice, setLocalPlayer] = useState(false);
   const [qrOpen, setQrOpen] = useState(false);
@@ -190,6 +191,7 @@ function SessionPage() {
 
       {session.session_type === "x1" && (
         <X1Matches sessionId={id} sessionActive={session.status === "active"} participants={participants} perfs={perfs} hasActive={!!active} busy={busy} act={act}
+          preparedSongs={preparedSongs}
           onPickSong={(match, slot, p) => { setMatchPick({ match, slot }); setPicking(p); }} />
       )}
 
@@ -245,7 +247,7 @@ function SessionPage() {
         </div>
       )}
 
-      <AddSingerDialog open={addOpen} onOpenChange={setAddOpen} sessionId={id} onAdded={(p) => { refresh(); if (session.session_type !== "x1") setPicking(p); }} />
+      <AddSingerDialog open={addOpen} onOpenChange={setAddOpen} sessionId={id} x1={session.session_type === "x1"} onAdded={(p, song) => { refresh(); if (song) setPreparedSongs((songs) => ({ ...songs, [p.id]: song })); if (session.session_type !== "x1") setPicking(p); }} />
 
       <Dialog open={finishOpen} onOpenChange={setFinishOpen}>
         <DialogContent className="max-w-[calc(100vw-2rem)] rounded-2xl sm:max-w-md">
@@ -386,19 +388,21 @@ function ActivePanel(props: {
   );
 }
 
-function AddSingerDialog({ open, onOpenChange, sessionId, onAdded }: { open: boolean; onOpenChange: (o: boolean) => void; sessionId: string; onAdded: (p: Participant) => void }) {
+function AddSingerDialog({ open, onOpenChange, sessionId, x1, onAdded }: { open: boolean; onOpenChange: (o: boolean) => void; sessionId: string; x1: boolean; onAdded: (p: Participant, song?: PlaybackSearchResult) => void }) {
   const [name, setName] = useState("");
   const [stage, setStage] = useState("");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [song, setSong] = useState<PlaybackSearchResult | null>(null);
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (!name.trim()) { setErr("Informe o nome do cantor."); return; }
+    if (x1 && !song) { setErr("Escolha uma música para o confronto X1."); return; }
     setBusy(true); setErr(null);
     try {
       const p = await addParticipant(sessionId, name, stage);
       toast.success(`✓ Cantor cadastrado — Cantor ${p.participant_number}: ${displayName(p)}`);
-      setName(""); setStage(""); onOpenChange(false); onAdded(p);
+      setName(""); setStage(""); setSong(null); onOpenChange(false); onAdded(p, song ?? undefined);
     } catch (e) { setErr((e as Error).message); } finally { setBusy(false); }
   }
   return (
@@ -408,10 +412,13 @@ function AddSingerDialog({ open, onOpenChange, sessionId, onAdded }: { open: boo
         <form onSubmit={submit} className="flex flex-col gap-4">
           <div><Label htmlFor="pn">Nome *</Label><Input id="pn" className="mt-2 h-12 text-base" value={name} onChange={(e) => setName(e.target.value)} autoFocus aria-invalid={!!err} /></div>
           <div><Label htmlFor="ps">Nome artístico</Label><Input id="ps" className="mt-2 h-12 text-base" value={stage} onChange={(e) => setStage(e.target.value)} /></div>
+          {x1 && (song ? (
+            <div className="rounded-xl bg-secondary p-3 text-sm"><p className="font-semibold">Música selecionada</p><p className="mt-1">{song.title}</p><Button type="button" variant="link" className="mt-1 h-auto p-0" onClick={() => setSong(null)}>Trocar música</Button></div>
+          ) : <MusicSearch onPick={setSong} />)}
           {err && <p role="alert" className="text-sm text-destructive">{err}</p>}
           <DialogFooter className="grid grid-cols-2 gap-3 sm:grid-cols-2">
             <Button type="button" variant="secondary" className="h-12" onClick={() => onOpenChange(false)}>Cancelar</Button>
-            <Button type="submit" className="h-12" disabled={busy}>{busy ? "Salvando…" : "Cadastrar"}</Button>
+            <Button type="submit" className="h-12" disabled={busy || (x1 && !song)}>{busy ? "Salvando…" : "Cadastrar cantor"}</Button>
           </DialogFooter>
         </form>
       </DialogContent>

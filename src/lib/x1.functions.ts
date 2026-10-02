@@ -2,9 +2,6 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 const Id = z.string().uuid();
-const MatchInput = z.object({ sessionId: Id, participantAId: Id, participantBId: Id });
-const MatchIdInput = z.object({ matchId: Id });
-const Slot = z.enum(["a", "b"]);
 const Playback = z.object({
   provider: z.string().trim().min(1),
   externalId: z.string().trim().min(1),
@@ -14,6 +11,9 @@ const Playback = z.object({
   duration: z.string().nullable().optional(),
   metadata: z.unknown().optional(),
 });
+const MatchInput = z.object({ sessionId: Id, participantAId: Id, participantBId: Id, playbackA: Playback, playbackB: Playback });
+const MatchIdInput = z.object({ matchId: Id });
+const Slot = z.enum(["a", "b"]);
 
 function fail(message: string): never {
   throw new Error(message);
@@ -79,6 +79,32 @@ export const createMatch = createServerFn({ method: "POST" })
       .select()
       .single();
     if (error || !match) fail("Não foi possível criar o confronto");
+    for (const [slot, participantId, playback] of [["a", data.participantAId, data.playbackA], ["b", data.participantBId, data.playbackB]] as const) {
+      let { data: source } = await supabaseAdmin
+        .from("playback_sources")
+        .select("id")
+        .eq("provider", playback.provider)
+        .eq("external_id", playback.externalId)
+        .maybeSingle();
+      if (!source) {
+        const created = await supabaseAdmin
+          .from("playback_sources")
+          .insert({ provider: playback.provider, external_id: playback.externalId, title: playback.title, channel_name: playback.channelName ?? null, thumbnail_url: playback.thumbnailUrl ?? null, duration: playback.duration ?? null, metadata: (playback.metadata ?? {}) as never })
+          .select("id")
+          .single();
+        if (created.error || !created.data) fail("Não foi possível salvar o playback");
+        source = created.data;
+      }
+      const { error: performanceError } = await supabaseAdmin.from("performances").insert({
+        session_id: data.sessionId,
+        participant_id: participantId,
+        playback_source_id: source.id,
+        match_id: match.id,
+        match_slot: slot,
+        status: "queued",
+      });
+      if (performanceError) fail("Não foi possível preparar as apresentações do confronto");
+    }
     return match;
   });
 
