@@ -15,9 +15,10 @@ import { addParticipant, commandChannel, createPerformance, displayName, finishS
 import { MusicSearch } from "@/components/karaoke/MusicSearch";
 import { PlaybackPlayer, type PlaybackPlayerRef } from "@/components/karaoke/PlaybackPlayer";
 import { SessionQr, voteUrl } from "@/components/karaoke/SessionQr";
-import { X1Matches } from "@/components/karaoke/X1Matches";
 import type { PlaybackSearchResult } from "@/lib/playback/types";
-import { completeMatchPerformance, startMatchPerformance } from "@/lib/x1.functions";
+import { X1Matches, matchesKey } from "@/components/karaoke/X1Matches";
+import { completeMatchPerformance, createMatchPerformance, startMatchPerformance } from "@/lib/x1.functions";
+import type { Match, MatchSlot } from "@/lib/karaoke";
 
 const sessionTypeLabels = {
   free: "BatalhaOkê Livre",
@@ -47,6 +48,7 @@ function SessionPage() {
   const live = useSessionLive(id);
   const [addOpen, setAddOpen] = useState(false);
   const [picking, setPicking] = useState<Participant | null>(null);
+  const [matchPick, setMatchPick] = useState<{ match: Match; slot: MatchSlot } | null>(null);
   const [confirm, setConfirm] = useState<PlaybackSearchResult | null>(null);
   const [busy, setBusy] = useState(false);
   const [localPlayerChoice, setLocalPlayer] = useState(false);
@@ -73,12 +75,16 @@ function SessionPage() {
   const votingModeLocked = !!session && (session.status !== "draft" || session.session_type !== "free");
 
   const perfFor = (p: Participant) => [...perfs].reverse().find((x) => x.participant_id === p.id);
-  const refresh = () => { qc.invalidateQueries({ queryKey: ["performances", id] }); qc.invalidateQueries({ queryKey: ["participants", id] }); qc.invalidateQueries({ queryKey: ["session", id] }); };
+  const refresh = () => { qc.invalidateQueries({ queryKey: ["performances", id] }); qc.invalidateQueries({ queryKey: ["participants", id] }); qc.invalidateQueries({ queryKey: ["session", id] }); qc.invalidateQueries({ queryKey: matchesKey(id) }); };
 
   async function act(fn: () => Promise<unknown>, ok?: string) {
     setBusy(true);
     try { await fn(); if (ok) toast.success(ok); refresh(); } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
   }
+
+  // X1 performances end through the X1 server function; free flow unchanged.
+  const endActive = (p: Performance) => (p.match_id ? completeMatchPerformance({ data: { performanceId: p.id } }) : setPerformanceStatus(p.id, "completed"));
+  const closePicker = () => { setPicking(null); setMatchPick(null); setConfirm(null); };
 
   if (live.session.isLoading) return <Centered>Carregando sessão…</Centered>;
   if (live.error) return <Centered><p role="alert" className="text-destructive">Servidor indisponível. Verifique a internet e tente novamente.</p><Button className="mt-4" onClick={() => location.reload()}>Tentar novamente</Button></Centered>;
@@ -105,8 +111,8 @@ function SessionPage() {
           <ActivePanel perf={active} votingMode={session.voting_mode} busy={busy} tvEnabled={session.tv_enabled} localPlayer={localPlayer} setLocalPlayer={setLocalPlayer} playerRef={playerRef}
             onPlay={() => (localPlayer ? playerRef.current?.play() : sendTv("play"))}
             onPause={() => (localPlayer ? playerRef.current?.pause() : sendTv("pause"))}
-            onEnd={() => act(() => active.match_id ? completeMatchPerformance({ data: { performanceId: active.id } }) : setPerformanceStatus(active.id, "completed"), "Apresentação encerrada")}
-            onEnded={() => act(() => active.match_id ? completeMatchPerformance({ data: { performanceId: active.id } }) : setPerformanceStatus(active.id, "completed"), "Música terminou — apresentação concluída")} />
+            onEnd={() => act(() => endActive(active), "Apresentação encerrada")}
+            onEnded={() => act(() => endActive(active), "Música terminou — apresentação concluída")} />
         ) : nextQueued ? (
           <div className="mt-3">
             <Singer perf={nextQueued} />
@@ -155,7 +161,10 @@ function SessionPage() {
         </div>
       </section>
 
-      {session.session_type === "x1" && <X1Matches sessionId={id} participants={participants} performances={perfs} disabled={session.status !== "active" || busy} />}
+      {session.session_type === "x1" && (
+        <X1Matches sessionId={id} sessionActive={session.status === "active"} participants={participants} perfs={perfs} hasActive={!!active} busy={busy} act={act}
+          onPickSong={(match, slot, p) => { setMatchPick({ match, slot }); setPicking(p); }} />
+      )}
 
       {/* Queue */}
       <section aria-labelledby="order">
@@ -175,7 +184,7 @@ function SessionPage() {
                   <p className="truncate font-semibold">{displayName(p)}</p>
                   {pf?.source && <p className="truncate text-xs text-muted-foreground"><Music className="mr-1 inline size-3" />{pf.source.title}</p>}
                 </div>
-                <StatusOrAction pf={pf} onPick={() => setPicking(p)} disabled={session.status !== "active"} />
+                {session.session_type === "x1" ? null : <StatusOrAction pf={pf} onPick={() => setPicking(p)} disabled={session.status !== "active"} />}
               </li>
             );
           })}
@@ -239,9 +248,9 @@ function SessionPage() {
         </DialogContent>
       </Dialog>
 
-      <Sheet open={!!picking} onOpenChange={(o) => !o && (setPicking(null), setConfirm(null))}>
+      <Sheet open={!!picking} onOpenChange={(o) => !o && closePicker()}>
         <SheetContent side="bottom" className="max-h-[92dvh] overflow-y-auto rounded-t-2xl">
-          <SheetHeader><SheetTitle>Música para {picking && displayName(picking)}</SheetTitle></SheetHeader>
+          <SheetHeader><SheetTitle>{matchPick && `Cantor ${matchPick.slot.toUpperCase()} · `}Música para {picking && displayName(picking)}</SheetTitle></SheetHeader>
           <div className="px-4 pb-6">
             {confirm ? (
               <div className="flex flex-col gap-3">
@@ -250,8 +259,14 @@ function SessionPage() {
                 <p className="text-sm text-muted-foreground">Canal: {confirm.channelName}</p>
                 <div className="grid grid-cols-2 gap-3">
                   <Button variant="secondary" className="h-12" onClick={() => setConfirm(null)}>Voltar</Button>
-                  <Button className="h-12" disabled={busy} onClick={() => act(async () => { await createPerformance(id, picking!.id, confirm); setPicking(null); setConfirm(null); }, "Apresentação criada")}>
-                    <Check className="size-4" /> Confirmar
+                  <Button className="h-12" disabled={busy} onClick={() => matchPick
+                    ? act(async () => {
+                        const perf = await createMatchPerformance({ data: { matchId: matchPick.match.id, slot: matchPick.slot, playback: { provider: confirm.provider, externalId: confirm.externalId, title: confirm.title, channelName: confirm.channelName, thumbnailUrl: confirm.thumbnailUrl, duration: confirm.duration } } });
+                        await startMatchPerformance({ data: { performanceId: perf.id } });
+                        closePicker();
+                      }, `Cantor ${matchPick.slot.toUpperCase()} no palco`)
+                    : act(async () => { await createPerformance(id, picking!.id, confirm); setPicking(null); setConfirm(null); }, "Apresentação criada")}>
+                    <Check className="size-4" /> {matchPick ? "Confirmar e iniciar" : "Confirmar"}
                   </Button>
                 </div>
               </div>
