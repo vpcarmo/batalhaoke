@@ -112,30 +112,31 @@ function NewMatchDialog({ open, onOpenChange, participants, busy, preparedSongs,
   const [b, setB] = useState("");
   const [fallbackA, setFallbackA] = useState<PlaybackSearchResult | null>(null);
   const [fallbackB, setFallbackB] = useState<PlaybackSearchResult | null>(null);
+  const [preparingSlot, setPreparingSlot] = useState<MatchSlot | null>(null);
   const same = !!a && a === b;
   const playbackA = preparedSongs[a] ?? fallbackA;
   const playbackB = preparedSongs[b] ?? fallbackB;
   const sel = "mt-2 h-12 w-full rounded-md border bg-background px-3 text-base";
   return (
-    <Dialog open={open} onOpenChange={(o) => { onOpenChange(o); if (!o) { setA(""); setB(""); setFallbackA(null); setFallbackB(null); } }}>
+    <Dialog open={open} onOpenChange={(o) => { onOpenChange(o); if (!o) { setA(""); setB(""); setFallbackA(null); setFallbackB(null); setPreparingSlot(null); } }}>
       <DialogContent className="max-w-[calc(100vw-2rem)] rounded-2xl sm:max-w-md">
         <DialogHeader><DialogTitle className="font-display text-3xl">Novo confronto</DialogTitle></DialogHeader>
         <div className="flex flex-col gap-3">
           <div><Label htmlFor="ma">Cantor A</Label>
-            <select id="ma" className={sel} value={a} onChange={(e) => { setA(e.target.value); setFallbackA(null); }}>
+            <select id="ma" className={sel} value={a} onChange={(e) => { setA(e.target.value); setFallbackA(null); setPreparingSlot(null); }}>
               <option value="">Selecionar…</option>
               {participants.map((p) => <option key={p.id} value={p.id}>{p.participant_number}. {displayName(p)}</option>)}
             </select>
           </div>
-          {a && !preparedSongs[a] && <FallbackSong label="A" song={fallbackA} onPick={setFallbackA} />}
+          {a && !preparedSongs[a] && <PendingSong label="A" song={fallbackA} preparing={preparingSlot === "a"} onPrepare={() => setPreparingSlot("a")} onPick={(song) => { setFallbackA(song); setPreparingSlot(null); }} />}
           <p className="text-center font-display text-2xl text-accent">VS</p>
           <div><Label htmlFor="mb">Cantor B</Label>
-            <select id="mb" className={sel} value={b} onChange={(e) => { setB(e.target.value); setFallbackB(null); }}>
+            <select id="mb" className={sel} value={b} onChange={(e) => { setB(e.target.value); setFallbackB(null); setPreparingSlot(null); }}>
               <option value="">Selecionar…</option>
               {participants.map((p) => <option key={p.id} value={p.id} disabled={p.id === a}>{p.participant_number}. {displayName(p)}</option>)}
             </select>
           </div>
-          {b && !preparedSongs[b] && <FallbackSong label="B" song={fallbackB} onPick={setFallbackB} />}
+          {b && !preparedSongs[b] && <PendingSong label="B" song={fallbackB} preparing={preparingSlot === "b"} onPrepare={() => setPreparingSlot("b")} onPick={(song) => { setFallbackB(song); setPreparingSlot(null); }} />}
           {same && <p role="alert" className="text-sm text-destructive">Escolha dois cantores diferentes.</p>}
         </div>
         <DialogFooter className="grid grid-cols-2 gap-3 sm:grid-cols-2">
@@ -147,7 +148,7 @@ function NewMatchDialog({ open, onOpenChange, participants, busy, preparedSongs,
   );
 }
 
-function FallbackSong({ label, song, onPick }: { label: string; song: PlaybackSearchResult | null; onPick: (song: PlaybackSearchResult) => void }) {
+function PendingSong({ label, song, preparing, onPrepare, onPick }: { label: string; song: PlaybackSearchResult | null; preparing: boolean; onPrepare: () => void; onPick: (song: PlaybackSearchResult) => void }) {
   if (song) return <p className="rounded-lg bg-secondary px-3 py-2 text-sm"><span className="font-semibold">Música do cantor {label}:</span> {song.title}</p>;
-  return <div className="rounded-xl border p-3"><p className="mb-3 text-sm text-muted-foreground">Escolha a música do cantor {label} para este confronto.</p><MusicSearch onPick={onPick} /></div>;
+  return <div className="rounded-xl border border-dashed p-3"><p className="text-sm text-muted-foreground">Música do cantor {label} pendente de preparação.</p>{preparing ? <div className="mt-3"><MusicSearch onPick={onPick} /></div> : <Button type="button" variant="secondary" className="mt-3 h-11" onClick={onPrepare}>Preparar música do cantor {label}</Button>}</div>;
 }
