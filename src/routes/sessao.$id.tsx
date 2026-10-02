@@ -15,7 +15,9 @@ import { addParticipant, commandChannel, createPerformance, displayName, finishS
 import { MusicSearch } from "@/components/karaoke/MusicSearch";
 import { PlaybackPlayer, type PlaybackPlayerRef } from "@/components/karaoke/PlaybackPlayer";
 import { SessionQr, voteUrl } from "@/components/karaoke/SessionQr";
+import { X1Matches } from "@/components/karaoke/X1Matches";
 import type { PlaybackSearchResult } from "@/lib/playback/types";
+import { completeMatchPerformance, startMatchPerformance } from "@/lib/x1.functions";
 
 const sessionTypeLabels = {
   free: "BatalhaOkê Livre",
@@ -103,12 +105,12 @@ function SessionPage() {
           <ActivePanel perf={active} votingMode={session.voting_mode} busy={busy} tvEnabled={session.tv_enabled} localPlayer={localPlayer} setLocalPlayer={setLocalPlayer} playerRef={playerRef}
             onPlay={() => (localPlayer ? playerRef.current?.play() : sendTv("play"))}
             onPause={() => (localPlayer ? playerRef.current?.pause() : sendTv("pause"))}
-            onEnd={() => act(() => setPerformanceStatus(active.id, "completed"), "Apresentação encerrada")}
-            onEnded={() => act(() => setPerformanceStatus(active.id, "completed"), "Música terminou — apresentação concluída")} />
+            onEnd={() => act(() => active.match_id ? completeMatchPerformance({ data: { performanceId: active.id } }) : setPerformanceStatus(active.id, "completed"), "Apresentação encerrada")}
+            onEnded={() => act(() => active.match_id ? completeMatchPerformance({ data: { performanceId: active.id } }) : setPerformanceStatus(active.id, "completed"), "Música terminou — apresentação concluída")} />
         ) : nextQueued ? (
           <div className="mt-3">
             <Singer perf={nextQueued} />
-            <Button size="lg" className="mt-4 h-14 w-full text-base font-semibold shadow-glow" disabled={busy} onClick={() => act(() => setPerformanceStatus(nextQueued.id, "active"), "Apresentação iniciada")}>
+            <Button size="lg" className="mt-4 h-14 w-full text-base font-semibold shadow-glow" disabled={busy} onClick={() => act(() => nextQueued.match_id ? startMatchPerformance({ data: { performanceId: nextQueued.id } }) : setPerformanceStatus(nextQueued.id, "active"), "Apresentação iniciada")}>
               <Mic2 className="size-5" /> Iniciar apresentação
             </Button>
           </div>
@@ -152,6 +154,8 @@ function SessionPage() {
           </div>
         </div>
       </section>
+
+      {session.session_type === "x1" && <X1Matches sessionId={id} participants={participants} performances={perfs} disabled={session.status !== "active" || busy} />}
 
       {/* Queue */}
       <section aria-labelledby="order">
