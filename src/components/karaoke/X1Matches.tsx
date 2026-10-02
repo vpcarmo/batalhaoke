@@ -6,7 +6,9 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { displayName, type Match, type MatchSlot, type Participant, type Performance } from "@/lib/karaoke";
-import { cancelMatch, createMatch, startMatch } from "@/lib/x1.functions";
+import { cancelMatch, createMatch, startMatch, startMatchPerformance } from "@/lib/x1.functions";
+import { MusicSearch } from "@/components/karaoke/MusicSearch";
+import type { PlaybackSearchResult } from "@/lib/playback/types";
 
 const statusLabel: Record<string, string> = { scheduled: "Agendado", in_progress: "Em andamento", completed: "Concluído", cancelled: "Cancelado" };
 
@@ -17,6 +19,7 @@ export function X1Matches(props: {
   sessionId: string; sessionActive: boolean; participants: Participant[]; perfs: Performance[]; hasActive: boolean; busy: boolean;
   act: (fn: () => Promise<unknown>, ok?: string) => void;
   onPickSong: (match: Match, slot: MatchSlot, participant: Participant) => void;
+  preparedSongs: Record<string, PlaybackSearchResult>;
 }) {
   const { sessionId, participants, perfs } = props;
   const [open, setOpen] = useState(false);
@@ -67,8 +70,12 @@ export function X1Matches(props: {
                     <p className="mt-1 rounded-lg bg-secondary px-3 py-2 text-center font-semibold">Aguardando resultado</p>
                   ) : !pa ? (
                     <Button size="lg" className="mt-1 h-14 text-base font-semibold" disabled={props.busy || props.hasActive || !a} onClick={() => a && props.onPickSong(m, "a", a)}><Mic2 className="size-5" /> Iniciar Cantor A</Button>
+                  ) : pa.status === "queued" ? (
+                    <Button size="lg" className="mt-1 h-14 text-base font-semibold" disabled={props.busy || props.hasActive} onClick={() => props.act(() => startMatchPerformance({ data: { performanceId: pa.id } }), "Cantor A no palco")}><Mic2 className="size-5" /> Iniciar Cantor A</Button>
                   ) : pa.status === "completed" && !pb ? (
                     <Button size="lg" className="mt-1 h-14 text-base font-semibold" disabled={props.busy || props.hasActive || !b} onClick={() => b && props.onPickSong(m, "b", b)}><Mic2 className="size-5" /> Iniciar Cantor B</Button>
+                  ) : pa.status === "completed" && pb?.status === "queued" ? (
+                    <Button size="lg" className="mt-1 h-14 text-base font-semibold" disabled={props.busy || props.hasActive} onClick={() => props.act(() => startMatchPerformance({ data: { performanceId: pb.id } }), "Cantor B no palco")}><Mic2 className="size-5" /> Iniciar Cantor B</Button>
                   ) : null}
                 </div>
               )}
@@ -83,8 +90,8 @@ export function X1Matches(props: {
           );
         })}
       </ol>
-      <NewMatchDialog open={open} onOpenChange={setOpen} participants={participants} busy={props.busy}
-        onCreate={(aId, bId) => props.act(async () => { await createMatch({ data: { sessionId, participantAId: aId, participantBId: bId } }); setOpen(false); }, "Confronto criado")} />
+      <NewMatchDialog open={open} onOpenChange={setOpen} participants={participants} busy={props.busy} preparedSongs={props.preparedSongs}
+        onCreate={(aId, bId, playbackA, playbackB) => props.act(async () => { await createMatch({ data: { sessionId, participantAId: aId, participantBId: bId, playbackA, playbackB } }); setOpen(false); }, "Confronto criado")} />
     </section>
   );
 }
@@ -100,36 +107,47 @@ function SlotRow({ label, p, perf }: { label: string; p: Participant | undefined
   );
 }
 
-function NewMatchDialog({ open, onOpenChange, participants, busy, onCreate }: { open: boolean; onOpenChange: (o: boolean) => void; participants: Participant[]; busy: boolean; onCreate: (a: string, b: string) => void }) {
+function NewMatchDialog({ open, onOpenChange, participants, busy, preparedSongs, onCreate }: { open: boolean; onOpenChange: (o: boolean) => void; participants: Participant[]; busy: boolean; preparedSongs: Record<string, PlaybackSearchResult>; onCreate: (a: string, b: string, playbackA: PlaybackSearchResult, playbackB: PlaybackSearchResult) => void }) {
   const [a, setA] = useState("");
   const [b, setB] = useState("");
+  const [fallbackA, setFallbackA] = useState<PlaybackSearchResult | null>(null);
+  const [fallbackB, setFallbackB] = useState<PlaybackSearchResult | null>(null);
   const same = !!a && a === b;
+  const playbackA = preparedSongs[a] ?? fallbackA;
+  const playbackB = preparedSongs[b] ?? fallbackB;
   const sel = "mt-2 h-12 w-full rounded-md border bg-background px-3 text-base";
   return (
-    <Dialog open={open} onOpenChange={(o) => { onOpenChange(o); if (!o) { setA(""); setB(""); } }}>
+    <Dialog open={open} onOpenChange={(o) => { onOpenChange(o); if (!o) { setA(""); setB(""); setFallbackA(null); setFallbackB(null); } }}>
       <DialogContent className="max-w-[calc(100vw-2rem)] rounded-2xl sm:max-w-md">
         <DialogHeader><DialogTitle className="font-display text-3xl">Novo confronto</DialogTitle></DialogHeader>
         <div className="flex flex-col gap-3">
           <div><Label htmlFor="ma">Cantor A</Label>
-            <select id="ma" className={sel} value={a} onChange={(e) => setA(e.target.value)}>
+            <select id="ma" className={sel} value={a} onChange={(e) => { setA(e.target.value); setFallbackA(null); }}>
               <option value="">Selecionar…</option>
               {participants.map((p) => <option key={p.id} value={p.id}>{p.participant_number}. {displayName(p)}</option>)}
             </select>
           </div>
+          {a && !preparedSongs[a] && <FallbackSong label="A" song={fallbackA} onPick={setFallbackA} />}
           <p className="text-center font-display text-2xl text-accent">VS</p>
           <div><Label htmlFor="mb">Cantor B</Label>
-            <select id="mb" className={sel} value={b} onChange={(e) => setB(e.target.value)}>
+            <select id="mb" className={sel} value={b} onChange={(e) => { setB(e.target.value); setFallbackB(null); }}>
               <option value="">Selecionar…</option>
               {participants.map((p) => <option key={p.id} value={p.id} disabled={p.id === a}>{p.participant_number}. {displayName(p)}</option>)}
             </select>
           </div>
+          {b && !preparedSongs[b] && <FallbackSong label="B" song={fallbackB} onPick={setFallbackB} />}
           {same && <p role="alert" className="text-sm text-destructive">Escolha dois cantores diferentes.</p>}
         </div>
         <DialogFooter className="grid grid-cols-2 gap-3 sm:grid-cols-2">
           <Button type="button" variant="secondary" className="h-12" onClick={() => onOpenChange(false)}>Voltar</Button>
-          <Button className="h-12" disabled={busy || !a || !b || same} onClick={() => onCreate(a, b)}>Criar confronto</Button>
+          <Button className="h-12" disabled={busy || !a || !b || same || !playbackA || !playbackB} onClick={() => playbackA && playbackB && onCreate(a, b, playbackA, playbackB)}>Criar confronto</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
   );
+}
+
+function FallbackSong({ label, song, onPick }: { label: string; song: PlaybackSearchResult | null; onPick: (song: PlaybackSearchResult) => void }) {
+  if (song) return <p className="rounded-lg bg-secondary px-3 py-2 text-sm"><span className="font-semibold">Música do cantor {label}:</span> {song.title}</p>;
+  return <div className="rounded-xl border p-3"><p className="mb-3 text-sm text-muted-foreground">Escolha a música do cantor {label} para este confronto.</p><MusicSearch onPick={onPick} /></div>;
 }
