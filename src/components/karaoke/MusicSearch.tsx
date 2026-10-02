@@ -13,8 +13,7 @@ export function MusicSearch({ onPick, onSearched }: { onPick: (r: PlaybackSearch
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
-  async function run(e?: React.FormEvent) {
-    e?.preventDefault();
+  async function run() {
     const term = q.trim();
     if (!term || loading || term === lastQ) return; // no empty or duplicate searches
     setLoading(true); setErr(null);
@@ -28,13 +27,13 @@ export function MusicSearch({ onPick, onSearched }: { onPick: (r: PlaybackSearch
 
   return (
     <div className="flex flex-col gap-4">
-      <form onSubmit={run} className="flex flex-col gap-2 sm:flex-row">
+      <div className="flex flex-col gap-2 sm:flex-row">
         <label htmlFor="q" className="sr-only">Música</label>
-        <Input id="q" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Ex.: Evidências, Menina Veneno, Leão..." className="h-12 text-base" autoComplete="off" />
-        <Button type="submit" className="h-12 shrink-0" disabled={!q.trim() || loading || q.trim() === lastQ}>
+        <Input id="q" value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); void run(); } }} placeholder="Ex.: Evidências, Menina Veneno, Leão..." className="h-12 text-base" autoComplete="off" />
+        <Button type="button" className="h-12 shrink-0" disabled={!q.trim() || loading || q.trim() === lastQ} onClick={() => void run()}>
           <Search className="size-4" /> {loading ? "Pesquisando…" : q.trim() ? `Pesquisar "${q.trim().slice(0, 18)}"` : "Pesquisar"}
         </Button>
-      </form>
+      </div>
       {err && <p role="alert" className="rounded-lg bg-destructive/10 p-3 text-sm text-destructive">{err}</p>}
       {results && results.length === 0 && <p className="text-sm text-muted-foreground">Nenhum resultado incorporável para "{lastQ}".</p>}
       {results && results.length > 0 && (
@@ -46,7 +45,7 @@ export function MusicSearch({ onPick, onSearched }: { onPick: (r: PlaybackSearch
                 <p className="line-clamp-2 font-semibold leading-snug">{r.title}</p>
                 <p className="text-sm text-muted-foreground">Canal: {r.channelName ?? "—"}</p>
                 {r.duration && <p className="flex items-center gap-1 text-xs text-muted-foreground"><Clock className="size-3" /> {r.duration}</p>}
-                <Button className="mt-2 h-11" onClick={() => onPick(r)}>Selecionar</Button>
+                <Button type="button" className="mt-2 h-11" onClick={() => onPick(r)}>Selecionar</Button>
               </div>
             </li>
           ))}

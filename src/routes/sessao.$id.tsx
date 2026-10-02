@@ -400,21 +400,24 @@ function AddSingerDialog({ open, onOpenChange, sessionId, x1, onAdded }: { open:
     if (x1 && !song) { setErr("Escolha uma música para o confronto X1."); return; }
     setBusy(true); setErr(null);
     try {
+      const selectedSong = song ?? undefined;
       const p = await addParticipant(sessionId, name, stage);
       toast.success(`✓ Cantor cadastrado — Cantor ${p.participant_number}: ${displayName(p)}`);
-      setName(""); setStage(""); setSong(null); onOpenChange(false); onAdded(p, song ?? undefined);
+      onAdded(p, selectedSong);
+      setName(""); setStage(""); setSong(null); onOpenChange(false);
     } catch (e) { setErr((e as Error).message); } finally { setBusy(false); }
   }
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[calc(100vw-2rem)] rounded-2xl sm:max-w-md">
+      <DialogContent className="max-h-[92dvh] max-w-[calc(100vw-2rem)] overflow-y-auto rounded-2xl sm:max-w-md">
         <DialogHeader><DialogTitle className="font-display text-3xl">Novo cantor</DialogTitle></DialogHeader>
         <form onSubmit={submit} className="flex flex-col gap-4">
           <div><Label htmlFor="pn">Nome *</Label><Input id="pn" className="mt-2 h-12 text-base" value={name} onChange={(e) => setName(e.target.value)} autoFocus aria-invalid={!!err} /></div>
           <div><Label htmlFor="ps">Nome artístico</Label><Input id="ps" className="mt-2 h-12 text-base" value={stage} onChange={(e) => setStage(e.target.value)} /></div>
-          {x1 && (song ? (
-            <div className="rounded-xl bg-secondary p-3 text-sm"><p className="font-semibold">Música selecionada</p><p className="mt-1">{song.title}</p><Button type="button" variant="link" className="mt-1 h-auto p-0" onClick={() => setSong(null)}>Trocar música</Button></div>
-          ) : <MusicSearch onPick={setSong} />)}
+          {x1 && <>
+            {song && <div className="rounded-xl bg-secondary p-3 text-sm"><p className="font-semibold text-success">✓ Música selecionada: {song.title}</p>{song.channelName && <p className="mt-1 text-muted-foreground">Canal: {song.channelName}</p>}<Button type="button" variant="link" className="mt-1 h-auto p-0" onClick={() => setSong(null)}>Trocar música</Button></div>}
+            <div className={song ? "hidden" : undefined} aria-hidden={!!song}><MusicSearch onPick={(result) => { setSong(result); setErr(null); }} /></div>
+          </>}
           {err && <p role="alert" className="text-sm text-destructive">{err}</p>}
           <DialogFooter className="grid grid-cols-2 gap-3 sm:grid-cols-2">
             <Button type="button" variant="secondary" className="h-12" onClick={() => onOpenChange(false)}>Cancelar</Button>
