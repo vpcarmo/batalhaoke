@@ -191,7 +191,6 @@ function SessionPage() {
 
       {session.session_type === "x1" && (
         <X1Matches sessionId={id} sessionActive={session.status === "active"} participants={participants} perfs={perfs} hasActive={!!active} busy={busy} act={act}
-          preparedSongs={preparedSongs}
           onPickSong={(match, slot, p) => { setMatchPick({ match, slot }); setPicking(p); }} />
       )}
 
