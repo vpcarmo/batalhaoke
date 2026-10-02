@@ -4,6 +4,7 @@ import { Check, Mic2, Swords, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { supabase } from "@/integrations/supabase/client";
 import { displayName, type Match, type MatchSlot, type Participant, type Performance } from "@/lib/karaoke";
 import { cancelMatch, confirmMatchWinner, createMatch, startMatch, startMatchPerformance } from "@/lib/x1.functions";
@@ -22,6 +23,7 @@ export function X1Matches(props: {
 }) {
   const { sessionId, participants, perfs } = props;
   const [pairToPrepare, setPairToPrepare] = useState<{ a: Participant; b: Participant; first: boolean } | null>(null);
+  const [matchToCancel, setMatchToCancel] = useState<Match | null>(null);
   const matches = useQuery({
     queryKey: matchesKey(sessionId),
     queryFn: async () => {
@@ -38,19 +40,24 @@ export function X1Matches(props: {
     if (match.participant_a_id !== match.winner_participant_id) eliminatedIds.add(match.participant_a_id);
     if (match.participant_b_id !== match.winner_participant_id) eliminatedIds.add(match.participant_b_id);
   }
+  const withdrawnIds = new Set(
+    perfs
+      .filter((performance) => performance.match_id !== null && performance.status === "cancelled")
+      .map((performance) => performance.participant_id),
+  );
   const latestCompleted = completed.at(-1);
-  const currentChampion = latestCompleted?.winner_participant_id && !eliminatedIds.has(latestCompleted.winner_participant_id)
+  const currentChampion = latestCompleted?.winner_participant_id && !eliminatedIds.has(latestCompleted.winner_participant_id) && !withdrawnIds.has(latestCompleted.winner_participant_id)
     ? byId(latestCompleted.winner_participant_id)
     : undefined;
   const openMatches = list.filter((m) => m.status === "scheduled" || m.status === "in_progress");
   const activeCompetitorIds = new Set(openMatches.flatMap((m) => [m.participant_a_id, m.participant_b_id]));
   const waitingQueue = [...participants]
-    .filter((p) => !eliminatedIds.has(p.id) && p.id !== currentChampion?.id && !activeCompetitorIds.has(p.id))
+    .filter((p) => !eliminatedIds.has(p.id) && !withdrawnIds.has(p.id) && p.id !== currentChampion?.id && !activeCompetitorIds.has(p.id))
     .sort((a, b) => a.participant_number - b.participant_number);
   const nextChallenger = waitingQueue[0];
   const [firstA, firstB] = waitingQueue;
-  const firstPair = completed.length === 0 && openMatches.length === 0 && firstA && firstB
-    ? { a: firstA, b: firstB }
+  const firstPair = !currentChampion && openMatches.length === 0 && firstA && firstB
+    ? { a: firstA, b: firstB, first: completed.length === 0 }
     : null;
   const sessionActive = props.sessionStatus === "active";
   const sessionFinished = props.sessionStatus === "finished";
@@ -61,12 +68,12 @@ export function X1Matches(props: {
         <h2 id="x1" className="font-display text-3xl">Confrontos X1</h2>
       </div>
       {participants.length < 2 && <p className="text-sm text-muted-foreground">Cadastre pelo menos dois cantores para criar um confronto.</p>}
-      <QueueSummary participants={participants} currentChampion={currentChampion} activeCompetitorIds={activeCompetitorIds} eliminatedIds={eliminatedIds} waitingQueue={waitingQueue} />
+      <QueueSummary participants={participants} currentChampion={currentChampion} activeCompetitorIds={activeCompetitorIds} eliminatedIds={eliminatedIds} withdrawnIds={withdrawnIds} waitingQueue={waitingQueue} />
       {sessionActive && firstPair && (
         <section className="rounded-2xl border border-primary/40 bg-primary/5 p-4">
           <p className="text-xs font-semibold uppercase tracking-widest text-primary">Primeiro confronto</p>
           <p className="mt-2 text-center font-display text-2xl">{displayName(firstPair.a)} <span className="text-accent">×</span> {displayName(firstPair.b)}</p>
-          <Button className="mt-4 h-12 w-full" disabled={props.busy} onClick={() => setPairToPrepare({ ...firstPair, first: true })}><Swords className="size-4" /> Iniciar 1º confronto</Button>
+          <Button className="mt-4 h-12 w-full" disabled={props.busy} onClick={() => setPairToPrepare(firstPair)}><Swords className="size-4" /> Iniciar 1º confronto</Button>
         </section>
       )}
       {sessionActive && currentChampion && openMatches.length === 0 && nextChallenger && (
@@ -123,7 +130,7 @@ export function X1Matches(props: {
               )}
               {m.status === "scheduled" && sessionActive && (
                 <div className="mt-4 grid grid-cols-2 gap-2">
-                  <Button variant="secondary" className="h-12" disabled={props.busy} onClick={() => props.act(() => cancelMatch({ data: { matchId: m.id } }), "Confronto cancelado")}><X className="size-4" /> Cancelar</Button>
+                  <Button variant="secondary" className="h-12" disabled={props.busy} onClick={() => setMatchToCancel(m)}><X className="size-4" /> Cancelar confronto</Button>
                   <Button className="h-12" disabled={props.busy || list.some((other) => other.id !== m.id && other.status === "in_progress")} onClick={() => props.act(() => startMatch({ data: { matchId: m.id } }), "Confronto iniciado")}><Swords className="size-4" /> Iniciar confronto</Button>
                 </div>
               )}
@@ -138,6 +145,12 @@ export function X1Matches(props: {
           if (!pairToPrepare?.first) await startMatch({ data: { matchId: match.id } });
           setPairToPrepare(null);
         }, pairToPrepare?.first ? "Confronto criado" : "Confronto criado e iniciado")} />
+      <CancelMatchDialog match={matchToCancel} participantA={matchToCancel ? byId(matchToCancel.participant_a_id) : undefined} participantB={matchToCancel ? byId(matchToCancel.participant_b_id) : undefined}
+        busy={props.busy} onOpenChange={(open) => !open && setMatchToCancel(null)}
+        onConfirm={(withdrawnSlot) => matchToCancel && props.act(async () => {
+          await cancelMatch({ data: { matchId: matchToCancel.id, withdrawnSlot } });
+          setMatchToCancel(null);
+        }, "Desistência confirmada")} />
     </section>
   );
 }
@@ -195,8 +208,8 @@ function SlotRow({ label, p, perf }: { label: string; p: Participant | undefined
   );
 }
 
-function QueueSummary({ participants, currentChampion, activeCompetitorIds, eliminatedIds, waitingQueue }: {
-  participants: Participant[]; currentChampion: Participant | undefined; activeCompetitorIds: Set<string>; eliminatedIds: Set<string>; waitingQueue: Participant[];
+function QueueSummary({ participants, currentChampion, activeCompetitorIds, eliminatedIds, withdrawnIds, waitingQueue }: {
+  participants: Participant[]; currentChampion: Participant | undefined; activeCompetitorIds: Set<string>; eliminatedIds: Set<string>; withdrawnIds: Set<string>; waitingQueue: Participant[];
 }) {
   const queuePositions = new Map(waitingQueue.map((participant, index) => [participant.id, index + 1]));
   return (
@@ -204,8 +217,10 @@ function QueueSummary({ participants, currentChampion, activeCompetitorIds, elim
       <h3 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Fila eliminatória</h3>
       <ol className="mt-3 flex flex-col gap-2">
         {[...participants].sort((a, b) => a.participant_number - b.participant_number).map((participant) => {
-          const state = eliminatedIds.has(participant.id)
-            ? "❌ Eliminado"
+          const state = withdrawnIds.has(participant.id)
+            ? "🚫 Desistiu"
+            : eliminatedIds.has(participant.id)
+              ? "❌ Eliminado"
             : activeCompetitorIds.has(participant.id)
               ? "⚔️ Em duelo"
               : currentChampion?.id === participant.id
@@ -215,6 +230,43 @@ function QueueSummary({ participants, currentChampion, activeCompetitorIds, elim
         })}
       </ol>
     </section>
+  );
+}
+
+function CancelMatchDialog({ match, participantA, participantB, busy, onOpenChange, onConfirm }: {
+  match: Match | null; participantA: Participant | undefined; participantB: Participant | undefined; busy: boolean;
+  onOpenChange: (open: boolean) => void; onConfirm: (withdrawnSlot: "a" | "b" | "both") => void;
+}) {
+  const [withdrawnSlot, setWithdrawnSlot] = useState<"a" | "b" | "both" | null>(null);
+  return (
+    <Dialog open={!!match} onOpenChange={(open) => { onOpenChange(open); if (!open) setWithdrawnSlot(null); }}>
+      <DialogContent className="max-w-[calc(100vw-2rem)] rounded-2xl sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle className="font-display text-3xl">Cancelar confronto</DialogTitle>
+        </DialogHeader>
+        <div className="flex flex-col gap-3">
+          <p className="font-semibold">Quem desistiu?</p>
+          <RadioGroup value={withdrawnSlot} onValueChange={(value) => setWithdrawnSlot(value as "a" | "b" | "both")}>
+            <Label className="flex cursor-pointer items-center gap-3 rounded-lg border p-3">
+              <RadioGroupItem value="a" />
+              {participantA ? `${displayName(participantA)} desistiu` : "Cantor A desistiu"}
+            </Label>
+            <Label className="flex cursor-pointer items-center gap-3 rounded-lg border p-3">
+              <RadioGroupItem value="b" />
+              {participantB ? `${displayName(participantB)} desistiu` : "Cantor B desistiu"}
+            </Label>
+            <Label className="flex cursor-pointer items-center gap-3 rounded-lg border p-3">
+              <RadioGroupItem value="both" />
+              Ambos desistiram
+            </Label>
+          </RadioGroup>
+        </div>
+        <DialogFooter className="grid grid-cols-2 gap-3 sm:grid-cols-2">
+          <Button type="button" variant="secondary" className="h-12" onClick={() => onOpenChange(false)}>Voltar</Button>
+          <Button className="h-12" disabled={busy || !withdrawnSlot} onClick={() => withdrawnSlot && onConfirm(withdrawnSlot)}>Confirmar desistência</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
