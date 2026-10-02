@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Mic2, Music, Pause, Play, Plus, Square, Tv, Smartphone, Check, QrCode, Copy, Download, Printer, ThumbsDown, ThumbsUp } from "lucide-react";
@@ -44,6 +44,7 @@ export const Route = createFileRoute("/sessao/$id")({
 
 function SessionPage() {
   const { id } = Route.useParams();
+  const navigate = useNavigate();
   const qc = useQueryClient();
   const live = useSessionLive(id);
   const [addOpen, setAddOpen] = useState(false);
@@ -82,6 +83,20 @@ function SessionPage() {
     try { await fn(); if (ok) toast.success(ok); refresh(); } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
   }
 
+  async function finish() {
+    setBusy(true);
+    try {
+      await finishSession(id);
+      await qc.invalidateQueries({ queryKey: ["active-session"] });
+      toast.success("Sessão encerrada");
+      navigate({ to: "/" });
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
   // X1 performances end through the X1 server function; free flow unchanged.
   const endActive = (p: Performance) => (p.match_id ? completeMatchPerformance({ data: { performanceId: p.id } }) : setPerformanceStatus(p.id, "completed"));
   const closePicker = () => { setPicking(null); setMatchPick(null); setConfirm(null); };
@@ -104,26 +119,38 @@ function SessionPage() {
         </span>
       </header>
 
-      {/* Current / next performance */}
-      <section aria-labelledby="now" className="rounded-2xl border bg-card p-4 sm:p-5">
-        <h2 id="now" className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">{active ? "Apresentação em andamento" : "Próxima apresentação"}</h2>
-        {active ? (
+      {session.session_type !== "x1" && (
+        <section aria-labelledby="now" className="rounded-2xl border bg-card p-4 sm:p-5">
+          <h2 id="now" className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">{active ? "Apresentação em andamento" : "Próxima apresentação"}</h2>
+          {active ? (
+            <ActivePanel perf={active} votingMode={session.voting_mode} busy={busy} tvEnabled={session.tv_enabled} localPlayer={localPlayer} setLocalPlayer={setLocalPlayer} playerRef={playerRef}
+              onPlay={() => (localPlayer ? playerRef.current?.play() : sendTv("play"))}
+              onPause={() => (localPlayer ? playerRef.current?.pause() : sendTv("pause"))}
+              onEnd={() => act(() => endActive(active), "Apresentação encerrada")}
+              onEnded={() => act(() => endActive(active), "Música terminou — apresentação concluída")} />
+          ) : nextQueued ? (
+            <div className="mt-3">
+              <Singer perf={nextQueued} />
+              <Button size="lg" className="mt-4 h-14 w-full text-base font-semibold shadow-glow" disabled={busy} onClick={() => act(() => nextQueued.match_id ? startMatchPerformance({ data: { performanceId: nextQueued.id } }) : setPerformanceStatus(nextQueued.id, "active"), "Apresentação iniciada")}>
+                <Mic2 className="size-5" /> Iniciar apresentação
+              </Button>
+            </div>
+          ) : (
+            <p className="mt-3 text-muted-foreground">Cadastre um cantor e escolha uma música para começar.</p>
+          )}
+        </section>
+      )}
+
+      {session.session_type === "x1" && active && (
+        <section aria-labelledby="now" className="rounded-2xl border bg-card p-4 sm:p-5">
+          <h2 id="now" className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Apresentação em andamento</h2>
           <ActivePanel perf={active} votingMode={session.voting_mode} busy={busy} tvEnabled={session.tv_enabled} localPlayer={localPlayer} setLocalPlayer={setLocalPlayer} playerRef={playerRef}
             onPlay={() => (localPlayer ? playerRef.current?.play() : sendTv("play"))}
             onPause={() => (localPlayer ? playerRef.current?.pause() : sendTv("pause"))}
             onEnd={() => act(() => endActive(active), "Apresentação encerrada")}
             onEnded={() => act(() => endActive(active), "Música terminou — apresentação concluída")} />
-        ) : nextQueued ? (
-          <div className="mt-3">
-            <Singer perf={nextQueued} />
-            <Button size="lg" className="mt-4 h-14 w-full text-base font-semibold shadow-glow" disabled={busy} onClick={() => act(() => nextQueued.match_id ? startMatchPerformance({ data: { performanceId: nextQueued.id } }) : setPerformanceStatus(nextQueued.id, "active"), "Apresentação iniciada")}>
-              <Mic2 className="size-5" /> Iniciar apresentação
-            </Button>
-          </div>
-        ) : (
-          <p className="mt-3 text-muted-foreground">Cadastre um cantor e escolha uma música para começar.</p>
-        )}
-      </section>
+        </section>
+      )}
 
       <div className={`grid gap-3 ${session.tv_enabled ? "grid-cols-2" : "grid-cols-1"}`}>
         {session.tv_enabled && (
@@ -166,7 +193,7 @@ function SessionPage() {
           onPickSong={(match, slot, p) => { setMatchPick({ match, slot }); setPicking(p); }} />
       )}
 
-      {/* Queue */}
+      {session.session_type !== "x1" && (
       <section aria-labelledby="order">
         <div className="mb-3 flex items-center justify-between">
           <h2 id="order" className="font-display text-3xl">Ordem</h2>
@@ -190,6 +217,7 @@ function SessionPage() {
           })}
         </ol>
       </section>
+      )}
 
       {/* {session.status === "active" && (
         <Button variant="ghost" className="text-muted-foreground" disabled={busy || !!active} onClick={() => confirm_("Encerrar a sessão?") && act(() => finishSession(id), "Sessão encerrada")}>
@@ -217,7 +245,7 @@ function SessionPage() {
         </div>
       )}
 
-      <AddSingerDialog open={addOpen} onOpenChange={setAddOpen} sessionId={id} onAdded={(p) => { refresh(); setPicking(p); }} />
+      <AddSingerDialog open={addOpen} onOpenChange={setAddOpen} sessionId={id} onAdded={(p) => { refresh(); if (session.session_type !== "x1") setPicking(p); }} />
 
       <Dialog open={finishOpen} onOpenChange={setFinishOpen}>
         <DialogContent className="max-w-[calc(100vw-2rem)] rounded-2xl sm:max-w-md">
@@ -238,8 +266,7 @@ function SessionPage() {
               className="h-12 font-semibold"
               disabled={busy}
               onClick={() => {
-                setFinishOpen(false);
-                act(() => finishSession(id), "Sessão encerrada");
+                void finish();
               }}
             >
               Sim, encerrar
