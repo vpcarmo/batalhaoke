@@ -25,7 +25,7 @@ function fail(error: { message: string } | null, what: string): asserts error is
 export async function getActiveSession(): Promise<Session | null> {
   const { data, error } = await supabase.from("sessions").select("*").eq("status", "active").order("started_at", { ascending: false }).limit(1).maybeSingle();
   fail(error, "Erro ao carregar sessão");
-  return data;
+  return data as Session | null;
 }
 
 export async function createSession(name: string, options: { sessionType?: SessionType; votingMode?: VotingMode } = {}): Promise<Session> {
@@ -37,7 +37,7 @@ export async function createSession(name: string, options: { sessionType?: Sessi
   const now = new Date().toISOString();
   const { data, error } = await supabase.from("sessions").insert({ name, status: "active", started_at: now, session_type: sessionType, voting_mode: votingMode }).select().single();
   fail(error, "Erro ao criar sessão");
-  return data!;
+  return data as Session;
 }
 
 export async function finishSession(id: string) {
@@ -48,14 +48,14 @@ export async function finishSession(id: string) {
 export async function getSession(id: string): Promise<Session | null> {
   const { data, error } = await supabase.from("sessions").select("*").eq("id", id).maybeSingle();
   fail(error, "Erro ao carregar sessão");
-  return data;
+  return data as Session | null;
 }
 
 /** Public lookup by the permanent QR code (unique per session → establishments never mix). */
 export async function getSessionByCode(code: string): Promise<Session | null> {
   const { data, error } = await supabase.from("sessions").select("*").eq("public_code", code).maybeSingle();
   fail(error, "Erro ao carregar sessão");
-  return data;
+  return data as Session | null;
 }
 
 export async function updateSessionDisplay(id: string, patch: { tv_enabled?: boolean; show_qr_on_tv?: boolean; voting_mode?: VotingMode }) {
