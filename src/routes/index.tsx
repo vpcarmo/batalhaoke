@@ -83,7 +83,7 @@ function Home() {
               <div className="grid gap-2" role="radiogroup" aria-label="Formato da sessão">
                 <Button variant={sessionType === "free" ? "default" : "secondary"} className="h-11 justify-start" role="radio" aria-checked={sessionType === "free"} onClick={() => selectSessionType("free")}>🎤 BatalhaOkê Livre</Button>
                 <Button variant={sessionType === "x1" ? "default" : "secondary"} className="h-11 justify-start" role="radio" aria-checked={sessionType === "x1"} onClick={() => selectSessionType("x1")}>⚔️ BatalhaOkê X1</Button>
-                <Button variant={sessionType === "championship" ? "default" : "secondary"} className="h-11 justify-start" role="radio" aria-checked={sessionType === "championship"} onClick={() => selectSessionType("championship")}>🏆 BatalhaOkê Campeonato</Button>
+                {/* <Button variant={sessionType === "championship" ? "default" : "secondary"} className="h-11 justify-start" role="radio" aria-checked={sessionType === "championship"} onClick={() => selectSessionType("championship")}>🏆 BatalhaOkê Campeonato</Button> */}
               </div>
             </div>
             {sessionType === "free" ? (
