@@ -6,8 +6,8 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { supabase } from "@/integrations/supabase/client";
-import { displayName, type Match, type MatchSlot, type Participant, type Performance } from "@/lib/karaoke";
-import { cancelMatch, confirmMatchWinner, createMatch, startMatch, startMatchPerformance } from "@/lib/x1.functions";
+import { displayName, type Match, type Participant, type Performance } from "@/lib/karaoke";
+import { cancelMatch, confirmMatchWinner, createMatch, createMatchPerformance, startMatch, startMatchPerformance } from "@/lib/x1.functions";
 import { MusicSearch } from "@/components/karaoke/MusicSearch";
 import type { PlaybackSearchResult } from "@/lib/playback/types";
 
@@ -19,7 +19,6 @@ export const matchesKey = (sessionId: string) => ["matches", sessionId];
 export function X1Matches(props: {
   sessionId: string; sessionStatus: string; participants: Participant[]; perfs: Performance[]; hasActive: boolean; busy: boolean;
   act: (fn: () => Promise<unknown>, ok?: string) => void;
-  onPickSong: (match: Match, slot: MatchSlot, participant: Participant) => void;
 }) {
   const { sessionId, participants, perfs } = props;
   const [pairToPrepare, setPairToPrepare] = useState<{ a: Participant; b: Participant; first: boolean } | null>(null);
@@ -40,11 +39,12 @@ export function X1Matches(props: {
     if (match.participant_a_id !== match.winner_participant_id) eliminatedIds.add(match.participant_a_id);
     if (match.participant_b_id !== match.winner_participant_id) eliminatedIds.add(match.participant_b_id);
   }
-  const withdrawnIds = new Set(
-    perfs
-      .filter((performance) => performance.match_id !== null && performance.status === "cancelled")
-      .map((performance) => performance.participant_id),
-  );
+  const withdrawnIds = new Set<string>();
+  for (const match of list) {
+    if (match.status !== "cancelled") continue;
+    if (match.withdrawn_slot === "a" || match.withdrawn_slot === "both") withdrawnIds.add(match.participant_a_id);
+    if (match.withdrawn_slot === "b" || match.withdrawn_slot === "both") withdrawnIds.add(match.participant_b_id);
+  }
   const latestCompleted = completed.at(-1);
   const currentChampion = latestCompleted?.winner_participant_id && !eliminatedIds.has(latestCompleted.winner_participant_id) && !withdrawnIds.has(latestCompleted.winner_participant_id)
     ? byId(latestCompleted.winner_participant_id)
@@ -110,13 +110,9 @@ export function X1Matches(props: {
                   {done ? (
                     <MatchResult match={m} participantA={a} participantB={b} performanceA={pa} performanceB={pb} busy={props.busy}
                       onConfirm={(winnerParticipantId) => props.act(() => confirmMatchWinner({ data: { matchId: m.id, winnerParticipantId } }), "Vencedor confirmado")} />
-                  ) : !pa ? (
-                    <Button size="lg" className="mt-1 h-14 text-base font-semibold" disabled={props.busy || props.hasActive || !a} onClick={() => a && props.onPickSong(m, "a", a)}><Mic2 className="size-5" /> Iniciar Cantor A</Button>
-                  ) : pa.status === "queued" ? (
+                  ) : pa?.status === "queued" ? (
                     <Button size="lg" className="mt-1 h-14 text-base font-semibold" disabled={props.busy || props.hasActive} onClick={() => props.act(() => startMatchPerformance({ data: { performanceId: pa.id } }), "Cantor A no palco")}><Mic2 className="size-5" /> Iniciar Cantor A</Button>
-                  ) : pa.status === "completed" && !pb ? (
-                    <Button size="lg" className="mt-1 h-14 text-base font-semibold" disabled={props.busy || props.hasActive || !b} onClick={() => b && props.onPickSong(m, "b", b)}><Mic2 className="size-5" /> Iniciar Cantor B</Button>
-                  ) : pa.status === "completed" && pb?.status === "queued" ? (
+                  ) : pa?.status === "completed" && pb?.status === "queued" ? (
                     <Button size="lg" className="mt-1 h-14 text-base font-semibold" disabled={props.busy || props.hasActive} onClick={() => props.act(() => startMatchPerformance({ data: { performanceId: pb.id } }), "Cantor B no palco")}><Mic2 className="size-5" /> Iniciar Cantor B</Button>
                   ) : null}
                 </div>
@@ -129,9 +125,15 @@ export function X1Matches(props: {
                 </div>
               )}
               {m.status === "scheduled" && sessionActive && (
-                <div className="mt-4 grid grid-cols-2 gap-2">
-                  <Button variant="secondary" className="h-12" disabled={props.busy} onClick={() => setMatchToCancel(m)}><X className="size-4" /> Cancelar confronto</Button>
-                  <Button className="h-12" disabled={props.busy || list.some((other) => other.id !== m.id && other.status === "in_progress")} onClick={() => props.act(() => startMatch({ data: { matchId: m.id } }), "Confronto iniciado")}><Swords className="size-4" /> Iniciar confronto</Button>
+                <div className="mt-4 flex flex-col gap-3">
+                  <SongPreparation label="A" participant={a} performance={pa} busy={props.busy}
+                    onPick={(playback) => props.act(() => createMatchPerformance({ data: { matchId: m.id, slot: "a", playback } }), "Música do cantor A preparada")} />
+                  <SongPreparation label="B" participant={b} performance={pb} busy={props.busy}
+                    onPick={(playback) => props.act(() => createMatchPerformance({ data: { matchId: m.id, slot: "b", playback } }), "Música do cantor B preparada")} />
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button variant="secondary" className="h-12" disabled={props.busy} onClick={() => setMatchToCancel(m)}><X className="size-4" /> Cancelar confronto</Button>
+                    <Button className="h-12" disabled={props.busy || !pa || !pb || list.some((other) => other.id !== m.id && other.status === "in_progress")} onClick={() => props.act(() => startMatch({ data: { matchId: m.id } }), "Confronto iniciado")}><Swords className="size-4" /> Iniciar confronto</Button>
+                  </div>
                 </div>
               )}
               {m.status === "scheduled" && list.some((other) => other.id !== m.id && other.status === "in_progress") && <p className="mt-2 text-xs text-muted-foreground">Termine o confronto em andamento antes de iniciar este.</p>}
@@ -139,12 +141,11 @@ export function X1Matches(props: {
           );
         })}
       </ol>
-      <NewMatchDialog key={pairToPrepare ? `${pairToPrepare.a.id}:${pairToPrepare.b.id}` : "closed"} pair={pairToPrepare} onOpenChange={(open) => !open && setPairToPrepare(null)} busy={props.busy}
-        onCreate={(aId, bId, playbackA, playbackB) => props.act(async () => {
-          const match = await createMatch({ data: { sessionId, participantAId: aId, participantBId: bId, playbackA, playbackB } });
-          if (!pairToPrepare?.first) await startMatch({ data: { matchId: match.id } });
+      <NewMatchDialog pair={pairToPrepare} onOpenChange={(open) => !open && setPairToPrepare(null)} busy={props.busy}
+        onCreate={(aId, bId) => props.act(async () => {
+          await createMatch({ data: { sessionId, participantAId: aId, participantBId: bId } });
           setPairToPrepare(null);
-        }, pairToPrepare?.first ? "Confronto criado" : "Confronto criado e iniciado")} />
+        }, "Confronto criado — prepare as músicas")} />
       <CancelMatchDialog match={matchToCancel} participantA={matchToCancel ? byId(matchToCancel.participant_a_id) : undefined} participantB={matchToCancel ? byId(matchToCancel.participant_b_id) : undefined}
         busy={props.busy} onOpenChange={(open) => !open && setMatchToCancel(null)}
         onConfirm={(withdrawnSlot) => matchToCancel && props.act(async () => {
@@ -270,33 +271,37 @@ function CancelMatchDialog({ match, participantA, participantB, busy, onOpenChan
   );
 }
 
-function NewMatchDialog({ pair, onOpenChange, busy, onCreate }: { pair: { a: Participant; b: Participant; first: boolean } | null; onOpenChange: (o: boolean) => void; busy: boolean; onCreate: (a: string, b: string, playbackA: PlaybackSearchResult, playbackB: PlaybackSearchResult) => void }) {
-  const [fallbackA, setFallbackA] = useState<PlaybackSearchResult | null>(null);
-  const [fallbackB, setFallbackB] = useState<PlaybackSearchResult | null>(null);
-  const [preparingSlot, setPreparingSlot] = useState<MatchSlot | null>(null);
-  const playbackA = fallbackA;
-  const playbackB = fallbackB;
+function NewMatchDialog({ pair, onOpenChange, busy, onCreate }: { pair: { a: Participant; b: Participant; first: boolean } | null; onOpenChange: (o: boolean) => void; busy: boolean; onCreate: (a: string, b: string) => void }) {
   return (
-    <Dialog open={!!pair} onOpenChange={(o) => { onOpenChange(o); if (!o) { setFallbackA(null); setFallbackB(null); setPreparingSlot(null); } }}>
+    <Dialog open={!!pair} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-[calc(100vw-2rem)] rounded-2xl sm:max-w-md">
         <DialogHeader><DialogTitle className="font-display text-3xl">{pair?.first ? "1º confronto" : "Próximo confronto"}</DialogTitle></DialogHeader>
         <div className="flex flex-col gap-3">
           <div><Label>Cantor A</Label><p className="mt-2 rounded-md border bg-secondary px-3 py-3 font-semibold">{pair ? displayName(pair.a) : "—"}</p></div>
-          <PendingSong label="A" song={fallbackA} preparing={preparingSlot === "a"} onPrepare={() => setPreparingSlot("a")} onPick={(song) => { setFallbackA(song); setPreparingSlot(null); }} />
           <p className="text-center font-display text-2xl text-accent">VS</p>
           <div><Label>Cantor B</Label><p className="mt-2 rounded-md border bg-secondary px-3 py-3 font-semibold">{pair ? displayName(pair.b) : "—"}</p></div>
-          <PendingSong label="B" song={fallbackB} preparing={preparingSlot === "b"} onPrepare={() => setPreparingSlot("b")} onPick={(song) => { setFallbackB(song); setPreparingSlot(null); }} />
+          <p className="text-sm text-muted-foreground">As músicas serão escolhidas separadamente na preparação do confronto.</p>
         </div>
         <DialogFooter className="grid grid-cols-2 gap-3 sm:grid-cols-2">
           <Button type="button" variant="secondary" className="h-12" onClick={() => onOpenChange(false)}>Voltar</Button>
-          <Button className="h-12" disabled={busy || !pair || !playbackA || !playbackB} onClick={() => pair && playbackA && playbackB && onCreate(pair.a.id, pair.b.id, playbackA, playbackB)}>Criar confronto</Button>
+          <Button className="h-12" disabled={busy || !pair} onClick={() => pair && onCreate(pair.a.id, pair.b.id)}>Criar confronto</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
   );
 }
 
-function PendingSong({ label, song, preparing, onPrepare, onPick }: { label: string; song: PlaybackSearchResult | null; preparing: boolean; onPrepare: () => void; onPick: (song: PlaybackSearchResult) => void }) {
-  if (song) return <p className="rounded-lg bg-secondary px-3 py-2 text-sm"><span className="font-semibold">Música do cantor {label}:</span> {song.title}</p>;
-  return <div className="rounded-xl border border-dashed p-3"><p className="text-sm text-muted-foreground">Música do cantor {label} pendente de preparação.</p>{preparing ? <div className="mt-3"><MusicSearch onPick={onPick} /></div> : <Button type="button" variant="secondary" className="mt-3 h-11" onClick={onPrepare}>Preparar música do cantor {label}</Button>}</div>;
+function SongPreparation({ label, participant, performance, busy, onPick }: {
+  label: "A" | "B"; participant: Participant | undefined; performance: Performance | undefined; busy: boolean;
+  onPick: (playback: PlaybackSearchResult) => void;
+}) {
+  const [searching, setSearching] = useState(false);
+  if (performance) return <p className="rounded-lg bg-secondary px-3 py-2 text-sm"><span className="font-semibold">Música do cantor {label}:</span> preparada</p>;
+  return (
+    <div className="rounded-xl border border-dashed p-3">
+      <p className="text-sm text-muted-foreground">Música do cantor {label} ({participant ? displayName(participant) : "—"}) pendente de preparação.</p>
+      {searching ? <div className="mt-3"><MusicSearch onPick={(playback) => { onPick(playback); setSearching(false); }} /></div>
+        : <Button type="button" variant="secondary" className="mt-3 h-11" disabled={busy || !participant} onClick={() => setSearching(true)}>Preparar música do cantor {label}</Button>}
+    </div>
+  );
 }

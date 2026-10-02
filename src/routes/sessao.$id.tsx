@@ -17,8 +17,7 @@ import { PlaybackPlayer, type PlaybackPlayerRef } from "@/components/karaoke/Pla
 import { SessionQr, voteUrl } from "@/components/karaoke/SessionQr";
 import type { PlaybackSearchResult } from "@/lib/playback/types";
 import { X1Matches, matchesKey } from "@/components/karaoke/X1Matches";
-import { completeMatchPerformance, createMatchPerformance, startMatchPerformance } from "@/lib/x1.functions";
-import type { Match, MatchSlot } from "@/lib/karaoke";
+import { completeMatchPerformance, startMatchPerformance } from "@/lib/x1.functions";
 
 const sessionTypeLabels = {
   free: "BatalhaOkê Livre",
@@ -49,7 +48,6 @@ function SessionPage() {
   const live = useSessionLive(id);
   const [addOpen, setAddOpen] = useState(false);
   const [picking, setPicking] = useState<Participant | null>(null);
-  const [matchPick, setMatchPick] = useState<{ match: Match; slot: MatchSlot } | null>(null);
   const [confirm, setConfirm] = useState<PlaybackSearchResult | null>(null);
   const [busy, setBusy] = useState(false);
   const [localPlayerChoice, setLocalPlayer] = useState(false);
@@ -99,7 +97,7 @@ function SessionPage() {
 
   // X1 performances end through the X1 server function; free flow unchanged.
   const endActive = (p: Performance) => (p.match_id ? completeMatchPerformance({ data: { performanceId: p.id } }) : setPerformanceStatus(p.id, "completed"));
-  const closePicker = () => { setPicking(null); setMatchPick(null); setConfirm(null); };
+  const closePicker = () => { setPicking(null); setConfirm(null); };
 
   if (live.session.isLoading) return <Centered>Carregando sessão…</Centered>;
   if (live.error) return <Centered><p role="alert" className="text-destructive">Servidor indisponível. Verifique a internet e tente novamente.</p><Button className="mt-4" onClick={() => location.reload()}>Tentar novamente</Button></Centered>;
@@ -190,7 +188,7 @@ function SessionPage() {
 
       {session.session_type === "x1" && (
         <X1Matches sessionId={id} sessionStatus={session.status} participants={participants} perfs={perfs} hasActive={!!active} busy={busy} act={act}
-          onPickSong={(match, slot, p) => { setMatchPick({ match, slot }); setPicking(p); }} />
+        />
       )}
 
       {session.session_type !== "x1" && (
@@ -277,7 +275,7 @@ function SessionPage() {
 
       <Sheet open={!!picking} onOpenChange={(o) => !o && closePicker()}>
         <SheetContent side="bottom" className="max-h-[92dvh] overflow-y-auto rounded-t-2xl">
-          <SheetHeader><SheetTitle>{matchPick && `Cantor ${matchPick.slot.toUpperCase()} · `}Música para {picking && displayName(picking)}</SheetTitle></SheetHeader>
+          <SheetHeader><SheetTitle>Música para {picking && displayName(picking)}</SheetTitle></SheetHeader>
           <div className="px-4 pb-6">
             {confirm ? (
               <div className="flex flex-col gap-3">
@@ -286,14 +284,8 @@ function SessionPage() {
                 <p className="text-sm text-muted-foreground">Canal: {confirm.channelName}</p>
                 <div className="grid grid-cols-2 gap-3">
                   <Button variant="secondary" className="h-12" onClick={() => setConfirm(null)}>Voltar</Button>
-                  <Button className="h-12" disabled={busy} onClick={() => matchPick
-                    ? act(async () => {
-                        const perf = await createMatchPerformance({ data: { matchId: matchPick.match.id, slot: matchPick.slot, playback: { provider: confirm.provider, externalId: confirm.externalId, title: confirm.title, channelName: confirm.channelName, thumbnailUrl: confirm.thumbnailUrl, duration: confirm.duration } } });
-                        await startMatchPerformance({ data: { performanceId: perf.id } });
-                        closePicker();
-                      }, `Cantor ${matchPick.slot.toUpperCase()} no palco`)
-                    : act(async () => { await createPerformance(id, picking!.id, confirm); setPicking(null); setConfirm(null); }, "Apresentação criada")}>
-                    <Check className="size-4" /> {matchPick ? "Confirmar e iniciar" : "Confirmar"}
+                  <Button className="h-12" disabled={busy} onClick={() => act(async () => { await createPerformance(id, picking!.id, confirm); setPicking(null); setConfirm(null); }, "Apresentação criada")}>
+                    <Check className="size-4" /> Confirmar
                   </Button>
                 </div>
               </div>

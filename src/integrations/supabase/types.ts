@@ -54,6 +54,7 @@ export type Database = {
           status: string
           updated_at: string
           winner_participant_id: string | null
+          withdrawn_slot: string | null
         }
         Insert: {
           created_at?: string
@@ -64,6 +65,7 @@ export type Database = {
           status?: string
           updated_at?: string
           winner_participant_id?: string | null
+          withdrawn_slot?: string | null
         }
         Update: {
           created_at?: string
@@ -74,6 +76,7 @@ export type Database = {
           status?: string
           updated_at?: string
           winner_participant_id?: string | null
+          withdrawn_slot?: string | null
         }
         Relationships: [
           {
