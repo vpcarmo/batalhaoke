@@ -16,7 +16,7 @@ export const matchesKey = (sessionId: string) => ["matches", sessionId];
 
 /** X1 confrontations panel. Reads matches; all writes go through x1 server functions. */
 export function X1Matches(props: {
-  sessionId: string; sessionActive: boolean; participants: Participant[]; perfs: Performance[]; hasActive: boolean; busy: boolean;
+  sessionId: string; sessionStatus: string; participants: Participant[]; perfs: Performance[]; hasActive: boolean; busy: boolean;
   act: (fn: () => Promise<unknown>, ok?: string) => void;
   onPickSong: (match: Match, slot: MatchSlot, participant: Participant) => void;
 }) {
@@ -52,7 +52,8 @@ export function X1Matches(props: {
   const firstPair = completed.length === 0 && openMatches.length === 0 && firstA && firstB
     ? { a: firstA, b: firstB }
     : null;
-  const battleFinished = !!currentChampion && openMatches.length === 0 && waitingQueue.length === 0;
+  const sessionActive = props.sessionStatus === "active";
+  const sessionFinished = props.sessionStatus === "finished";
 
   return (
     <section aria-labelledby="x1" className="flex flex-col gap-3">
@@ -61,21 +62,22 @@ export function X1Matches(props: {
       </div>
       {participants.length < 2 && <p className="text-sm text-muted-foreground">Cadastre pelo menos dois cantores para criar um confronto.</p>}
       <QueueSummary participants={participants} currentChampion={currentChampion} activeCompetitorIds={activeCompetitorIds} eliminatedIds={eliminatedIds} waitingQueue={waitingQueue} />
-      {props.sessionActive && firstPair && (
+      {sessionActive && firstPair && (
         <section className="rounded-2xl border border-primary/40 bg-primary/5 p-4">
           <p className="text-xs font-semibold uppercase tracking-widest text-primary">Primeiro confronto</p>
           <p className="mt-2 text-center font-display text-2xl">{displayName(firstPair.a)} <span className="text-accent">×</span> {displayName(firstPair.b)}</p>
           <Button className="mt-4 h-12 w-full" disabled={props.busy} onClick={() => setPairToPrepare({ ...firstPair, first: true })}><Swords className="size-4" /> Iniciar 1º confronto</Button>
         </section>
       )}
-      {props.sessionActive && currentChampion && openMatches.length === 0 && nextChallenger && (
+      {sessionActive && currentChampion && openMatches.length === 0 && nextChallenger && (
         <section className="rounded-2xl border border-primary/40 bg-primary/5 p-4">
           <p className="text-xs font-semibold uppercase tracking-widest text-primary">Próximo confronto</p>
           <p className="mt-2 text-center font-display text-2xl">{displayName(currentChampion)} <span className="text-accent">×</span> {displayName(nextChallenger)}</p>
           <Button className="mt-4 h-12 w-full" disabled={props.busy} onClick={() => setPairToPrepare({ a: currentChampion, b: nextChallenger, first: false })}><Swords className="size-4" /> Preparar próximo confronto</Button>
         </section>
       )}
-      {battleFinished && <section className="rounded-2xl border border-accent/50 bg-accent/10 p-5 text-center"><p className="font-display text-2xl">🏆 Campeão da Batalha X1: {displayName(currentChampion)}</p></section>}
+      {sessionActive && currentChampion && openMatches.length === 0 && waitingQueue.length === 0 && <section className="rounded-2xl border border-accent/50 bg-accent/10 p-5 text-center"><p className="font-display text-2xl">👑 Campeão atual: {displayName(currentChampion)}</p><p className="mt-2 text-muted-foreground">Fila de espera vazia. Cadastre novos cantores para continuar a disputa.</p></section>}
+      {sessionFinished && currentChampion && <section className="rounded-2xl border border-accent/50 bg-accent/10 p-5 text-center"><p className="font-display text-2xl">🏆 Campeão da noite: {displayName(currentChampion)}</p></section>}
       {list.length === 0 && !firstPair && <p className="rounded-xl border border-dashed p-6 text-center text-muted-foreground">Nenhum confronto ainda.</p>}
       <ol className="flex flex-col gap-3">
         {[...list].reverse().map((m) => {
@@ -119,7 +121,7 @@ export function X1Matches(props: {
                   <MatchResult match={m} participantA={a} participantB={b} performanceA={pa} performanceB={pb} busy={props.busy} />
                 </div>
               )}
-              {m.status === "scheduled" && props.sessionActive && (
+              {m.status === "scheduled" && sessionActive && (
                 <div className="mt-4 grid grid-cols-2 gap-2">
                   <Button variant="secondary" className="h-12" disabled={props.busy} onClick={() => props.act(() => cancelMatch({ data: { matchId: m.id } }), "Confronto cancelado")}><X className="size-4" /> Cancelar</Button>
                   <Button className="h-12" disabled={props.busy || list.some((other) => other.id !== m.id && other.status === "in_progress")} onClick={() => props.act(() => startMatch({ data: { matchId: m.id } }), "Confronto iniciado")}><Swords className="size-4" /> Iniciar confronto</Button>
