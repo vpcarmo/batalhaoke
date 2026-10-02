@@ -11,7 +11,7 @@ const Playback = z.object({
   duration: z.string().nullable().optional(),
   metadata: z.unknown().optional(),
 });
-const MatchInput = z.object({ sessionId: Id, participantAId: Id, participantBId: Id, playbackA: Playback, playbackB: Playback });
+const MatchInput = z.object({ sessionId: Id, participantAId: Id, participantBId: Id });
 const MatchIdInput = z.object({ matchId: Id });
 const CancelMatchInput = z.object({ matchId: Id, withdrawnSlot: z.enum(["a", "b", "both"]) });
 const Slot = z.enum(["a", "b"]);
@@ -76,36 +76,12 @@ export const createMatch = createServerFn({ method: "POST" })
         participant_a_id: data.participantAId,
         participant_b_id: data.participantBId,
         status: "scheduled",
+        winner_participant_id: null,
+        withdrawn_slot: null,
       })
       .select()
       .single();
     if (error || !match) fail("Não foi possível criar o confronto");
-    for (const [slot, participantId, playback] of [["a", data.participantAId, data.playbackA], ["b", data.participantBId, data.playbackB]] as const) {
-      let { data: source } = await supabaseAdmin
-        .from("playback_sources")
-        .select("id")
-        .eq("provider", playback.provider)
-        .eq("external_id", playback.externalId)
-        .maybeSingle();
-      if (!source) {
-        const created = await supabaseAdmin
-          .from("playback_sources")
-          .insert({ provider: playback.provider, external_id: playback.externalId, title: playback.title, channel_name: playback.channelName ?? null, thumbnail_url: playback.thumbnailUrl ?? null, duration: playback.duration ?? null, metadata: (playback.metadata ?? {}) as never })
-          .select("id")
-          .single();
-        if (created.error || !created.data) fail("Não foi possível salvar o playback");
-        source = created.data;
-      }
-      const { error: performanceError } = await supabaseAdmin.from("performances").insert({
-        session_id: data.sessionId,
-        participant_id: participantId,
-        playback_source_id: source.id,
-        match_id: match.id,
-        match_slot: slot,
-        status: "queued",
-      });
-      if (performanceError) fail("Não foi possível preparar as apresentações do confronto");
-    }
     return match;
   });
 
@@ -115,26 +91,35 @@ export const startMatch = createServerFn({ method: "POST" })
     const { supabaseAdmin, match, session } = await getX1Match(data.matchId);
     if (session.status !== "active" || match.status !== "scheduled")
       fail("Apenas confrontos agendados podem iniciar");
-    const { error } = await supabaseAdmin
+    const { data: performances, error: performancesError } = await supabaseAdmin
+      .from("performances")
+      .select("match_slot, status")
+      .eq("match_id", match.id);
+    if (performancesError) fail("Não foi possível verificar a preparação do confronto");
+    const slotsReady = new Set(
+      performances
+        .filter((performance) => performance.status === "queued")
+        .map((performance) => performance.match_slot),
+    );
+    if (!slotsReady.has("a") || !slotsReady.has("b"))
+      fail("Prepare as músicas dos cantores A e B antes de iniciar o confronto");
+    const { data: startedMatch, error } = await supabaseAdmin
       .from("matches")
       .update({ status: "in_progress" })
       .eq("id", match.id)
-      .eq("status", "scheduled");
+      .eq("status", "scheduled")
+      .select("id")
+      .maybeSingle();
     if (error?.code === "23505") fail("Já existe um confronto em andamento nesta sessão");
-    if (error) fail("Não foi possível iniciar o confronto");
+    if (error || !startedMatch) fail("Não foi possível iniciar o confronto");
   });
 
 export const createMatchPerformance = createServerFn({ method: "POST" })
   .inputValidator((d) => z.object({ matchId: Id, slot: Slot, playback: Playback }).parse(d))
   .handler(async ({ data }) => {
     const { supabaseAdmin, match } = await getX1Match(data.matchId);
-    if (match.status !== "in_progress") fail("O confronto precisa estar em andamento");
-    const { count: activeCount } = await supabaseAdmin
-      .from("performances")
-      .select("id", { count: "exact", head: true })
-      .eq("session_id", match.session_id)
-      .eq("status", "active");
-    if ((activeCount ?? 0) > 0) fail("Encerre a apresentação ativa antes de criar outra");
+    if (match.status !== "scheduled" && match.status !== "in_progress")
+      fail("O confronto precisa estar agendado ou em andamento");
     const { count: slotCount } = await supabaseAdmin
       .from("performances")
       .select("id", { count: "exact", head: true })
@@ -265,42 +250,18 @@ export const cancelMatch = createServerFn({ method: "POST" })
       fail("Apenas confrontos agendados podem ser cancelados por desistência");
     const { data: cancelledMatch, error: matchError } = await supabaseAdmin
       .from("matches")
-      .update({ status: "cancelled", winner_participant_id: null })
+      .update({ status: "cancelled", winner_participant_id: null, withdrawn_slot: data.withdrawnSlot })
       .eq("id", match.id)
       .eq("status", "scheduled")
       .select("id")
       .maybeSingle();
     if (matchError || !cancelledMatch) fail("Não foi possível cancelar o confronto");
 
-    const cancelPerformance = async (slot: "a" | "b") => {
-      const { data: performance, error } = await supabaseAdmin
-        .from("performances")
-        .update({ status: "cancelled" })
-        .eq("match_id", match.id)
-        .eq("match_slot", slot)
-        .select("id")
-        .maybeSingle();
-      if (error || !performance) fail("Não foi possível registrar a desistência");
-    };
-    const removePerformance = async (slot: "a" | "b") => {
-      const { data: performance, error } = await supabaseAdmin
-        .from("performances")
-        .delete()
-        .eq("match_id", match.id)
-        .eq("match_slot", slot)
-        .select("id")
-        .maybeSingle();
-      if (error || !performance) fail("Não foi possível remover a apresentação do confronto");
-    };
-
-    if (data.withdrawnSlot === "a") {
-      await cancelPerformance("a");
-      await removePerformance("b");
-    } else if (data.withdrawnSlot === "b") {
-      await cancelPerformance("b");
-      await removePerformance("a");
-    } else {
-      await cancelPerformance("a");
-      await cancelPerformance("b");
-    }
+    const { data: removedPerformances, error: performancesError } = await supabaseAdmin
+      .from("performances")
+      .delete()
+      .eq("match_id", match.id)
+      .eq("status", "queued")
+      .select("id");
+    if (performancesError || !removedPerformances) fail("Não foi possível remover as apresentações preparadas do confronto");
   });
