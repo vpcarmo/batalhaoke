@@ -81,6 +81,17 @@ export async function listParticipants(sessionId: string): Promise<Participant[]
   return data ?? [];
 }
 
+/** X1 confrontations are read directly by the operator panel; writes stay server-side. */
+export async function listMatches(sessionId: string): Promise<Match[]> {
+  const { data, error } = await supabase
+    .from("matches")
+    .select("*")
+    .eq("session_id", sessionId)
+    .order("created_at");
+  fail(error, "Erro ao carregar confrontos");
+  return data ?? [];
+}
+
 export async function addParticipant(sessionId: string, name: string, stageName: string): Promise<Participant> {
   const { data, error } = await supabase
     .from("participants")
