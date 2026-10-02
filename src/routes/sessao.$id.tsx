@@ -116,7 +116,7 @@ function SessionPage() {
         ) : nextQueued ? (
           <div className="mt-3">
             <Singer perf={nextQueued} />
-            <Button size="lg" className="mt-4 h-14 w-full text-base font-semibold shadow-glow" disabled={busy} onClick={() => act(() => setPerformanceStatus(nextQueued.id, "active"), "Apresentação iniciada")}>
+            <Button size="lg" className="mt-4 h-14 w-full text-base font-semibold shadow-glow" disabled={busy} onClick={() => act(() => nextQueued.match_id ? startMatchPerformance({ data: { performanceId: nextQueued.id } }) : setPerformanceStatus(nextQueued.id, "active"), "Apresentação iniciada")}>
               <Mic2 className="size-5" /> Iniciar apresentação
             </Button>
           </div>
