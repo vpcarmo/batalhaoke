@@ -93,6 +93,7 @@ export const startMatch = createServerFn({ method: "POST" })
       .update({ status: "in_progress" })
       .eq("id", match.id)
       .eq("status", "scheduled");
+    if (error?.code === "23505") fail("Já existe um confronto em andamento nesta sessão");
     if (error) fail("Não foi possível iniciar o confronto");
   });
 
