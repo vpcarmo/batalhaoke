@@ -5,6 +5,7 @@ import {
   Link,
   createRootRouteWithContext,
   useRouter,
+  useRouterState,
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
@@ -13,6 +14,93 @@ import { useEffect, type ReactNode } from "react";
 import { Toaster } from "@/components/ui/sonner";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+
+// Classic head script: parsed by Chromium 68 before any client modules run.
+// Kept as text so none of its browser globals execute during SSR.
+const legacyBrowserPolyfills = `(function () {
+  if (typeof window === 'undefined') return;
+  if (typeof globalThis === 'undefined') window.globalThis = window;
+  var MAX_LENGTH = 9007199254740991;
+  function toLength(value) {
+    var number = +value;
+    if (number !== number || number <= 0) return 0;
+    return Math.min(Math.floor(number), MAX_LENGTH);
+  }
+  function receiver(value) {
+    if (value == null) throw new TypeError('Array receiver is null or undefined');
+    return Object(value);
+  }
+  function speciesArray(source) {
+    var constructor;
+    if (Array.isArray(source)) {
+      constructor = source.constructor;
+      if (constructor && (typeof constructor === 'object' || typeof constructor === 'function')) {
+        constructor = constructor[Symbol.species];
+        if (constructor === null) constructor = undefined;
+      }
+    }
+    return constructor === undefined ? [] : new constructor(0);
+  }
+  function flatten(target, source, length, depth, mapper, thisArg, index) {
+    for (var i = 0; i < length; i++) {
+      if (!(i in source)) continue;
+      var element = source[i];
+      if (mapper) element = mapper.call(thisArg, element, i, source);
+      if (depth > 0 && Array.isArray(element)) {
+        index = flatten(target, element, toLength(element.length), depth - 1, null, null, index);
+      } else {
+        if (index >= MAX_LENGTH) throw new TypeError('Flattened array is too large');
+        Object.defineProperty(target, index++, { value: element, writable: true, enumerable: true, configurable: true });
+      }
+    }
+    return index;
+  }
+  if (!Array.prototype.flat) Object.defineProperty(Array.prototype, 'flat', {
+    configurable: true, writable: true,
+    value: function flat() {
+      var source = receiver(this), length = toLength(source.length);
+      var depth = arguments[0] === undefined ? 1 : +arguments[0];
+      depth = depth !== depth ? 0 : (depth < 0 ? Math.ceil(depth) : Math.floor(depth));
+      var target = speciesArray(source);
+      flatten(target, source, length, depth, null, null, 0);
+      return target;
+    }
+  });
+  if (!Array.prototype.flatMap) Object.defineProperty(Array.prototype, 'flatMap', {
+    configurable: true, writable: true,
+    value: function flatMap(callback) {
+      var source = receiver(this), length = toLength(source.length);
+      if (typeof callback !== 'function') throw new TypeError('flatMap callback must be a function');
+      var target = speciesArray(source);
+      flatten(target, source, length, 1, callback, arguments[1], 0);
+      return target;
+    }
+  });
+  if (Array.prototype[Symbol.unscopables]) {
+    Array.prototype[Symbol.unscopables].flat = true;
+    Array.prototype[Symbol.unscopables].flatMap = true;
+  }
+  if (!Object.fromEntries) Object.defineProperty(Object, 'fromEntries', {
+    configurable: true, writable: true,
+    value: function fromEntries(iterable) {
+      if (iterable == null || typeof iterable[Symbol.iterator] !== 'function') throw new TypeError('Value is not iterable');
+      var iterator = iterable[Symbol.iterator](), result = {}, step;
+      try {
+        while (true) {
+          step = iterator.next();
+          if (!step || typeof step !== 'object') throw new TypeError('Invalid iterator result');
+          if (step.done) return result;
+          var entry = step.value;
+          if (entry === null || (typeof entry !== 'object' && typeof entry !== 'function')) throw new TypeError('Invalid entry');
+          Object.defineProperty(result, entry[0], { value: entry[1], writable: true, enumerable: true, configurable: true });
+        }
+      } catch (error) {
+        try { if (typeof iterator.return === 'function') iterator.return(); } catch (ignored) {}
+        throw error;
+      }
+    }
+  });
+})();`;
 
 function NotFoundComponent() {
   return (
@@ -81,8 +169,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { name: "theme-color", content: "#1c1530" },
     ],
-    // Chromium 68 (LG webOS 5) lacks globalThis; inline script runs only in the browser, before module scripts.
-    scripts: [{ children: "if(typeof globalThis==='undefined'){window.globalThis=window;}" }],
+    scripts: [{ children: legacyBrowserPolyfills }],
     links: [
       {
         rel: "stylesheet",
@@ -101,8 +188,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 });
 
 function RootShell({ children }: { children: ReactNode }) {
+  const isTvPage = useRouterState({ select: (state) => state.location.pathname === "/karaoke-tv" });
   return (
-    <html lang="pt-BR">
+    <html lang="pt-BR" data-tv-page={isTvPage ? "" : undefined}>
       <head>
         <HeadContent />
       </head>
