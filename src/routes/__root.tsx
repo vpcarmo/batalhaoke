@@ -81,6 +81,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { name: "theme-color", content: "#1c1530" },
     ],
+    // Chromium 68 (LG webOS 5) lacks globalThis; inline script runs only in the browser, before module scripts.
+    scripts: [{ children: "if(typeof globalThis==='undefined'){window.globalThis=window;}" }],
     links: [
       {
         rel: "stylesheet",

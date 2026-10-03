@@ -118,6 +118,19 @@
   }
 }
 
+/* Fallback for browsers without oklch() (LG webOS 5 / Chromium 68). Modern browsers keep the oklch values. */
+@supports not (color: oklch(0 0 0)) {
+  :root {
+    --background: #0c0b1a; --foreground: #f8f5ee; --card: #171628; --card-foreground: #f8f5ee;
+    --popover: #171628; --popover-foreground: #f8f5ee; --primary: #ff6f4a; --primary-foreground: #0a0917;
+    --secondary: #242439; --secondary-foreground: #f8f5ee; --muted: #201f32; --muted-foreground: #a2a2b7;
+    --accent: #bbec4c; --accent-foreground: #0a0917; --destructive: #f53b4b; --destructive-foreground: #f8f8f8;
+    --success: #54dd7d; --border: rgba(255,255,255,0.11); --input: rgba(255,255,255,0.16); --ring: #ff6f4a;
+    --gradient-stage: none; --shadow-glow: 0 10px 40px -10px rgba(255,111,74,0.55);
+  }
+  html, body { background-color: #0c0b1a; color: #f8f5ee; }
+}
+
 @utility font-display { font-family: var(--font-display); letter-spacing: 0.02em; }
 @utility shadow-glow { box-shadow: var(--shadow-glow); }
 
