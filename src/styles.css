@@ -112,6 +112,7 @@
     font-family: var(--font-sans);
     background-image: var(--gradient-stage);
     background-attachment: fixed;
+    min-height: 100vh;
     min-height: 100dvh;
     background-color: var(--color-background);
     color: var(--color-foreground);
@@ -141,4 +142,155 @@
   .no-print { display: none !important; }
   .print-sheet { min-height: auto; max-width: none; padding: 0; }
   .print-card { border-color: #000 !important; color: #000 !important; break-inside: avoid; margin-top: 20mm; }
+}
+
+/* TV-only legacy presentation. Outside all layers: Chromium 68 ignores @layer.
+ * The oklch gate leaves modern presentation untouched. Selectors mirror TvPage,
+ * PlaybackPlayer and SessionQr; grid gaps work in Chrome 68, flex gaps do not. */
+@supports not (color: oklch(0 0 0)) {
+  html[data-tv-page] {
+    --font-display: "Bebas Neue", Impact, sans-serif;
+    --font-sans: "Barlow", system-ui, sans-serif;
+    --tv-accent-soft: rgba(187, 236, 76, 0.15);
+    --tv-error-soft: rgba(245, 59, 75, 0.1);
+    --tv-error-border: rgba(245, 59, 75, 0.5);
+    --tv-qr-paper: #fff;
+    --radius-xl: calc(var(--radius) + 4px);
+    --radius-lg: var(--radius);
+    font-size: 16px;
+    line-height: 1.5;
+    -webkit-text-size-adjust: 100%;
+  }
+  html[data-tv-page] body {
+    margin: 0;
+    min-height: 100vh;
+    min-height: 100dvh;
+    font-family: var(--font-sans);
+    background-color: var(--background);
+    color: var(--foreground);
+  }
+  html[data-tv-page] main,
+  html[data-tv-page] main * {
+    box-sizing: border-box;
+    border: 0 solid var(--border);
+  }
+  html[data-tv-page] main h1,
+  html[data-tv-page] main p { margin: 0; font-size: inherit; font-weight: inherit; }
+  html[data-tv-page] main svg,
+  html[data-tv-page] main iframe { display: block; vertical-align: middle; }
+  html[data-tv-page] main button {
+    font: inherit;
+    color: inherit;
+    background: transparent;
+    padding: 0;
+    cursor: pointer;
+  }
+  html[data-tv-page] main.min-h-dvh { min-height: 100vh; min-height: 100dvh; }
+  html[data-tv-page] main .grid,
+  html[data-tv-page] main.grid { display: grid; }
+  html[data-tv-page] main .flex,
+  html[data-tv-page] main.flex { display: flex; }
+  html[data-tv-page] main .inline-flex { display: inline-flex; }
+  html[data-tv-page] main .inline-block { display: inline-block; }
+  html[data-tv-page] main.flex-col,
+  html[data-tv-page] main .flex-col { flex-direction: column; }
+  html[data-tv-page] main .flex-1 { flex: 1 1 0%; }
+  html[data-tv-page] main .items-center { align-items: center; }
+  html[data-tv-page] main .justify-center { justify-content: center; }
+  html[data-tv-page] main .justify-between { justify-content: space-between; }
+  html[data-tv-page] main.place-items-center,
+  html[data-tv-page] main .place-items-center { align-items: center; justify-items: center; }
+  html[data-tv-page] main.text-center,
+  html[data-tv-page] main .text-center { text-align: center; }
+  html[data-tv-page] main.gap-6 > * + * { margin-top: 1.5rem; }
+  html[data-tv-page] main .grid.gap-8 { grid-gap: 2rem; }
+  html[data-tv-page] main .flex.gap-3:not(.flex-col) > * + *,
+  html[data-tv-page] main .inline-flex.gap-3 > * + * { margin-left: 0.75rem; }
+  html[data-tv-page] main .flex.flex-col.gap-3 > * + * { margin-top: 0.75rem; }
+  html[data-tv-page] main .flex.gap-2 > * + * { margin-left: 0.5rem; }
+  html[data-tv-page] main.p-5 { padding: 1.25rem; }
+  html[data-tv-page] main.p-8 { padding: 2rem; }
+  html[data-tv-page] main .p-3 { padding: 0.75rem; }
+  html[data-tv-page] main .px-5 { padding-left: 1.25rem; padding-right: 1.25rem; }
+  html[data-tv-page] main .px-6 { padding-left: 1.5rem; padding-right: 1.5rem; }
+  html[data-tv-page] main .py-2 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
+  html[data-tv-page] main .py-3 { padding-top: 0.75rem; padding-bottom: 0.75rem; }
+  html[data-tv-page] main .mt-2 { margin-top: 0.5rem; }
+  html[data-tv-page] main .mt-4 { margin-top: 1rem; }
+  html[data-tv-page] main .mt-6 { margin-top: 1.5rem; }
+  html[data-tv-page] main .mx-auto { margin-left: auto; margin-right: auto; }
+  html[data-tv-page] main .font-display { font-family: var(--font-display); letter-spacing: 0.02em; }
+  html[data-tv-page] main .font-semibold { font-weight: 600; }
+  html[data-tv-page] main .uppercase { text-transform: uppercase; }
+  html[data-tv-page] main .tracking-widest { letter-spacing: 0.1em; }
+  html[data-tv-page] main .text-xs { font-size: 0.75rem; line-height: 1rem; }
+  html[data-tv-page] main .text-sm { font-size: 0.875rem; line-height: 1.25rem; }
+  html[data-tv-page] main .text-lg { font-size: 1.125rem; line-height: 1.75rem; }
+  html[data-tv-page] main .text-xl { font-size: 1.25rem; line-height: 1.75rem; }
+  html[data-tv-page] main .text-2xl { font-size: 1.5rem; line-height: 2rem; }
+  html[data-tv-page] main .text-3xl { font-size: 1.875rem; line-height: 2.25rem; }
+  html[data-tv-page] main .text-4xl { font-size: 2.25rem; line-height: 2.5rem; }
+  html[data-tv-page] main .text-5xl { font-size: 3rem; line-height: 1; }
+  html[data-tv-page] main .text-6xl { font-size: 3.75rem; line-height: 1; }
+  html[data-tv-page] main .leading-none { line-height: 1; }
+  html[data-tv-page] main .leading-tight { line-height: 1.25; }
+  html[data-tv-page] main .text-primary { color: var(--primary); }
+  html[data-tv-page] main .text-muted-foreground { color: var(--muted-foreground); }
+  html[data-tv-page] main .text-accent { color: var(--accent); }
+  html[data-tv-page] main .text-destructive { color: var(--destructive); }
+  html[data-tv-page] main .bg-muted { background-color: var(--muted); }
+  html[data-tv-page] main .bg-white { background-color: var(--tv-qr-paper); }
+  html[data-tv-page] main .bg-accent { background-color: var(--accent); }
+  html[data-tv-page] main .bg-accent\/15 { background-color: var(--tv-accent-soft); }
+  html[data-tv-page] main .bg-destructive\/10 { background-color: var(--tv-error-soft); }
+  html[data-tv-page] main .border { border-width: 1px; }
+  html[data-tv-page] main .border-destructive\/50 { border-color: var(--tv-error-border); }
+  html[data-tv-page] main .rounded-full { border-radius: 9999px; }
+  html[data-tv-page] main .rounded-xl { border-radius: var(--radius-xl); }
+  html[data-tv-page] main .rounded-lg { border-radius: var(--radius-lg); }
+  html[data-tv-page] main .size-3 { width: 0.75rem; height: 0.75rem; flex-shrink: 0; }
+  html[data-tv-page] main .size-8 { width: 2rem; height: 2rem; flex-shrink: 0; }
+  html[data-tv-page] main .w-full { width: 100%; }
+  html[data-tv-page] main .min-w-\[280px\] { min-width: 280px; }
+  html[data-tv-page] main .overflow-hidden { overflow: hidden; }
+  html[data-tv-page] main .relative { position: relative; }
+  /* PlaybackPlayer already has an inline aspect-ratio; Chrome 68 needs height. */
+  html[data-tv-page] main .relative.min-w-\[280px\] { height: 0; padding-top: 56.25%; }
+  html[data-tv-page] main .absolute { position: absolute; }
+  html[data-tv-page] main .inset-0 { top: 0; right: 0; bottom: 0; left: 0; }
+  html[data-tv-page] main .absolute.inset-0 iframe { width: 100%; height: 100%; }
+  html[data-tv-page] main button:focus { outline: 2px solid var(--ring); outline-offset: 2px; }
+  html[data-tv-page] main .animate-pulse { animation: tv-legacy-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+  html[data-tv-page] main .animate-in { animation: tv-legacy-enter 700ms ease; }
+  @keyframes tv-legacy-pulse { 50% { opacity: 0.5; } }
+  @keyframes tv-legacy-enter { from { opacity: 0; transform: translateX(-1rem); } to { opacity: 1; transform: translateX(0); } }
+  @media (min-width: 640px) {
+    html[data-tv-page] main.sm\:p-8 { padding: 2rem; }
+    html[data-tv-page] main .sm\:text-7xl { font-size: 4.5rem; line-height: 1; }
+    html[data-tv-page] main .sm\:text-4xl { font-size: 2.25rem; line-height: 2.5rem; }
+    html[data-tv-page] main .sm\:text-4xl.leading-tight { line-height: 1.25; }
+  }
+  @media (min-width: 1024px) {
+    html[data-tv-page] main.lg\:p-12 { padding: 3rem; }
+    html[data-tv-page] main .lg\:justify-start { justify-content: flex-start; }
+    html[data-tv-page] main .lg\:size-10 { width: 2.5rem; height: 2.5rem; }
+    html[data-tv-page] main .lg\:text-left { text-align: left; }
+    html[data-tv-page] main .lg\:grid-cols-\[minmax\(0\,1fr\)_auto\] { grid-template-columns: minmax(0, 1fr) auto; }
+    html[data-tv-page] main .lg\:grid-cols-\[minmax\(0\,1fr\)_minmax\(0\,2fr\)\] { grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); }
+    html[data-tv-page] main .lg\:text-2xl { font-size: 1.5rem; line-height: 2rem; }
+    html[data-tv-page] main .lg\:text-3xl { font-size: 1.875rem; line-height: 2.25rem; }
+    html[data-tv-page] main .lg\:text-4xl { font-size: 2.25rem; line-height: 2.5rem; }
+    html[data-tv-page] main .lg\:text-5xl { font-size: 3rem; line-height: 1; }
+    html[data-tv-page] main .lg\:text-6xl { font-size: 3.75rem; line-height: 1; }
+    html[data-tv-page] main .lg\:text-6xl.leading-tight { line-height: 1.25; }
+    html[data-tv-page] main .lg\:text-7xl { font-size: 4.5rem; line-height: 1; }
+    html[data-tv-page] main .lg\:text-8xl { font-size: 6rem; line-height: 1; }
+  }
+  @media (min-width: 1280px) {
+    html[data-tv-page] main .xl\:text-9xl { font-size: 8rem; line-height: 1; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html[data-tv-page] main .animate-pulse,
+    html[data-tv-page] main .animate-in { animation: none; }
+  }
 }
