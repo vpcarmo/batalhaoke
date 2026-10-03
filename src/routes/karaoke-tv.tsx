@@ -11,7 +11,6 @@ import { PlaybackPlayer, type PlaybackPlayerRef } from "@/components/karaoke/Pla
 import { SessionQr } from "@/components/karaoke/SessionQr";
 
 export const Route = createFileRoute("/karaoke-tv")({
-  ssr: false,
   validateSearch: zodValidator(z.object({ session: fallback(z.string(), "").default("") })),
   head: () => ({
     meta: [
