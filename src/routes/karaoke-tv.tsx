@@ -8,7 +8,7 @@ import { Maximize2, Mic2, Minimize2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSessionLive } from "@/hooks/use-session-live";
 import { commandChannel, displayName, setPerformanceStatus } from "@/lib/karaoke";
-import { getTvState, registerTvDevice } from "@/lib/venue.functions";
+import { getTvState, listVenues, registerTvDevice } from "@/lib/venue.functions";
 import { PlaybackPlayer, type PlaybackPlayerRef } from "@/components/karaoke/PlaybackPlayer";
 import { SessionQr } from "@/components/karaoke/SessionQr";
 
@@ -33,6 +33,7 @@ function TvPage() {
   const [deviceToken, setDeviceToken] = useState<string | null>(null);
   const [tokenReady, setTokenReady] = useState(false);
   const tvStateFn = useServerFn(getTvState);
+  const listVenuesFn = useServerFn(listVenues);
   const registerDeviceFn = useServerFn(registerTvDevice);
   useEffect(() => {
     const stored = window.localStorage.getItem("ka-tv-device-token");
@@ -63,6 +64,15 @@ function TvPage() {
   const paired = !!tvState.data?.paired;
   const sessionId = paired ? tvState.data?.activeSessionId ?? undefined : devSession || undefined;
   const live = useSessionLive(sessionId);
+  const session = live.session.data;
+  const venues = useQuery({
+    queryKey: ["venues"],
+    queryFn: () => listVenuesFn(),
+    enabled: !!session?.venue_id,
+    staleTime: 60_000,
+  });
+  const venueSlug = session?.venue_id ? venues.data?.find((venue) => venue.id === session.venue_id)?.slug : null;
+  const votingCode = session?.venue_id ? venueSlug : session?.public_code;
   const active = live.active;
   const next = live.queued[0];
   const playerRef = useRef<PlaybackPlayerRef>(null);
@@ -181,7 +191,6 @@ function TvPage() {
     );
   }
 
-  const session = live.session.data;
   if (session && !session.tv_enabled) {
     return (
       <main className="grid min-h-dvh place-items-center p-8 text-center">
@@ -224,7 +233,7 @@ function TvPage() {
       )}
       {showQr && session && (
         <aside className="flex flex-col items-center justify-center gap-3 text-center">
-          <SessionQr code={session.public_code} size={200} />
+          {votingCode ? <SessionQr code={votingCode} size={200} /> : <p className="text-muted-foreground">Carregando QR Code permanente…</p>}
           <p className="font-display text-2xl lg:text-3xl">Escaneie para votar</p>
         </aside>
       )}
