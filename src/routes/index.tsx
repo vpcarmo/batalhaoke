@@ -1,12 +1,14 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { Mic2, Tv, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { createSession, getActiveSession, type VotingMode } from "@/lib/karaoke";
 import type { SessionType } from "@/lib/karaoke";
+import { createVenue, disableVenueDevice, listVenueDevices, listVenues, pairVenueDevice } from "@/lib/venue.functions";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -36,6 +38,16 @@ function Home() {
   const [votingMode, setVotingMode] = useState<VotingMode>("like_only");
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [venueId, setVenueId] = useState("");
+  const [newVenueName, setNewVenueName] = useState("");
+  const [pairingCode, setPairingCode] = useState("");
+  const [deviceName, setDeviceName] = useState("");
+  const venues = useQuery({ queryKey: ["venues"], queryFn: listVenues, retry: 1 });
+  const devicesFn = useServerFn(listVenueDevices);
+  const pairDeviceFn = useServerFn(pairVenueDevice);
+  const disableDeviceFn = useServerFn(disableVenueDevice);
+  const createVenueFn = useServerFn(createVenue);
+  const devices = useQuery({ queryKey: ["venue-devices", venueId], queryFn: () => devicesFn({ data: { venueId } }), enabled: !!venueId, retry: 1 });
 
   function selectSessionType(type: SessionType) {
     setSessionType(type);
@@ -45,9 +57,31 @@ function Home() {
   async function start() {
     setBusy(true); setErr(null);
     try {
-      const s = await createSession(name.trim() || defaultName(), { sessionType, votingMode });
+      let selectedVenueId = venueId || null;
+      if (!selectedVenueId && newVenueName.trim()) {
+        const venue = await createVenueFn({ data: { name: newVenueName.trim() } });
+        selectedVenueId = venue.id;
+      }
+      const s = await createSession(name.trim() || defaultName(), { sessionType, votingMode, venueId: selectedVenueId });
       nav({ to: "/sessao/$id", params: { id: s.id } });
     } catch (e) { setErr((e as Error).message); setBusy(false); }
+  }
+
+  async function pairTv() {
+    setBusy(true); setErr(null);
+    try {
+      let selectedVenueId = venueId || undefined;
+      let selectedVenueName: string | undefined;
+      if (!selectedVenueId && newVenueName.trim()) selectedVenueName = newVenueName.trim();
+      const result = await pairDeviceFn({ data: { pairingCode: pairingCode.trim(), venueId: selectedVenueId, venueName: selectedVenueName, deviceName: deviceName.trim() } });
+      setPairingCode(""); setDeviceName("");
+      if (!selectedVenueId && selectedVenueName) {
+        await venues.refetch();
+        setVenueId(result.venueId);
+        setNewVenueName("");
+      }
+      await devices.refetch();
+    } catch (e) { setErr((e as Error).message); } finally { setBusy(false); }
   }
 
   return (
@@ -79,6 +113,14 @@ function Home() {
             <Label htmlFor="sname">Nome da sessão</Label>
             <Input id="sname" className="mt-2 h-12 text-base" value={name} onChange={(e) => setName(e.target.value)} />
             <div className="mt-4">
+              <Label htmlFor="venue">Estabelecimento <span className="text-muted-foreground">(opcional)</span></Label>
+              <select id="venue" className="mt-2 h-12 w-full rounded-md border border-input bg-background px-3 text-base" value={venueId} onChange={(e) => setVenueId(e.target.value)}>
+                <option value="">Sem estabelecimento (compatibilidade)</option>
+                {(venues.data ?? []).map((venue) => <option key={venue.id} value={venue.id}>{venue.name}</option>)}
+              </select>
+              {!venueId && <Input className="mt-2 h-12 text-base" placeholder="Ou crie um estabelecimento" value={newVenueName} onChange={(e) => setNewVenueName(e.target.value)} />}
+            </div>
+            <div className="mt-4">
               <p className="mb-2 text-sm font-medium">Formato</p>
               <div className="grid gap-2" role="radiogroup" aria-label="Formato da sessão">
                 <Button variant={sessionType === "free" ? "default" : "secondary"} className="h-11 justify-start" role="radio" aria-checked={sessionType === "free"} onClick={() => selectSessionType("free")}>🎤 BatalhaOkê Livre</Button>
@@ -101,6 +143,16 @@ function Home() {
               <Button variant="secondary" className="h-12" onClick={() => setCreating(false)}>Cancelar</Button>
               <Button className="h-12" disabled={busy} onClick={start}>{busy ? "Criando…" : "Iniciar"}</Button>
             </div>
+            {(venueId || newVenueName.trim()) && (
+              <div className="mt-5 border-t pt-4">
+                <p className="font-medium">Parear TV</p>
+                <p className="mt-1 text-sm text-muted-foreground">Digite o código exibido na TV e dê um nome para ela.</p>
+                <Input className="mt-3 h-11" placeholder="Código da TV (ex.: ABC123)" value={pairingCode} onChange={(e) => setPairingCode(e.target.value.toUpperCase())} maxLength={6} />
+                <Input className="mt-2 h-11" placeholder="Nome da TV (ex.: TV Palco Principal)" value={deviceName} onChange={(e) => setDeviceName(e.target.value)} />
+                <Button type="button" variant="secondary" className="mt-2 h-11 w-full" disabled={busy || pairingCode.length !== 6 || !deviceName.trim()} onClick={() => { void pairTv(); }}>Concluir pareamento</Button>
+                {venueId && <div className="mt-3 text-sm text-muted-foreground">{devices.isLoading ? "Carregando TVs…" : (devices.data ?? []).length ? (devices.data ?? []).map((device) => <div key={device.id} className="mt-2 flex items-center justify-between gap-2"><span>{device.name || "TV sem nome"} · {device.status === "paired" ? "pareada" : device.status}</span>{device.status === "paired" && <Button type="button" variant="ghost" size="sm" disabled={busy} onClick={() => { disableDeviceFn({ data: { venueDeviceId: device.id } }).then(() => devices.refetch()).catch((error: Error) => setErr(error.message)); }}>Desabilitar</Button>}</div>) : "Nenhuma TV pareada ainda."}</div>}
+              </div>
+            )}
           </div>
         )}
         {err && <p role="alert" className="text-sm text-destructive">{err}</p>}

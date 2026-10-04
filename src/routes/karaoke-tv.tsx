@@ -1,12 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { zodValidator, fallback } from "@tanstack/zod-adapter";
 import { z } from "zod";
 import { Mic2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSessionLive } from "@/hooks/use-session-live";
-import { commandChannel, displayName, getActiveSession, setPerformanceStatus } from "@/lib/karaoke";
+import { commandChannel, displayName, setPerformanceStatus } from "@/lib/karaoke";
+import { getTvState, registerTvDevice } from "@/lib/venue.functions";
 import { PlaybackPlayer, type PlaybackPlayerRef } from "@/components/karaoke/PlaybackPlayer";
 import { SessionQr } from "@/components/karaoke/SessionQr";
 
@@ -27,13 +29,60 @@ export const Route = createFileRoute("/karaoke-tv")({
 
 function TvPage() {
   const { session: sp } = Route.useSearch();
-  const fallbackSession = useQuery({ queryKey: ["active-session"], queryFn: getActiveSession, enabled: !sp, retry: 2 });
-  const sessionId = sp || fallbackSession.data?.id;
+  const [deviceToken, setDeviceToken] = useState<string | null>(null);
+  const [tokenReady, setTokenReady] = useState(false);
+  const tvStateFn = useServerFn(getTvState);
+  const registerDeviceFn = useServerFn(registerTvDevice);
+  useEffect(() => {
+    const stored = window.localStorage.getItem("ka-tv-device-token");
+    if (stored) setDeviceToken(stored);
+    else if (!sp) {
+      const bytes = new Uint8Array(32);
+      window.crypto.getRandomValues(bytes);
+      let token = "";
+      for (let index = 0; index < bytes.length; index += 1) token += bytes[index]!.toString(16).padStart(2, "0");
+      window.localStorage.setItem("ka-tv-device-token", token);
+      setDeviceToken(token);
+    }
+    setTokenReady(true);
+  }, [sp]);
+  const tvState = useQuery({
+    queryKey: ["tv-state", deviceToken],
+    queryFn: () => tvStateFn({ data: { deviceToken: deviceToken! } }),
+    enabled: !!deviceToken,
+    retry: 2,
+  });
+  const pairing = useQuery({
+    queryKey: ["tv-pairing", deviceToken],
+    queryFn: () => registerDeviceFn({ data: { deviceToken: deviceToken! } }),
+    enabled: !!deviceToken && !tvState.isLoading && !tvState.data?.paired && !tvState.data?.disabled,
+    retry: 1,
+    staleTime: Infinity,
+  });
+  const paired = !!tvState.data?.paired;
+  const sessionId = paired ? tvState.data?.activeSessionId ?? undefined : sp;
   const live = useSessionLive(sessionId);
   const active = live.active;
   const next = live.queued[0];
   const playerRef = useRef<PlaybackPlayerRef>(null);
   const [armed, setArmed] = useState(false);
+
+  useEffect(() => {
+    const venueId = tvState.data?.venueId;
+    if (!paired || !venueId) return;
+    const channel = supabase.channel(`tv-venue:${venueId}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "sessions", filter: `venue_id=eq.${venueId}` }, () => { tvState.refetch(); })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [paired, tvState.data?.venueId]);
+
+  // Pairing has no public device subscription (the device table stays private).
+  // While waiting only, retry at a low cadence; this stops immediately after pairing.
+  useEffect(() => {
+    if (!deviceToken || paired || tvState.data?.disabled) return;
+    const timer = window.setTimeout(() => { tvState.refetch(); }, 10_000);
+    return () => { window.clearTimeout(timer); };
+  }, [deviceToken, paired, tvState.data?.disabled, tvState.dataUpdatedAt]);
 
   useEffect(() => {
     if (!sessionId) return;
@@ -53,10 +102,28 @@ function TvPage() {
     </header>
   );
 
+  if (!tokenReady || (deviceToken && tvState.isLoading)) {
+    return <main className="grid min-h-dvh place-items-center p-8 text-center"><div>{brand}<p className="mt-6 text-2xl text-muted-foreground lg:text-4xl">Conectando…</p></div></main>;
+  }
+
+  if (tvState.data?.disabled || pairing.data?.disabled) {
+    return <main className="grid min-h-dvh place-items-center p-8 text-center"><div>{brand}<p className="mt-6 text-2xl text-muted-foreground lg:text-4xl">Esta TV foi desabilitada. Peça ajuda ao operador.</p></div></main>;
+  }
+
+  if (!sp && !paired) {
+    return (
+      <main className="grid min-h-dvh place-items-center p-8 text-center">
+        <div>{brand}<p className="mt-6 text-2xl text-muted-foreground lg:text-4xl">Esta TV ainda não está configurada.</p>
+          {pairing.data?.pairingCode ? <><p className="mt-8 text-lg text-muted-foreground">Código de pareamento</p><p className="font-display text-6xl tracking-[0.2em] text-primary lg:text-8xl">{pairing.data.pairingCode}</p><p className="mt-6 text-base text-muted-foreground">Informe este código ao operador para vincular esta TV.</p></> : <p className="mt-6 text-xl text-muted-foreground">{pairing.isLoading ? "Gerando código…" : "Não foi possível preparar o pareamento. Recarregue a tela."}</p>}
+        </div>
+      </main>
+    );
+  }
+
   if (!sessionId) {
     return (
       <main className="grid min-h-dvh place-items-center p-8 text-center">
-        <div>{brand}<p className="mt-6 text-2xl text-muted-foreground lg:text-4xl">{fallbackSession.isLoading ? "Conectando…" : fallbackSession.error ? "Servidor indisponível. Tentando novamente…" : "Aguardando início da sessão"}</p></div>
+        <div>{brand}<p className="mt-6 text-2xl text-muted-foreground lg:text-4xl">{paired ? "Aguardando início da sessão neste estabelecimento" : "Aguardando início da sessão"}</p></div>
       </main>
     );
   }
