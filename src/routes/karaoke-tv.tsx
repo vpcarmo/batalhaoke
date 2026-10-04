@@ -7,10 +7,41 @@ import { z } from "zod";
 import { Maximize2, Mic2, Minimize2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSessionLive } from "@/hooks/use-session-live";
-import { commandChannel, displayName, setPerformanceStatus } from "@/lib/karaoke";
+import { commandChannel, displayName, setPerformanceStatus, type Performance, type VotingMode } from "@/lib/karaoke";
 import { getTvState, listVenues, registerTvDevice } from "@/lib/venue.functions";
 import { PlaybackPlayer, type PlaybackPlayerRef } from "@/components/karaoke/PlaybackPlayer";
 import { SessionQr } from "@/components/karaoke/SessionQr";
+
+type CompletedPerformance = Performance & {
+  participant: NonNullable<Performance["participant"]>;
+  source: NonNullable<Performance["source"]>;
+};
+
+function isCompletedPerformance(performance: Performance): performance is CompletedPerformance {
+  return performance.status === "completed" && !!performance.participant && !!performance.source;
+}
+
+function performanceScore(performance: Performance, votingMode: VotingMode) {
+  return votingMode === "like_dislike" ? performance.like_count - performance.dislike_count : performance.like_count;
+}
+
+function completionTime(performance: Performance) {
+  return performance.ended_at ?? performance.started_at ?? performance.created_at;
+}
+
+function PerformanceScore({ performance, votingMode }: { performance: Performance; votingMode: VotingMode }) {
+  if (votingMode === "like_only") {
+    return <p className="font-display text-3xl text-primary lg:text-4xl">{performance.like_count} {performance.like_count === 1 ? "voto" : "votos"} 👍</p>;
+  }
+
+  const score = performanceScore(performance, votingMode);
+  return (
+    <div>
+      <p className="font-display text-3xl text-primary lg:text-4xl">Pontuação {score >= 0 ? "+" : ""}{score}</p>
+      <p className="mt-1 text-lg text-muted-foreground lg:text-xl">👍 {performance.like_count} · 👎 {performance.dislike_count}</p>
+    </div>
+  );
+}
 
 export const Route = createFileRoute("/karaoke-tv")({
   validateSearch: zodValidator(z.object({ session: fallback(z.string(), "").default("") })),
@@ -75,6 +106,22 @@ function TvPage() {
   const votingCode = session?.venue_id ? venueSlug : session?.public_code;
   const active = live.active;
   const next = live.queued[0];
+  const isFreeWaiting = session?.session_type === "free" && !active;
+  const completedPerformances = (live.performances.data ?? []).filter(isCompletedPerformance);
+  const latestPerformance = [...completedPerformances].sort((a, b) =>
+    completionTime(b).localeCompare(completionTime(a)) || b.id.localeCompare(a.id),
+  )[0];
+  const nightlyHighlight = completedPerformances.reduce<CompletedPerformance | undefined>((leader, performance) => {
+    if (!leader) return performance;
+    const scoreDifference = performanceScore(performance, session?.voting_mode ?? "like_only")
+      - performanceScore(leader, session?.voting_mode ?? "like_only");
+    return scoreDifference > 0 || (scoreDifference === 0 && performance.id.localeCompare(leader.id) < 0)
+      ? performance
+      : leader;
+  }, undefined);
+  const completedVotes = completedPerformances.reduce((total, performance) =>
+    total + performance.like_count + (session?.voting_mode === "like_dislike" ? performance.dislike_count : 0),
+  0);
   const playerRef = useRef<PlaybackPlayerRef>(null);
   const [armed, setArmed] = useState(false);
 
@@ -198,7 +245,7 @@ function TvPage() {
       </main>
     );
   }
-  const showQr = !!session?.show_qr_on_tv;
+  const showQr = !!session?.show_qr_on_tv || isFreeWaiting;
 
   return (
     <main className="flex min-h-dvh flex-col gap-6 p-5 sm:p-8 lg:p-12">
@@ -222,18 +269,60 @@ function TvPage() {
           </section>
         </div>
       ) : (
-        <div className="grid place-items-center text-center">
-          <div>
-            <p className="text-3xl text-muted-foreground lg:text-5xl">Aguardando o próximo cantor</p>
-            {next?.participant && (
-              <p className="mt-6 font-display text-6xl lg:text-8xl">Próximo: <span className="text-primary">{displayName(next.participant)}</span></p>
+        isFreeWaiting ? (
+          <section className="flex flex-col justify-center gap-6 text-center lg:text-left">
+            {completedPerformances.length === 0 ? (
+              <div>
+                <h1 className="font-display text-5xl leading-none text-primary sm:text-6xl lg:text-8xl">A noite está começando!</h1>
+                <p className="mt-5 text-2xl text-muted-foreground lg:text-3xl">Escaneie o QR Code, participe e prepare-se para a próxima apresentação.</p>
+              </div>
+            ) : (
+              <div className={`grid gap-5 ${completedPerformances.length > 1 ? "lg:grid-cols-2" : ""}`}>
+                {latestPerformance && (
+                  <article className="rounded-2xl border border-border/60 bg-secondary/40 p-5 sm:p-7">
+                    <p className="text-lg font-semibold uppercase tracking-widest text-muted-foreground lg:text-xl">Última apresentação</p>
+                    <h1 className="mt-2 font-display text-5xl leading-none text-primary sm:text-6xl lg:text-7xl">{displayName(latestPerformance.participant)}</h1>
+                    <p className="mt-3 text-xl lg:text-2xl">{latestPerformance.source.title}</p>
+                    <div className="mt-4">
+                      <PerformanceScore performance={latestPerformance} votingMode={session?.voting_mode ?? "like_only"} />
+                    </div>
+                    {completedPerformances.length === 1 && (
+                      <p className="mt-4 text-lg font-semibold text-accent lg:text-xl">Primeiro destaque da noite · líder até agora</p>
+                    )}
+                  </article>
+                )}
+                {completedPerformances.length > 1 && nightlyHighlight && (
+                  <article className="rounded-2xl border border-primary/50 bg-primary/10 p-5 sm:p-7">
+                    <p className="text-lg font-semibold uppercase tracking-widest text-muted-foreground lg:text-xl">Destaque da noite</p>
+                    <h2 className="mt-2 font-display text-5xl leading-none text-primary sm:text-6xl lg:text-7xl">{displayName(nightlyHighlight.participant)}</h2>
+                    <div className="mt-4">
+                      <PerformanceScore performance={nightlyHighlight} votingMode={session?.voting_mode ?? "like_only"} />
+                    </div>
+                  </article>
+                )}
+              </div>
             )}
+            {next?.participant && (
+              <p className="font-display text-3xl lg:text-5xl">Próximo cantor: <span className="text-primary">{displayName(next.participant)}</span></p>
+            )}
+            <p className="text-base text-muted-foreground lg:text-lg">
+              {completedPerformances.length} {completedPerformances.length === 1 ? "apresentação realizada" : "apresentações realizadas"} · {completedVotes} {completedVotes === 1 ? "voto registrado" : "votos registrados"} pelo público
+            </p>
+          </section>
+        ) : (
+          <div className="grid place-items-center text-center">
+            <div>
+              <p className="text-3xl text-muted-foreground lg:text-5xl">Aguardando o próximo cantor</p>
+              {next?.participant && (
+                <p className="mt-6 font-display text-6xl lg:text-8xl">Próximo: <span className="text-primary">{displayName(next.participant)}</span></p>
+              )}
+            </div>
           </div>
-        </div>
+        )
       )}
       {showQr && session && (
         <aside className="flex flex-col items-center justify-center gap-3 text-center">
-          {votingCode ? <SessionQr code={votingCode} size={200} /> : <p className="text-muted-foreground">Carregando QR Code permanente…</p>}
+          {votingCode ? <SessionQr code={votingCode} size={isFreeWaiting ? 260 : 200} /> : <p className="text-muted-foreground">Carregando QR Code permanente…</p>}
           <p className="font-display text-2xl lg:text-3xl">Escaneie para votar</p>
         </aside>
       )}
