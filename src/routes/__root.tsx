@@ -21,6 +21,13 @@ const legacyBrowserPolyfills = `(function () {
   'use strict';
   if (typeof window === 'undefined') return;
   if (typeof globalThis === 'undefined') window.globalThis = window;
+  if (typeof window.queueMicrotask !== 'function') {
+    window.queueMicrotask = function (callback) {
+      Promise.resolve().then(callback).catch(function (error) {
+        setTimeout(function () { throw error; }, 0);
+      });
+    };
+  }
   var MAX_LENGTH = 9007199254740991;
   function toLength(value) {
     var number = +value;
@@ -81,6 +88,16 @@ const legacyBrowserPolyfills = `(function () {
     Array.prototype[Symbol.unscopables].flat = true;
     Array.prototype[Symbol.unscopables].flatMap = true;
   }
+  if (!Array.prototype.at) Object.defineProperty(Array.prototype, 'at', {
+    configurable: true, writable: true,
+    value: function at(index) {
+      var source = receiver(this), length = toLength(source.length);
+      var number = +index;
+      var integer = number !== number || number === 0 ? 0 : (number < 0 ? Math.ceil(number) : Math.floor(number));
+      var actualIndex = integer >= 0 ? integer : length + integer;
+      return actualIndex < 0 || actualIndex >= length ? undefined : source[actualIndex];
+    }
+  });
   if (!Object.fromEntries) Object.defineProperty(Object, 'fromEntries', {
     configurable: true, writable: true,
     value: function fromEntries(iterable) {
@@ -99,6 +116,31 @@ const legacyBrowserPolyfills = `(function () {
         try { if (typeof iterator.return === 'function') iterator.return(); } catch (ignored) {}
         throw error;
       }
+    }
+  });
+  if (!Object.hasOwn) Object.defineProperty(Object, 'hasOwn', {
+    configurable: true, writable: true,
+    value: function hasOwn(object, key) {
+      if (object == null) throw new TypeError('Cannot convert undefined or null to object');
+      return Object.prototype.hasOwnProperty.call(object, key);
+    }
+  });
+  if (!String.prototype.replaceAll) Object.defineProperty(String.prototype, 'replaceAll', {
+    configurable: true, writable: true,
+    value: function replaceAll(searchValue, replaceValue) {
+      if (this == null) throw new TypeError('String receiver is null or undefined');
+      var string = String(this);
+      var isRegExp = searchValue instanceof RegExp;
+      if (typeof Symbol !== 'undefined' && Symbol.match && searchValue != null && searchValue[Symbol.match] !== undefined) {
+        isRegExp = !!searchValue[Symbol.match];
+      }
+      if (isRegExp) {
+        if (!searchValue.global) throw new TypeError('String.prototype.replaceAll called with a non-global RegExp argument');
+        return String.prototype.replace.call(string, searchValue, replaceValue);
+      }
+      var searchString = String(searchValue);
+      var escapedSearch = searchString.replace(/[\\^$.*+?()[\]{}|]/g, '\\$&');
+      return String.prototype.replace.call(string, new RegExp(escapedSearch, 'g'), replaceValue);
     }
   });
 })();`;
