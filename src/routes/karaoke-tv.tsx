@@ -7,10 +7,11 @@ import { z } from "zod";
 import { Maximize2, Mic2, Minimize2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSessionLive } from "@/hooks/use-session-live";
-import { commandChannel, displayName, setPerformanceStatus, type Performance, type VotingMode } from "@/lib/karaoke";
+import { commandChannel, displayName, setPerformanceStatus, type Match, type Participant, type Performance, type VotingMode } from "@/lib/karaoke";
 import { getTvState, listVenues, registerTvDevice } from "@/lib/venue.functions";
 import { PlaybackPlayer, type PlaybackPlayerRef } from "@/components/karaoke/PlaybackPlayer";
 import { SessionQr } from "@/components/karaoke/SessionQr";
+import { getX1CompetitionState } from "@/lib/x1-state";
 
 type CompletedPerformance = Performance & {
   participant: NonNullable<Performance["participant"]>;
@@ -107,6 +108,12 @@ function TvPage() {
   const active = live.active;
   const next = live.queued[0];
   const isFreeWaiting = session?.session_type === "free" && !active;
+  const isX1Waiting = session?.session_type === "x1" && !active;
+  const showX1Arena = isX1Waiting && session?.status !== "finished";
+  const x1Matches = live.matches?.data ?? [];
+  const x1State = showX1Arena
+    ? getX1CompetitionState(x1Matches, live.participants.data ?? [])
+    : null;
   const completedPerformances = (live.performances.data ?? []).filter(isCompletedPerformance);
   const latestPerformance = [...completedPerformances].sort((a, b) =>
     completionTime(b).localeCompare(completionTime(a)) || b.id.localeCompare(a.id),
@@ -245,7 +252,7 @@ function TvPage() {
       </main>
     );
   }
-  const showQr = !!session?.show_qr_on_tv || isFreeWaiting;
+  const showQr = !!session?.show_qr_on_tv || isFreeWaiting || isX1Waiting;
 
   return (
     <main className="flex min-h-dvh flex-col gap-6 p-5 sm:p-8 lg:p-12">
@@ -309,6 +316,18 @@ function TvPage() {
               {completedPerformances.length} {completedPerformances.length === 1 ? "apresentação realizada" : "apresentações realizadas"} · {completedVotes} {completedVotes === 1 ? "voto registrado" : "votos registrados"} pelo público
             </p>
           </section>
+        ) : showX1Arena && x1State ? (
+          <X1Arena
+            state={x1State}
+            participants={live.participants.data ?? []}
+            performances={live.performances.data ?? []}
+          />
+        ) : showX1Arena ? (
+          <section className="grid place-items-center rounded-2xl border border-primary/40 bg-card/70 p-8 text-center">
+            <p className="font-display text-3xl text-muted-foreground lg:text-5xl">
+              {live.error ? "Não foi possível carregar os dados da Arena." : "Carregando a Arena…"}
+            </p>
+          </section>
         ) : (
           <div className="grid place-items-center text-center">
             <div>
@@ -322,8 +341,8 @@ function TvPage() {
       )}
       {showQr && session && (
         <aside className="flex flex-col items-center justify-center gap-3 text-center">
-          {votingCode ? <SessionQr code={votingCode} size={isFreeWaiting ? 260 : 200} /> : <p className="text-muted-foreground">Carregando QR Code permanente…</p>}
-          <p className="font-display text-2xl lg:text-3xl">Escaneie para votar</p>
+          {votingCode ? <SessionQr code={votingCode} size={isFreeWaiting || isX1Waiting ? 260 : 200} /> : <p className="text-muted-foreground">Carregando QR Code permanente…</p>}
+          <p className="font-display text-2xl lg:text-3xl">{isX1Waiting ? "Escaneie para votar no próximo duelo" : "Escaneie para votar"}</p>
         </aside>
       )}
       </div>
@@ -333,5 +352,111 @@ function TvPage() {
         </button>
       )}
     </main>
+  );
+}
+
+function X1Arena({ state, participants, performances }: {
+  state: ReturnType<typeof getX1CompetitionState>;
+  participants: Participant[];
+  performances: Performance[];
+}) {
+  const participantById = (id: string) => participants.find((participant) => participant.id === id);
+  const last = state.latestCompleted;
+  const lastA = last ? participantById(last.participant_a_id) : undefined;
+  const lastB = last ? participantById(last.participant_b_id) : undefined;
+  const winner = last?.winner_participant_id ? participantById(last.winner_participant_id) : undefined;
+  const scoreForSlot = (match: Match, slot: "a" | "b") =>
+    performances.find((performance) => performance.match_id === match.id && performance.match_slot === slot);
+  const performanceA = last ? scoreForSlot(last, "a") : undefined;
+  const performanceB = last ? scoreForSlot(last, "b") : undefined;
+  const nextMatch = state.currentMatch;
+  const nextA = nextMatch ? participantById(nextMatch.participant_a_id) : undefined;
+  const nextB = nextMatch ? participantById(nextMatch.participant_b_id) : undefined;
+  const nextPerfA = nextMatch ? scoreForSlot(nextMatch, "a") : undefined;
+  const nextPerfB = nextMatch ? scoreForSlot(nextMatch, "b") : undefined;
+  const score = (performance: Performance) => {
+    const value = performance.like_count - performance.dislike_count;
+    return value > 0 ? `+${value}` : String(value);
+  };
+
+  return (
+    <section className="flex flex-col justify-center gap-5 rounded-2xl border border-primary/40 bg-card/70 p-5 sm:p-7 lg:gap-6 lg:p-8">
+      {state.currentChampion ? (
+        <article className="rounded-2xl border border-accent/60 bg-accent/10 p-5 text-center sm:p-7">
+          <p className="text-lg font-bold uppercase tracking-[0.18em] text-accent lg:text-2xl">👑 Rei da mesa</p>
+          <h1 className="mt-2 break-words font-display text-6xl leading-none text-primary sm:text-7xl lg:text-8xl">{displayName(state.currentChampion)}</h1>
+          <p className="mt-3 text-xl font-semibold lg:text-2xl">{state.championWinStreak} {state.championWinStreak === 1 ? "vitória consecutiva" : "vitórias consecutivas"}</p>
+        </article>
+      ) : (
+        <article className="rounded-2xl border border-primary/40 bg-primary/10 p-5 text-center sm:p-7">
+          <p className="text-lg font-bold uppercase tracking-[0.18em] text-primary lg:text-2xl">⚔ Arena X1</p>
+          <h1 className="mt-2 font-display text-4xl leading-tight sm:text-5xl lg:text-6xl">
+            {state.completed.length === 0 ? "A disputa vai começar" : "Arena em preparação"}
+          </h1>
+          <p className="mt-2 text-lg text-muted-foreground lg:text-xl">
+            {state.completed.length === 0 ? "Preparando o primeiro duelo" : "Aguardando a definição do próximo duelo"}
+          </p>
+        </article>
+      )}
+
+      {last && (
+        <article className="rounded-2xl border border-border/70 bg-background/50 p-4 text-center sm:p-5">
+          <p className="text-base font-bold uppercase tracking-[0.18em] text-muted-foreground lg:text-xl">Último duelo</p>
+          <div className="mt-3 grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2">
+            <div className="min-w-0">
+              {lastA && <p className="truncate font-display text-3xl text-primary sm:text-4xl lg:text-5xl">{displayName(lastA)}</p>}
+              {performanceA && <p className="mt-1 text-2xl font-bold lg:text-3xl">{score(performanceA)}</p>}
+            </div>
+            <span className="font-display text-2xl text-muted-foreground lg:text-3xl">×</span>
+            <div className="min-w-0">
+              {lastB && <p className="truncate font-display text-3xl text-primary sm:text-4xl lg:text-5xl">{displayName(lastB)}</p>}
+              {performanceB && <p className="mt-1 text-2xl font-bold lg:text-3xl">{score(performanceB)}</p>}
+            </div>
+          </div>
+          {winner && <p className="mt-3 text-xl font-bold text-accent lg:text-2xl">🏆 {displayName(winner)} avançou</p>}
+        </article>
+      )}
+
+      <article className="rounded-2xl border border-border/70 bg-background/50 p-4 text-center sm:p-5">
+        {nextMatch ? (
+          <>
+            <p className="text-base font-bold uppercase tracking-[0.18em] text-muted-foreground lg:text-xl">
+              {nextMatch.status === "scheduled" ? "Próximo duelo" : "Duelo em preparação"}
+            </p>
+            <div className="mt-3 grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2">
+              <div className="min-w-0">
+                {nextA && <p className="truncate font-display text-3xl sm:text-4xl lg:text-5xl">{displayName(nextA)}</p>}
+                <p className="mt-1 text-sm text-muted-foreground lg:text-base">{nextPerfA ? "Música preparada" : "Aguardando música"}</p>
+              </div>
+              <span className="font-display text-2xl text-accent lg:text-3xl">VS</span>
+              <div className="min-w-0">
+                {nextB && <p className="truncate font-display text-3xl sm:text-4xl lg:text-5xl">{displayName(nextB)}</p>}
+                <p className="mt-1 text-sm text-muted-foreground lg:text-base">{nextPerfB ? "Música preparada" : "Aguardando música"}</p>
+              </div>
+            </div>
+          </>
+        ) : state.currentChampion && state.nextChallenger ? (
+          <>
+            <p className="text-base font-bold uppercase tracking-[0.18em] text-muted-foreground lg:text-xl">Próximo desafiante</p>
+            <p className="mt-2 font-display text-5xl text-primary sm:text-6xl lg:text-7xl">{displayName(state.nextChallenger)}</p>
+          </>
+        ) : !state.currentChampion && state.firstPair ? (
+          <>
+            <p className="text-base font-bold uppercase tracking-[0.18em] text-muted-foreground lg:text-xl">Primeiro duelo</p>
+            <p className="mt-2 font-display text-4xl sm:text-5xl lg:text-6xl">
+              {displayName(state.firstPair.a)} <span className="text-accent">×</span> {displayName(state.firstPair.b)}
+            </p>
+            <p className="mt-2 text-lg text-muted-foreground">Preparando o início da Arena</p>
+          </>
+        ) : state.currentChampion ? (
+          <>
+            <p className="text-base font-bold uppercase tracking-[0.18em] text-muted-foreground lg:text-xl">Próximo duelo</p>
+            <p className="mt-2 text-2xl font-semibold lg:text-3xl">Aguardando novo desafiante</p>
+          </>
+        ) : (
+          <p className="text-xl font-semibold text-muted-foreground lg:text-2xl">Aguardando participantes para iniciar a Arena</p>
+        )}
+      </article>
+    </section>
   );
 }

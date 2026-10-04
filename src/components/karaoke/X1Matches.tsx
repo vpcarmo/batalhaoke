@@ -8,6 +8,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { supabase } from "@/integrations/supabase/client";
 import { displayName, type Match, type Participant, type Performance } from "@/lib/karaoke";
 import { cancelMatch, confirmMatchWinner, createMatch, createMatchPerformance, startMatch, startMatchPerformance } from "@/lib/x1.functions";
+import { getX1CompetitionState } from "@/lib/x1-state";
 import { MusicSearch } from "@/components/karaoke/MusicSearch";
 import type { PlaybackSearchResult } from "@/lib/playback/types";
 
@@ -23,6 +24,7 @@ export function X1Matches(props: {
   const { sessionId, participants, perfs } = props;
   const [pairToPrepare, setPairToPrepare] = useState<{ a: Participant; b: Participant; first: boolean } | null>(null);
   const [matchToCancel, setMatchToCancel] = useState<Match | null>(null);
+  const byId = (pid: string) => participants.find((participant) => participant.id === pid);
   const matches = useQuery({
     queryKey: matchesKey(sessionId),
     queryFn: async () => {
@@ -31,34 +33,9 @@ export function X1Matches(props: {
       return data as Match[];
     },
   });
-  const byId = (pid: string) => participants.find((p) => p.id === pid);
   const list = matches.data ?? [];
-  const completed = list.filter((m) => m.status === "completed" && m.winner_participant_id);
-  const eliminatedIds = new Set<string>();
-  for (const match of completed) {
-    if (match.participant_a_id !== match.winner_participant_id) eliminatedIds.add(match.participant_a_id);
-    if (match.participant_b_id !== match.winner_participant_id) eliminatedIds.add(match.participant_b_id);
-  }
-  const withdrawnIds = new Set<string>();
-  for (const match of list) {
-    if (match.status !== "cancelled") continue;
-    if (match.withdrawn_slot === "a" || match.withdrawn_slot === "both") withdrawnIds.add(match.participant_a_id);
-    if (match.withdrawn_slot === "b" || match.withdrawn_slot === "both") withdrawnIds.add(match.participant_b_id);
-  }
-  const latestCompleted = completed.at(-1);
-  const currentChampion = latestCompleted?.winner_participant_id && !eliminatedIds.has(latestCompleted.winner_participant_id) && !withdrawnIds.has(latestCompleted.winner_participant_id)
-    ? byId(latestCompleted.winner_participant_id)
-    : undefined;
-  const openMatches = list.filter((m) => m.status === "scheduled" || m.status === "in_progress");
-  const activeCompetitorIds = new Set(openMatches.flatMap((m) => [m.participant_a_id, m.participant_b_id]));
-  const waitingQueue = [...participants]
-    .filter((p) => !eliminatedIds.has(p.id) && !withdrawnIds.has(p.id) && p.id !== currentChampion?.id && !activeCompetitorIds.has(p.id))
-    .sort((a, b) => a.participant_number - b.participant_number);
-  const nextChallenger = waitingQueue[0];
-  const [firstA, firstB] = waitingQueue;
-  const firstPair = !currentChampion && openMatches.length === 0 && firstA && firstB
-    ? { a: firstA, b: firstB, first: completed.length === 0 }
-    : null;
+  const { completed, eliminatedIds, withdrawnIds, currentChampion, openMatches, activeCompetitorIds, waitingQueue, nextChallenger, firstPair } =
+    getX1CompetitionState(list, participants);
   const sessionActive = props.sessionStatus === "active";
   const sessionFinished = props.sessionStatus === "finished";
 
