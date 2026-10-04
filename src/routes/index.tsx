@@ -124,7 +124,17 @@ function Home() {
               </select>
               {!venueId && <Input className="mt-2 h-12 text-base" placeholder="Ou crie um estabelecimento" value={newVenueName} onChange={(e) => setNewVenueName(e.target.value)} />}
             </div>
-            <div className="mt-4">
+             {(venueId || newVenueName.trim()) && (
+              <div className="mt-5 border-t pt-4">
+                <p className="font-medium">Parear TV</p>
+                <p className="mt-1 text-sm text-muted-foreground">Digite o código exibido na TV e dê um nome para ela.</p>
+                <Input className="mt-3 h-11" placeholder="Código da TV (ex.: ABC123)" value={pairingCode} onChange={(e) => setPairingCode(e.target.value.toUpperCase())} maxLength={6} />
+                <Input className="mt-2 h-11" placeholder="Nome da TV (ex.: TV Palco Principal)" value={deviceName} onChange={(e) => setDeviceName(e.target.value)} />
+                <Button type="button" variant="secondary" className="mt-2 h-11 w-full" disabled={busy || pairingCode.length !== 6 || !deviceName.trim()} onClick={() => { void pairTv(); }}>Concluir pareamento</Button>
+                {venueId && <div className="mt-3 text-sm text-muted-foreground">{devices.isLoading ? "Carregando TVs…" : (devices.data ?? []).length ? (devices.data ?? []).map((device) => <div key={device.id} className="mt-2 flex items-center justify-between gap-2"><span>{device.name || "TV sem nome"} · {device.status === "paired" ? "pareada" : device.status}</span>{device.status === "paired" && <Button type="button" variant="ghost" size="sm" disabled={busy} onClick={() => { disableDeviceFn({ data: { venueDeviceId: device.id } }).then(() => devices.refetch()).catch((error: Error) => setErr(error.message)); }}>Desabilitar</Button>}</div>) : "Nenhuma TV pareada ainda."}</div>}
+              </div>
+            )}
+            <div className="mt-5 border-t pt-4">
               <p className="mb-2 text-sm font-medium">Formato</p>
               <div className="grid gap-2" role="radiogroup" aria-label="Formato da sessão">
                 <Button variant={sessionType === "free" ? "default" : "secondary"} className="h-11 justify-start" role="radio" aria-checked={sessionType === "free"} onClick={() => selectSessionType("free")}>🎤 BatalhaOkê Livre</Button>
@@ -147,16 +157,6 @@ function Home() {
               <Button variant="secondary" className="h-12" onClick={() => setCreating(false)}>Cancelar</Button>
               <Button className="h-12" disabled={busy} onClick={start}>{busy ? "Criando…" : "Iniciar"}</Button>
             </div>
-            {(venueId || newVenueName.trim()) && (
-              <div className="mt-5 border-t pt-4">
-                <p className="font-medium">Parear TV</p>
-                <p className="mt-1 text-sm text-muted-foreground">Digite o código exibido na TV e dê um nome para ela.</p>
-                <Input className="mt-3 h-11" placeholder="Código da TV (ex.: ABC123)" value={pairingCode} onChange={(e) => setPairingCode(e.target.value.toUpperCase())} maxLength={6} />
-                <Input className="mt-2 h-11" placeholder="Nome da TV (ex.: TV Palco Principal)" value={deviceName} onChange={(e) => setDeviceName(e.target.value)} />
-                <Button type="button" variant="secondary" className="mt-2 h-11 w-full" disabled={busy || pairingCode.length !== 6 || !deviceName.trim()} onClick={() => { void pairTv(); }}>Concluir pareamento</Button>
-                {venueId && <div className="mt-3 text-sm text-muted-foreground">{devices.isLoading ? "Carregando TVs…" : (devices.data ?? []).length ? (devices.data ?? []).map((device) => <div key={device.id} className="mt-2 flex items-center justify-between gap-2"><span>{device.name || "TV sem nome"} · {device.status === "paired" ? "pareada" : device.status}</span>{device.status === "paired" && <Button type="button" variant="ghost" size="sm" disabled={busy} onClick={() => { disableDeviceFn({ data: { venueDeviceId: device.id } }).then(() => devices.refetch()).catch((error: Error) => setErr(error.message)); }}>Desabilitar</Button>}</div>) : "Nenhuma TV pareada ainda."}</div>}
-              </div>
-            )}
           </div>
         )}
         {err && <p role="alert" className="text-sm text-destructive">{err}</p>}
