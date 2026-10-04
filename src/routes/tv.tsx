@@ -12,6 +12,7 @@ import { getTvState, listVenues, registerTvDevice } from "@/lib/venue.functions"
 import { PlaybackPlayer, type PlaybackPlayerRef } from "@/components/karaoke/PlaybackPlayer";
 import { SessionQr } from "@/components/karaoke/SessionQr";
 import { getX1CompetitionState } from "@/lib/x1-state";
+import { completeMatchPerformance } from "@/lib/x1.functions";
 
 type CompletedPerformance = Performance & {
   participant: NonNullable<Performance["participant"]>;
@@ -297,7 +298,13 @@ function TvPage() {
           </section>
           <section className="w-full">
             <PlaybackPlayer key={active.id} ref={playerRef} provider={active.source.provider} externalId={active.source.external_id}
-              onState={(s) => { if (s === "ended") setPerformanceStatus(active.id, "completed").catch(() => {}); }} />
+              onState={(s) => {
+                if (s !== "ended") return;
+                const completion = active.match_id
+                  ? completeMatchPerformance({ data: { performanceId: active.id } })
+                  : setPerformanceStatus(active.id, "completed");
+                completion.catch((error: unknown) => console.error("Não foi possível concluir a apresentação.", error));
+              }} />
           </section>
         </div>
       ) : (

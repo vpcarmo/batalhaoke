@@ -93,16 +93,26 @@ export const startMatch = createServerFn({ method: "POST" })
       fail("Apenas confrontos agendados podem iniciar");
     const { data: performances, error: performancesError } = await supabaseAdmin
       .from("performances")
-      .select("match_slot, status")
+      .select("id, match_slot, participant_id, playback_source_id, status")
       .eq("match_id", match.id);
     if (performancesError) fail("Não foi possível verificar a preparação do confronto");
-    const slotsReady = new Set(
-      performances
-        .filter((performance) => performance.status === "queued")
-        .map((performance) => performance.match_slot),
-    );
-    if (!slotsReady.has("a") || !slotsReady.has("b"))
+    const performanceA = performances.find((performance) => performance.match_slot === "a");
+    const performanceB = performances.find((performance) => performance.match_slot === "b");
+    if (
+      !performanceA || performanceA.status !== "queued" ||
+      performanceA.participant_id !== match.participant_a_id || !performanceA.playback_source_id ||
+      !performanceB || performanceB.status !== "queued" ||
+      performanceB.participant_id !== match.participant_b_id || !performanceB.playback_source_id
+    )
       fail("Prepare as músicas dos cantores A e B antes de iniciar o confronto");
+    const { data: activePerformance, error: activePerformanceError } = await supabaseAdmin
+      .from("performances")
+      .select("id")
+      .eq("session_id", match.session_id)
+      .eq("status", "active")
+      .maybeSingle();
+    if (activePerformanceError) fail("Não foi possível verificar apresentações em andamento");
+    if (activePerformance) fail("Encerre a apresentação ativa antes de iniciar este confronto");
     const { data: startedMatch, error } = await supabaseAdmin
       .from("matches")
       .update({ status: "in_progress" })
@@ -112,6 +122,7 @@ export const startMatch = createServerFn({ method: "POST" })
       .maybeSingle();
     if (error?.code === "23505") fail("Já existe um confronto em andamento nesta sessão");
     if (error || !startedMatch) fail("Não foi possível iniciar o confronto");
+    await activateMatchPerformance(performanceA.id, "a");
   });
 
 export const createMatchPerformance = createServerFn({ method: "POST" })
@@ -170,52 +181,109 @@ export const createMatchPerformance = createServerFn({ method: "POST" })
 export const startMatchPerformance = createServerFn({ method: "POST" })
   .inputValidator((d) => z.object({ performanceId: Id }).parse(d))
   .handler(async ({ data }) => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: performance } = await supabaseAdmin
-      .from("performances")
-      .select("*")
-      .eq("id", data.performanceId)
-      .maybeSingle();
-    if (!performance?.match_id || performance.status !== "queued")
-      fail("Apresentação X1 agendada não encontrada");
-    const { match } = await getX1Match(performance.match_id);
-    if (match.status !== "in_progress") fail("O confronto não está em andamento");
-    if (performance.match_slot === "b") {
-      const { data: first } = await supabaseAdmin
-        .from("performances")
-        .select("status")
-        .eq("match_id", match.id)
-        .eq("match_slot", "a")
-        .maybeSingle();
-      if (first?.status !== "completed") fail("A apresentação A precisa terminar antes da B");
-    }
-    const { error } = await supabaseAdmin
-      .from("performances")
-      .update({ status: "active", started_at: new Date().toISOString() })
-      .eq("id", performance.id)
-      .eq("status", "queued");
-    if (error) fail("Não foi possível iniciar a apresentação");
+    await activateMatchPerformance(data.performanceId);
   });
+
+async function activateMatchPerformance(performanceId: string, expectedSlot?: "a" | "b") {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data: performance, error: performanceError } = await supabaseAdmin
+    .from("performances")
+    .select("id, match_id, match_slot, participant_id, session_id, status")
+    .eq("id", performanceId)
+    .maybeSingle();
+  if (performanceError) fail("Não foi possível verificar a apresentação X1");
+  if (!performance?.match_id || performance.status !== "queued")
+    fail("Apresentação X1 agendada não encontrada");
+  if (expectedSlot && performance.match_slot !== expectedSlot)
+    fail(`A apresentação do cantor ${expectedSlot.toUpperCase()} não corresponde ao confronto`);
+
+  const { match } = await getX1Match(performance.match_id);
+  if (match.status !== "in_progress") fail("O confronto não está em andamento");
+  const participantId = performance.match_slot === "a" ? match.participant_a_id
+    : performance.match_slot === "b" ? match.participant_b_id
+      : null;
+  if (
+    !participantId || performance.participant_id !== participantId ||
+    performance.session_id !== match.session_id
+  ) fail("A apresentação não pertence à posição informada neste confronto");
+  if (performance.match_slot === "b") {
+    const { data: first, error: firstError } = await supabaseAdmin
+      .from("performances")
+      .select("status")
+      .eq("match_id", match.id)
+      .eq("match_slot", "a")
+      .maybeSingle();
+    if (firstError) fail("Não foi possível verificar a apresentação A");
+    if (first?.status !== "completed") fail("A apresentação A precisa terminar antes da B");
+  }
+
+  const { data: activePerformance, error: activePerformanceError } = await supabaseAdmin
+    .from("performances")
+    .select("id")
+    .eq("session_id", match.session_id)
+    .eq("status", "active")
+    .maybeSingle();
+  if (activePerformanceError) fail("Não foi possível verificar apresentações em andamento");
+  if (activePerformance) fail("Já existe uma apresentação ativa nesta sessão");
+
+  const { data: activatedPerformance, error } = await supabaseAdmin
+    .from("performances")
+    .update({ status: "active", started_at: new Date().toISOString() })
+    .eq("id", performance.id)
+    .eq("status", "queued")
+    .select("id")
+    .maybeSingle();
+  if (error?.code === "23505") fail("Já existe uma apresentação ativa nesta sessão");
+  if (error || !activatedPerformance) fail("Não foi possível iniciar a apresentação");
+}
 
 export const completeMatchPerformance = createServerFn({ method: "POST" })
   .inputValidator((d) => z.object({ performanceId: Id }).parse(d))
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: performance } = await supabaseAdmin
+    const { data: performance, error: performanceError } = await supabaseAdmin
       .from("performances")
-      .select("id, match_id, status")
+      .select("id, match_id, match_slot, participant_id, session_id, status")
       .eq("id", data.performanceId)
       .maybeSingle();
+    if (performanceError) fail("Não foi possível verificar a apresentação X1");
     if (!performance?.match_id || performance.status !== "active")
       fail("Apresentação X1 ativa não encontrada");
     const { match } = await getX1Match(performance.match_id);
     if (match.status !== "in_progress") fail("O confronto não está em andamento");
-    const { error } = await supabaseAdmin
+    const participantId = performance.match_slot === "a" ? match.participant_a_id
+      : performance.match_slot === "b" ? match.participant_b_id
+        : null;
+    if (
+      !participantId || performance.participant_id !== participantId ||
+      performance.session_id !== match.session_id
+    ) fail("A apresentação não pertence à posição informada neste confronto");
+    const { data: completedPerformance, error } = await supabaseAdmin
       .from("performances")
       .update({ status: "completed", ended_at: new Date().toISOString() })
       .eq("id", performance.id)
-      .eq("status", "active");
-    if (error) fail("Não foi possível encerrar a apresentação");
+      .eq("status", "active")
+      .select("id")
+      .maybeSingle();
+    if (error || !completedPerformance) fail("Não foi possível encerrar a apresentação");
+
+    if (performance.match_slot === "a") {
+      const { data: performanceB, error: performanceBError } = await supabaseAdmin
+        .from("performances")
+        .select("id, match_slot, participant_id, session_id, status")
+        .eq("match_id", match.id)
+        .eq("match_slot", "b")
+        .maybeSingle();
+      if (performanceBError) fail("Não foi possível verificar a apresentação B");
+      if (
+        performanceB?.status === "queued" &&
+        performanceB.match_slot === "b" &&
+        performanceB.participant_id === match.participant_b_id &&
+        performanceB.session_id === match.session_id
+      ) {
+        await activateMatchPerformance(performanceB.id, "b");
+      }
+    }
   });
 
 export const confirmMatchWinner = createServerFn({ method: "POST" })
