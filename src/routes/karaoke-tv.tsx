@@ -139,9 +139,18 @@ function TvPage() {
   }, [sessionId]);
 
   const brand = (
-    <header className="flex items-center justify-center gap-3 lg:justify-start">
+    <header className="relative flex items-center justify-center gap-3 lg:justify-start">
       <Mic2 className="size-8 text-primary lg:size-10" aria-hidden />
       <p className="font-display text-4xl lg:text-5xl">BatalhaOkê</p>
+      <button
+        type="button"
+        onClick={toggleFullscreen}
+        aria-label={isFullscreen ? "Sair da tela cheia" : "Entrar em tela cheia"}
+        title={isFullscreen ? "Sair da tela cheia" : "Entrar em tela cheia"}
+        className="absolute right-0 top-1/2 -translate-y-1/2 rounded-full border border-border/60 p-3 text-muted-foreground hover:bg-accent/10 hover:text-foreground lg:p-4 focus-visible:outline-2 focus-visible:outline-ring"
+      >
+        {isFullscreen ? <Minimize2 className="size-6 lg:size-8" aria-hidden /> : <Maximize2 className="size-6 lg:size-8" aria-hidden />}
+      </button>
     </header>
   );
 
