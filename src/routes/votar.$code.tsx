@@ -113,7 +113,7 @@ function VotePage() {
                 <p className="text-xl text-muted-foreground">{session.voting_mode === "like_dislike" ? "O que você achou?" : "Você gostou?"}</p>
                 <div className={`grid w-full gap-3 ${session.voting_mode === "like_dislike" ? "grid-cols-2" : "grid-cols-1"}`}>
                   <button onClick={() => onVote("like")} disabled={busy || !token || statusQ.isLoading}
-                    className="flex h-40 w-full items-center justify-center gap-4 rounded-3xl bg-primary font-display text-5xl text-primary-foreground shadow-glow transition active:scale-95 disabled:opacity-60 focus-visible:outline-2 focus-visible:outline-ring">
+                    className="flex h-40 w-full items-center justify-center gap-4 rounded-3xl bg-primary font-display text-5xl font-semibold text-primary-foreground shadow-glow transition active:scale-95 disabled:opacity-80 focus-visible:outline-2 focus-visible:outline-ring">
                     <ThumbsUp className="size-12" aria-hidden /> {busy ? "…" : "Gostei"}
                   </button>
                   {session.voting_mode === "like_dislike" && <button onClick={() => onVote("dislike")} disabled={busy || !token || statusQ.isLoading}
