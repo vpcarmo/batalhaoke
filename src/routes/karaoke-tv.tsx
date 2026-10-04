@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { zodValidator, fallback } from "@tanstack/zod-adapter";
 import { z } from "zod";
-import { Mic2 } from "lucide-react";
+import { Maximize2, Mic2, Minimize2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSessionLive } from "@/hooks/use-session-live";
 import { commandChannel, displayName, setPerformanceStatus } from "@/lib/karaoke";
@@ -67,6 +67,49 @@ function TvPage() {
   const playerRef = useRef<PlaybackPlayerRef>(null);
   const [armed, setArmed] = useState(false);
 
+  // Fullscreen state (client-only; SSR renders the button without document access).
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  useEffect(() => {
+    const doc = document as Document & {
+      webkitFullscreenElement?: Element | null;
+      webkitExitFullscreen?: () => Promise<void> | void;
+    };
+    const sync = () => {
+      setIsFullscreen(!!(doc.fullscreenElement ?? doc.webkitFullscreenElement));
+    };
+    sync();
+    document.addEventListener("fullscreenchange", sync);
+    document.addEventListener("webkitfullscreenchange", sync);
+    return () => {
+      document.removeEventListener("fullscreenchange", sync);
+      document.removeEventListener("webkitfullscreenchange", sync);
+    };
+  }, []);
+  const toggleFullscreen = () => {
+    const doc = document as Document & {
+      webkitFullscreenElement?: Element | null;
+      webkitExitFullscreen?: () => Promise<void> | void;
+    };
+    const element = document.documentElement as HTMLElement & {
+      webkitRequestFullscreen?: () => Promise<void> | void;
+    };
+    if (doc.fullscreenElement ?? doc.webkitFullscreenElement) {
+      if (typeof doc.exitFullscreen === "function") {
+        const request = doc.exitFullscreen();
+        if (request && typeof request.catch === "function") request.catch(() => {});
+      } else if (typeof doc.webkitExitFullscreen === "function") {
+        doc.webkitExitFullscreen();
+      }
+      return;
+    }
+    if (typeof element.requestFullscreen === "function") {
+      const request = element.requestFullscreen();
+      if (request && typeof request.catch === "function") request.catch(() => {});
+    } else if (typeof element.webkitRequestFullscreen === "function") {
+      element.webkitRequestFullscreen();
+    }
+  };
+
   useEffect(() => {
     const venueId = tvState.data?.venueId;
     if (!paired || !venueId) return;
@@ -96,9 +139,18 @@ function TvPage() {
   }, [sessionId]);
 
   const brand = (
-    <header className="flex items-center justify-center gap-3 lg:justify-start">
+    <header className="relative flex items-center justify-center gap-3 lg:justify-start">
       <Mic2 className="size-8 text-primary lg:size-10" aria-hidden />
       <p className="font-display text-4xl lg:text-5xl">BatalhaOkê</p>
+      <button
+        type="button"
+        onClick={toggleFullscreen}
+        aria-label={isFullscreen ? "Sair da tela cheia" : "Entrar em tela cheia"}
+        title={isFullscreen ? "Sair da tela cheia" : "Entrar em tela cheia"}
+        className="absolute right-0 top-1/2 -translate-y-1/2 rounded-full border border-border/60 p-3 text-muted-foreground hover:bg-accent/10 hover:text-foreground lg:p-4 focus-visible:outline-2 focus-visible:outline-ring"
+      >
+        {isFullscreen ? <Minimize2 className="size-6 lg:size-8" aria-hidden /> : <Maximize2 className="size-6 lg:size-8" aria-hidden />}
+      </button>
     </header>
   );
 
