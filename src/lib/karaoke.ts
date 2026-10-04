@@ -28,14 +28,16 @@ export async function getActiveSession(): Promise<Session | null> {
   return data as Session | null;
 }
 
-export async function createSession(name: string, options: { sessionType?: SessionType; votingMode?: VotingMode; venueId?: string | null } = {}): Promise<Session> {
+export async function createSession(name: string, options: { sessionType?: SessionType; votingMode?: VotingMode; venueId: string }): Promise<Session> {
+  const venueId = options.venueId.trim();
+  if (!venueId) throw new Error("Selecione ou crie um estabelecimento antes de iniciar a sessão.");
   const sessionType = options.sessionType ?? "free";
   if (sessionType !== "free" && options.votingMode === "like_only") {
     throw new Error("Este formato exige votação com Gostei / Não gostei");
   }
   const votingMode = sessionType === "free" ? options.votingMode ?? "like_only" : "like_dislike";
   const now = new Date().toISOString();
-  const { data, error } = await supabase.from("sessions").insert({ name, status: "active", started_at: now, session_type: sessionType, voting_mode: votingMode, venue_id: options.venueId ?? null }).select().single();
+  const { data, error } = await supabase.from("sessions").insert({ name, status: "active", started_at: now, session_type: sessionType, voting_mode: votingMode, venue_id: venueId }).select().single();
   fail(error, "Erro ao criar sessão");
   return data as Session;
 }

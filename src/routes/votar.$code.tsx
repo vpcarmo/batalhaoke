@@ -1,11 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Check, Mic2, ThumbsDown, ThumbsUp } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 import { useSessionLive } from "@/hooks/use-session-live";
-import { displayName, getSessionByCode, getVoterToken } from "@/lib/karaoke";
-import { castVote, getVoterStatus } from "@/lib/votes.functions";
+import { displayName, getVoterToken } from "@/lib/karaoke";
+import { castVote, getVoterStatus, getVotingSession } from "@/lib/votes.functions";
 
 export const Route = createFileRoute("/votar/$code")({
   ssr: false,
@@ -24,9 +25,13 @@ export const Route = createFileRoute("/votar/$code")({
 
 function VotePage() {
   const { code } = Route.useParams();
-  const sessionQ = useQuery({ queryKey: ["session-by-code", code], queryFn: () => getSessionByCode(code), retry: 2 });
-  const live = useSessionLive(sessionQ.data?.id);
-  const session = live.session.data ?? sessionQ.data;
+  const queryClient = useQueryClient();
+  const getVotingSessionFn = useServerFn(getVotingSession);
+  const sessionQ = useQuery({ queryKey: ["voting-target", code], queryFn: () => getVotingSessionFn({ data: { code } }), retry: 2 });
+  const target = sessionQ.data;
+  const session = target?.session;
+  const live = useSessionLive(session?.id);
+  const currentSession = live.session.data ?? session;
   const active = live.active;
   const [token, setToken] = useState<string | null>(null);
   useEffect(() => { setToken(getVoterToken()); }, []);
@@ -36,6 +41,18 @@ function VotePage() {
   const [voted, setVoted] = useState<Record<string, boolean>>({});
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (target?.kind !== "venue") return;
+    const channel = supabase.channel(`venue-voting:${target.venueId}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "sessions", filter: `venue_id=eq.${target.venueId}` }, () => {
+        void queryClient.invalidateQueries({ queryKey: ["voting-target", code] });
+      })
+      .subscribe((status) => {
+        if (status === "SUBSCRIBED") void queryClient.invalidateQueries({ queryKey: ["voting-target", code] });
+      });
+    return () => { void supabase.removeChannel(channel); };
+  }, [code, queryClient, target?.kind, target?.venueId]);
 
   const statusQ = useQuery({
     queryKey: ["voter-status", code, active?.id],
@@ -52,6 +69,7 @@ function VotePage() {
       if (r.result === "ok" || r.result === "already_voted") setVoted((v) => ({ ...v, [r.performanceId]: true }));
       else if (r.result === "vote_not_allowed") setErr("Esta sessão aceita apenas votos de gostei.");
       else if (r.result === "no_performance") setErr("A apresentação terminou. Aguarde o próximo cantor.");
+      else if (r.result === "no_active_session") setErr("Este estabelecimento não possui uma batalha ativa no momento.");
       else setErr("Esta sessão não está mais aceitando votos.");
     } catch (e) { setErr((e as Error).message); } finally { setBusy(false); }
   }
@@ -67,9 +85,11 @@ function VotePage() {
           <p className="text-muted-foreground">Carregando…</p>
         ) : sessionQ.error ? (
           <p role="alert" className="text-destructive">Sem conexão. Verifique a internet e recarregue.</p>
+        ) : target?.kind === "venue" && !session ? (
+          <p className="text-lg text-muted-foreground">Este estabelecimento não possui uma batalha ativa no momento.</p>
         ) : !session ? (
           <p className="text-lg text-muted-foreground">QR Code inválido.</p>
-        ) : session.status !== "active" ? (
+        ) : currentSession?.status !== "active" ? (
           <p className="text-lg text-muted-foreground">Esta sessão foi encerrada. Obrigado por participar!</p>
         ) : !active?.participant ? (
           <div>

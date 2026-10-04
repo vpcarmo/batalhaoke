@@ -1,8 +1,10 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
+const Code = z.string().trim().min(4).max(40).regex(/^[a-zA-Z0-9_-]+$/);
+
 const Input = z.object({
-  code: z.string().trim().min(4).max(40).regex(/^[a-zA-Z0-9_-]+$/),
+  code: Code,
   token: z.string().min(16).max(128).regex(/^[a-zA-Z0-9_-]+$/),
   voteType: z.enum(["like", "dislike"]).default("like"),
 });
@@ -12,12 +14,33 @@ async function hashToken(sessionId: string, token: string) {
   return Array.from(new Uint8Array(buf), (b) => b.toString(16).padStart(2, "0")).join("");
 }
 
+async function resolveVotingSession(code: string) {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data: venue, error: venueError } = await supabaseAdmin.from("venues").select("id").eq("slug", code).maybeSingle();
+  if (venueError) throw new Error("Não foi possível localizar o estabelecimento.");
+
+  if (venue) {
+    const { data: session, error } = await supabaseAdmin.from("sessions").select("*")
+      .eq("venue_id", venue.id).eq("status", "active").maybeSingle();
+    if (error) throw new Error("Não foi possível carregar a sessão ativa.");
+    return { kind: "venue" as const, venueId: venue.id, session };
+  }
+
+  const { data: session, error } = await supabaseAdmin.from("sessions").select("*").eq("public_code", code).maybeSingle();
+  if (error) throw new Error("Não foi possível carregar a sessão.");
+  return { kind: "legacy" as const, venueId: null, session };
+}
+
+export const getVotingSession = createServerFn({ method: "POST" })
+  .inputValidator((data) => z.object({ code: Code }).parse(data))
+  .handler(async ({ data }) => resolveVotingSession(data.code));
+
 /** Has this anonymous voter already voted on the session's currently active performance? */
 export const getVoterStatus = createServerFn({ method: "POST" })
   .inputValidator((d) => Input.parse(d))
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: s } = await supabaseAdmin.from("sessions").select("id, status").eq("public_code", data.code).maybeSingle();
+    const { session: s } = await resolveVotingSession(data.code);
     if (!s || s.status !== "active") return { performanceId: null as string | null, hasVoted: false };
     const { data: perf } = await supabaseAdmin.from("performances").select("id").eq("session_id", s.id).eq("status", "active").limit(1).maybeSingle();
     if (!perf) return { performanceId: null, hasVoted: false };
@@ -36,8 +59,8 @@ export const castVote = createServerFn({ method: "POST" })
   .inputValidator((d) => Input.parse(d))
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: s } = await supabaseAdmin.from("sessions").select("id, status, voting_mode").eq("public_code", data.code).maybeSingle();
-    if (!s) return { result: "invalid_session" as const };
+    const { kind, session: s } = await resolveVotingSession(data.code);
+    if (!s) return kind === "venue" ? { result: "no_active_session" as const } : { result: "invalid_session" as const };
     if (s.status !== "active") return { result: "session_closed" as const };
     if (data.voteType === "dislike" && s.voting_mode !== "like_dislike") return { result: "vote_not_allowed" as const };
     const { data: perf } = await supabaseAdmin.from("performances").select("id").eq("session_id", s.id).eq("status", "active").limit(1).maybeSingle();

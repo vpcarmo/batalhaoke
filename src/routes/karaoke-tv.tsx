@@ -29,6 +29,7 @@ export const Route = createFileRoute("/karaoke-tv")({
 
 function TvPage() {
   const { session: sp } = Route.useSearch();
+  const devSession = import.meta.env.DEV ? sp : "";
   const [deviceToken, setDeviceToken] = useState<string | null>(null);
   const [tokenReady, setTokenReady] = useState(false);
   const tvStateFn = useServerFn(getTvState);
@@ -36,7 +37,7 @@ function TvPage() {
   useEffect(() => {
     const stored = window.localStorage.getItem("ka-tv-device-token");
     if (stored) setDeviceToken(stored);
-    else if (!sp) {
+    else if (!devSession) {
       const bytes = new Uint8Array(32);
       window.crypto.getRandomValues(bytes);
       let token = "";
@@ -45,7 +46,7 @@ function TvPage() {
       setDeviceToken(token);
     }
     setTokenReady(true);
-  }, [sp]);
+  }, [devSession]);
   const tvState = useQuery({
     queryKey: ["tv-state", deviceToken],
     queryFn: () => tvStateFn({ data: { deviceToken: deviceToken! } }),
@@ -60,7 +61,7 @@ function TvPage() {
     staleTime: Infinity,
   });
   const paired = !!tvState.data?.paired;
-  const sessionId = paired ? tvState.data?.activeSessionId ?? undefined : sp;
+  const sessionId = paired ? tvState.data?.activeSessionId ?? undefined : devSession || undefined;
   const live = useSessionLive(sessionId);
   const active = live.active;
   const next = live.queued[0];
@@ -162,7 +163,7 @@ function TvPage() {
     return <main className="grid min-h-dvh place-items-center p-8 text-center"><div>{brand}<p className="mt-6 text-2xl text-muted-foreground lg:text-4xl">Esta TV foi desabilitada. Peça ajuda ao operador.</p></div></main>;
   }
 
-  if (!sp && !paired) {
+  if (!devSession && !paired) {
     return (
       <main className="grid min-h-dvh place-items-center p-8 text-center">
         <div>{brand}<p className="mt-6 text-2xl text-muted-foreground lg:text-4xl">Esta TV ainda não está configurada.</p>

@@ -55,10 +55,14 @@ function Home() {
   }
 
   async function start() {
+    if (!venueId && !newVenueName.trim()) {
+      setErr("Selecione um estabelecimento ou informe um nome para criar um.");
+      return;
+    }
     setBusy(true); setErr(null);
     try {
-      let selectedVenueId = venueId || null;
-      if (!selectedVenueId && newVenueName.trim()) {
+      let selectedVenueId = venueId;
+      if (!selectedVenueId) {
         const venue = await createVenueFn({ data: { name: newVenueName.trim() } });
         selectedVenueId = venue.id;
       }

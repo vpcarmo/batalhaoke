@@ -7,6 +7,10 @@ const Id = z.string().uuid();
 const PairingTtlMs = 10 * 60 * 1000;
 const pairingAlphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 
+function newVenueSlug() {
+  return `v-${crypto.randomUUID().replace(/-/g, "")}`;
+}
+
 async function sha256(value: string) {
   const bytes = new TextEncoder().encode(value);
   const digest = await crypto.subtle.digest("SHA-256", bytes);
@@ -83,7 +87,7 @@ export const registerTvDevice = createServerFn({ method: "POST" })
 
 export const listVenues = createServerFn({ method: "GET" }).handler(async () => {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const { data, error } = await supabaseAdmin.from("venues").select("id, name").order("name");
+  const { data, error } = await supabaseAdmin.from("venues").select("id, name, slug").order("name");
   if (error) throw new Error("Não foi possível carregar estabelecimentos.");
   return data ?? [];
 });
@@ -92,7 +96,7 @@ export const createVenue = createServerFn({ method: "POST" })
   .inputValidator((data) => z.object({ name: z.string().trim().min(2).max(100) }).parse(data))
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: venue, error } = await supabaseAdmin.from("venues").insert({ name: data.name }).select("id, name").single();
+    const { data: venue, error } = await supabaseAdmin.from("venues").insert({ name: data.name, slug: newVenueSlug() }).select("id, name, slug").single();
     if (error || !venue) throw new Error("Não foi possível criar o estabelecimento.");
     return venue;
   });
@@ -120,7 +124,7 @@ export const pairVenueDevice = createServerFn({ method: "POST" })
     let venueId = data.venueId;
     if (!venueId) {
       if (!data.venueName) throw new Error("Selecione ou informe um estabelecimento.");
-      const { data: venue, error } = await supabaseAdmin.from("venues").insert({ name: data.venueName }).select("id").single();
+      const { data: venue, error } = await supabaseAdmin.from("venues").insert({ name: data.venueName, slug: newVenueSlug() }).select("id").single();
       if (error || !venue) throw new Error("Não foi possível criar o estabelecimento.");
       venueId = venue.id;
     }

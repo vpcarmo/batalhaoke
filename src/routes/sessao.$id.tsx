@@ -69,6 +69,8 @@ function SessionPage() {
   const sendTv = (action: "play" | "pause") => chRef.current?.send({ type: "broadcast", event: "command", payload: { action } });
 
   const session = live.session.data;
+  const venueSlug = session?.venue_id ? venues.data?.find((venue) => venue.id === session.venue_id)?.slug : null;
+  const votingCode = session?.venue_id ? venueSlug : session?.public_code;
   const participants = live.participants.data ?? [];
   const perfs = live.performances.data ?? [];
   const active = live.active;
@@ -305,13 +307,13 @@ function SessionPage() {
         <SheetContent side="bottom" className="max-h-[92dvh] overflow-y-auto rounded-t-2xl">
           <SheetHeader><SheetTitle className="font-display text-3xl">QR Code de votação</SheetTitle></SheetHeader>
           <div className="flex flex-col items-center gap-4 px-4 pb-6 text-center">
-            <SessionQr code={session.public_code} size={200} id="session-qr" />
+            {votingCode ? <SessionQr code={votingCode} size={200} id="session-qr" /> : <p className="text-muted-foreground">Carregando QR Code permanente…</p>}
             <p className="text-muted-foreground">Escaneie com o celular para votar nas apresentações.</p>
-            <p className="w-full break-all rounded-lg bg-secondary px-3 py-2 text-xs">{voteUrl(session.public_code)}</p>
+            {votingCode && <p className="w-full break-all rounded-lg bg-secondary px-3 py-2 text-xs">{voteUrl(votingCode)}</p>}
             <div className="grid w-full grid-cols-1 gap-2 sm:grid-cols-3">
-              <Button className="h-12" onClick={() => navigator.clipboard.writeText(voteUrl(session.public_code)).then(() => toast.success("Link copiado"), () => toast.error("Não foi possível copiar"))}><Copy className="size-4" /> Copiar link</Button>
-              <Button variant="secondary" className="h-12" onClick={() => downloadQr(session.public_code)}><Download className="size-4" /> Baixar QR Code</Button>
-              <Button variant="secondary" asChild className="h-12"><a href={`/qr/${session.public_code}`} target="_blank" rel="noreferrer"><Printer className="size-4" /> Imprimir</a></Button>
+              <Button className="h-12" disabled={!votingCode} onClick={() => navigator.clipboard.writeText(voteUrl(votingCode!)).then(() => toast.success("Link copiado"), () => toast.error("Não foi possível copiar"))}><Copy className="size-4" /> Copiar link</Button>
+              <Button variant="secondary" className="h-12" disabled={!votingCode} onClick={() => votingCode && downloadQr(votingCode)}><Download className="size-4" /> Baixar QR Code</Button>
+              <Button variant="secondary" asChild className="h-12"><a href={votingCode ? `/qr/${votingCode}` : undefined} target="_blank" rel="noreferrer" aria-disabled={!votingCode}><Printer className="size-4" /> Imprimir</a></Button>
             </div>
           </div>
         </SheetContent>
