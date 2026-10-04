@@ -231,7 +231,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 });
 
 function RootShell({ children }: { children: ReactNode }) {
-  const isTvPage = useRouterState({ select: (state) => state.location.pathname === "/karaoke-tv" });
+  const isTvPage = useRouterState({ select: (state) => state.location.pathname === "/tv" });
   return (
     <html lang="pt-BR" data-tv-page={isTvPage ? "" : undefined}>
       <head>

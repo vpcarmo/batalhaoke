@@ -12,7 +12,7 @@ export default defineConfig({
     // nitro/vite builds from this
     server: { entry: "server" },
   },
-  // Downlevel syntax (?. ?? etc.) so the TV browser (LG webOS 5 / Chromium 68) can run /karaoke-tv.
+  // Downlevel syntax (?. ?? etc.) so the TV browser (LG webOS 5 / Chromium 68) can run /tv.
   vite: {
     build: { target: ["es2018", "chrome68"] },
   },

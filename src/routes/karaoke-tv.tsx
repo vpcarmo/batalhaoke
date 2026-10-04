@@ -44,7 +44,7 @@ function PerformanceScore({ performance, votingMode }: { performance: Performanc
   );
 }
 
-export const Route = createFileRoute("/karaoke-tv")({
+export const Route = createFileRoute("/tv")({
   validateSearch: zodValidator(z.object({ session: fallback(z.string(), "").default("") })),
   head: () => ({
     meta: [

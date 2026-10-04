@@ -10,7 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as KaraokeTvRouteImport } from './routes/karaoke-tv'
+import { Route as KaraokeTvRouteImport } from './routes/tv'
 import { Route as QrCodeRouteImport } from './routes/qr.$code'
 import { Route as SessaoIdRouteImport } from './routes/sessao.$id'
 import { Route as VotarCodeRouteImport } from './routes/votar.$code'
@@ -21,8 +21,8 @@ const IndexRoute = IndexRouteImport.update({
   getParentRoute: () => rootRouteImport,
 } as any)
 const KaraokeTvRoute = KaraokeTvRouteImport.update({
-  id: '/karaoke-tv',
-  path: '/karaoke-tv',
+  id: '/tv',
+  path: '/tv',
   getParentRoute: () => rootRouteImport,
 } as any)
 const QrCodeRoute = QrCodeRouteImport.update({
@@ -43,14 +43,14 @@ const VotarCodeRoute = VotarCodeRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/karaoke-tv': typeof KaraokeTvRoute
+  '/tv': typeof KaraokeTvRoute
   '/qr/$code': typeof QrCodeRoute
   '/sessao/$id': typeof SessaoIdRoute
   '/votar/$code': typeof VotarCodeRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/karaoke-tv': typeof KaraokeTvRoute
+  '/tv': typeof KaraokeTvRoute
   '/qr/$code': typeof QrCodeRoute
   '/sessao/$id': typeof SessaoIdRoute
   '/votar/$code': typeof VotarCodeRoute
@@ -58,20 +58,20 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/karaoke-tv': typeof KaraokeTvRoute
+  '/tv': typeof KaraokeTvRoute
   '/qr/$code': typeof QrCodeRoute
   '/sessao/$id': typeof SessaoIdRoute
   '/votar/$code': typeof VotarCodeRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/karaoke-tv' | '/qr/$code' | '/sessao/$id' | '/votar/$code'
+  fullPaths: '/' | '/tv' | '/qr/$code' | '/sessao/$id' | '/votar/$code'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/karaoke-tv' | '/qr/$code' | '/sessao/$id' | '/votar/$code'
+  to: '/' | '/tv' | '/qr/$code' | '/sessao/$id' | '/votar/$code'
   id:
     | '__root__'
     | '/'
-    | '/karaoke-tv'
+    | '/tv'
     | '/qr/$code'
     | '/sessao/$id'
     | '/votar/$code'
@@ -94,10 +94,10 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/karaoke-tv': {
-      id: '/karaoke-tv'
-      path: '/karaoke-tv'
-      fullPath: '/karaoke-tv'
+    '/tv': {
+      id: '/tv'
+      path: '/tv'
+      fullPath: '/tv'
       preLoaderRoute: typeof KaraokeTvRouteImport
       parentRoute: typeof rootRouteImport
     }

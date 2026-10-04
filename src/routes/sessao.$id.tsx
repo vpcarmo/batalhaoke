@@ -160,7 +160,7 @@ function SessionPage() {
       <div className={`grid gap-3 ${session.tv_enabled ? "grid-cols-2" : "grid-cols-1"}`}>
         {session.tv_enabled && (
           <Button variant="secondary" asChild className="h-12">
-            <a href={`/karaoke-tv?session=${id}`} target="_blank" rel="noreferrer"><Tv className="size-4" /> Abrir tela da TV</a>
+            <a href={`/tv?session=${id}`} target="_blank" rel="noreferrer"><Tv className="size-4" /> Abrir tela da TV</a>
           </Button>
         )}
         <Button variant="secondary" className="h-12" onClick={() => setQrOpen(true)}><QrCode className="size-4" /> QR Code de votação</Button>

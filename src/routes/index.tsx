@@ -191,7 +191,7 @@ function Home() {
         {notice && <p role="status" className="text-sm text-success">{notice}</p>}
       </section>
 
-      <Link to="/karaoke-tv" className="mx-auto inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm text-muted-foreground hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring">
+      <Link to="/tv" className="mx-auto inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm text-muted-foreground hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring">
         <Tv className="size-4" /> Abrir tela da TV
       </Link>
     </main>

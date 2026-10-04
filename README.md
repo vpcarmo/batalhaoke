@@ -72,7 +72,7 @@ Mobile First.
 Interface pública
 TV/desktop/projector First.
 Criar uma rota específica:
-/karaoke-tv
+/tv
 
 Essa tela não deve possuir menus administrativos.
 Ela serve exclusivamente para exibir:
@@ -505,7 +505,7 @@ performance.status = completed
 Registrar ended_at.
 24. TELA DE TV
 Criar:
-/karaoke-tv
+/tv
 
 Essa tela deverá ser independente da interface administrativa.
 Não mostrar:
@@ -541,7 +541,7 @@ CELULAR DO OPERADOR
        SUPABASE
           │
           ▼
-       TV /KARAOKE-TV
+       TV /tv
 
 O operador não precisa controlar a TV diretamente.
 Exemplo:
@@ -897,7 +897,7 @@ Teste 9
 Criar performance.
 Teste 10
 Abrir a tela:
-/karaoke-tv
+/tv
 
 Teste 11
 A TV mostrar:
@@ -949,7 +949,7 @@ A estrutura conceitual deverá ser:
           ┌────────────┴────────────┐
           │                         │
       OPERADOR                    TV
-      MOBILE                  /karaoke-tv
+      MOBILE                  /tv
           │                         │
           └────────────┬────────────┘
                        │
