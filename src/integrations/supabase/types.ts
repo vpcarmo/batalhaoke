@@ -299,6 +299,7 @@ export type Database = {
           status: string
           tv_enabled: boolean
           updated_at: string
+          venue_id: string | null
           voting_mode: string
         }
         Insert: {
@@ -313,6 +314,7 @@ export type Database = {
           status?: string
           tv_enabled?: boolean
           updated_at?: string
+          venue_id?: string | null
           voting_mode?: string
         }
         Update: {
@@ -327,7 +329,84 @@ export type Database = {
           status?: string
           tv_enabled?: boolean
           updated_at?: string
+          venue_id?: string | null
           voting_mode?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sessions_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      venue_devices: {
+        Row: {
+          created_at: string
+          device_token_hash: string
+          id: string
+          last_seen_at: string | null
+          name: string | null
+          pairing_code_hash: string | null
+          pairing_expires_at: string | null
+          status: string
+          updated_at: string
+          venue_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          device_token_hash: string
+          id?: string
+          last_seen_at?: string | null
+          name?: string | null
+          pairing_code_hash?: string | null
+          pairing_expires_at?: string | null
+          status?: string
+          updated_at?: string
+          venue_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          device_token_hash?: string
+          id?: string
+          last_seen_at?: string | null
+          name?: string | null
+          pairing_code_hash?: string | null
+          pairing_expires_at?: string | null
+          status?: string
+          updated_at?: string
+          venue_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "venue_devices_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      venues: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          updated_at?: string
         }
         Relationships: []
       }
