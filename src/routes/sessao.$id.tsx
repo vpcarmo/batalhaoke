@@ -1,6 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { ArrowLeft, Mic2, Music, Pause, Play, Plus, Square, Tv, Smartphone, Check, QrCode, Copy, Download, Printer, ThumbsDown, ThumbsUp } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -18,6 +19,7 @@ import { SessionQr, voteUrl } from "@/components/karaoke/SessionQr";
 import type { PlaybackSearchResult } from "@/lib/playback/types";
 import { X1Matches, matchesKey } from "@/components/karaoke/X1Matches";
 import { completeMatchPerformance, startMatchPerformance } from "@/lib/x1.functions";
+import { listVenues } from "@/lib/venue.functions";
 
 const sessionTypeLabels = {
   free: "BatalhaOkê Livre",
@@ -55,6 +57,8 @@ function SessionPage() {
   const [finishOpen, setFinishOpen] = useState(false);
   const playerRef = useRef<PlaybackPlayerRef>(null);
   const stats = useQuery({ queryKey: ["api-stats"], queryFn: getApiStats, staleTime: Infinity });
+  const listVenuesFn = useServerFn(listVenues);
+  const venues = useQuery({ queryKey: ["venues"], queryFn: () => listVenuesFn(), enabled: !!live.session.data?.venue_id, staleTime: 60_000 });
 
   const chRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   useEffect(() => {
@@ -110,6 +114,7 @@ function SessionPage() {
         <div className="min-w-0 flex-1">
           <p className="font-display text-2xl leading-none">BatalhaOkê</p>
           <p className="truncate text-sm text-muted-foreground">{session.name}</p>
+          {session.venue_id && <p className="truncate text-xs text-muted-foreground">Estabelecimento: {venues.data?.find((venue) => venue.id === session.venue_id)?.name ?? "Carregando…"}</p>}
         </div>
         <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold ${session.status === "active" ? "bg-success/15 text-success" : "bg-muted text-muted-foreground"}`}>
           <span className={`size-2 rounded-full ${session.status === "active" ? "bg-success animate-pulse" : "bg-muted-foreground"}`} />
