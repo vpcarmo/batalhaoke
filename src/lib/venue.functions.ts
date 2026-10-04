@@ -145,3 +145,28 @@ export const disableVenueDevice = createServerFn({ method: "POST" })
       .eq("id", data.venueDeviceId);
     if (error) throw new Error("Não foi possível desabilitar a TV.");
   });
+
+export const enableVenueDevice = createServerFn({ method: "POST" })
+  .inputValidator((data) => z.object({ venueDeviceId: Id }).parse(data))
+  .handler(async ({ data }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: device, error } = await supabaseAdmin.from("venue_devices")
+      .update({ status: "paired", pairing_code_hash: null, pairing_expires_at: null })
+      .eq("id", data.venueDeviceId)
+      .eq("status", "disabled")
+      .select("id")
+      .maybeSingle();
+    if (error || !device) throw new Error("Não foi possível reativar a TV desabilitada.");
+  });
+
+export const deleteVenueDevice = createServerFn({ method: "POST" })
+  .inputValidator((data) => z.object({ venueDeviceId: Id }).parse(data))
+  .handler(async ({ data }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: device, error } = await supabaseAdmin.from("venue_devices")
+      .delete()
+      .eq("id", data.venueDeviceId)
+      .select("id")
+      .maybeSingle();
+    if (error || !device) throw new Error("Não foi possível excluir a TV.");
+  });

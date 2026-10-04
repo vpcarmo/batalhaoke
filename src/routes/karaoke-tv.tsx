@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { zodValidator, fallback } from "@tanstack/zod-adapter";
 import { z } from "zod";
@@ -62,6 +62,7 @@ export const Route = createFileRoute("/karaoke-tv")({
 function TvPage() {
   const { session: sp } = Route.useSearch();
   const devSession = import.meta.env.DEV ? sp : "";
+  const queryClient = useQueryClient();
   const [deviceToken, setDeviceToken] = useState<string | null>(null);
   const [tokenReady, setTokenReady] = useState(false);
   const tvStateFn = useServerFn(getTvState);
@@ -177,20 +178,27 @@ function TvPage() {
 
   useEffect(() => {
     const venueId = tvState.data?.venueId;
-    if (!paired || !venueId) return;
+    if (!paired || !venueId || !deviceToken) return;
     const channel = supabase.channel(`tv-venue:${venueId}`)
-      .on("postgres_changes", { event: "*", schema: "public", table: "sessions", filter: `venue_id=eq.${venueId}` }, () => { tvState.refetch(); })
-      .subscribe();
+      .on("postgres_changes", { event: "*", schema: "public", table: "sessions", filter: `venue_id=eq.${venueId}` }, () => {
+        void queryClient.invalidateQueries({ queryKey: ["tv-state", deviceToken] });
+      })
+      .subscribe((status) => {
+        if (status === "SUBSCRIBED") {
+          void queryClient.invalidateQueries({ queryKey: ["tv-state", deviceToken] });
+        }
+      });
     return () => { supabase.removeChannel(channel); };
-  }, [paired, tvState.data?.venueId]);
+  }, [paired, tvState.data?.venueId, deviceToken, queryClient]);
 
-  // Pairing has no public device subscription (the device table stays private).
-  // While waiting only, retry at a low cadence; this stops immediately after pairing.
+  // Pairing and session changes have no public device subscription.
   useEffect(() => {
-    if (!deviceToken || paired || tvState.data?.disabled) return;
-    const timer = window.setTimeout(() => { tvState.refetch(); }, 10_000);
+    if (!deviceToken || tvState.data?.disabled || tvState.data?.activeSessionId) return;
+    const timer = window.setTimeout(() => {
+      void queryClient.invalidateQueries({ queryKey: ["tv-state", deviceToken] });
+    }, 10_000);
     return () => { window.clearTimeout(timer); };
-  }, [deviceToken, paired, tvState.data?.disabled, tvState.dataUpdatedAt]);
+  }, [deviceToken, tvState.data?.disabled, tvState.data?.activeSessionId, tvState.dataUpdatedAt, queryClient]);
 
   useEffect(() => {
     if (!sessionId) return;
@@ -224,7 +232,24 @@ function TvPage() {
   }
 
   if (tvState.data?.disabled || pairing.data?.disabled) {
-    return <main className="grid min-h-dvh place-items-center p-8 text-center"><div>{brand}<p className="mt-6 text-2xl text-muted-foreground lg:text-4xl">Esta TV foi desabilitada. Peça ajuda ao operador.</p></div></main>;
+    return (
+      <main className="grid min-h-dvh place-items-center p-8 text-center">
+        <div>
+          {brand}
+          <p className="mt-6 text-2xl text-muted-foreground lg:text-4xl">Esta TV foi desabilitada. Peça ajuda ao operador.</p>
+          <button
+            type="button"
+            className="mt-6 rounded-md border px-5 py-3 text-lg font-semibold hover:bg-accent focus-visible:outline-2 focus-visible:outline-ring"
+            onClick={() => {
+              window.localStorage.removeItem("ka-tv-device-token");
+              window.location.reload();
+            }}
+          >
+            Desvincular e parear novamente
+          </button>
+        </div>
+      </main>
+    );
   }
 
   if (!devSession && !paired) {
