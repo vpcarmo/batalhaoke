@@ -18,6 +18,7 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 // Classic head script: parsed by Chromium 68 before any client modules run.
 // Kept as text so none of its browser globals execute during SSR.
 const legacyBrowserPolyfills = `(function () {
+  'use strict';
   if (typeof window === 'undefined') return;
   if (typeof globalThis === 'undefined') window.globalThis = window;
   var MAX_LENGTH = 9007199254740991;
