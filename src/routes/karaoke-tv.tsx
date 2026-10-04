@@ -67,6 +67,49 @@ function TvPage() {
   const playerRef = useRef<PlaybackPlayerRef>(null);
   const [armed, setArmed] = useState(false);
 
+  // Fullscreen state (client-only; SSR renders the button without document access).
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  useEffect(() => {
+    const doc = document as Document & {
+      webkitFullscreenElement?: Element | null;
+      webkitExitFullscreen?: () => Promise<void> | void;
+    };
+    const sync = () => {
+      setIsFullscreen(!!(doc.fullscreenElement ?? doc.webkitFullscreenElement));
+    };
+    sync();
+    document.addEventListener("fullscreenchange", sync);
+    document.addEventListener("webkitfullscreenchange", sync);
+    return () => {
+      document.removeEventListener("fullscreenchange", sync);
+      document.removeEventListener("webkitfullscreenchange", sync);
+    };
+  }, []);
+  const toggleFullscreen = () => {
+    const doc = document as Document & {
+      webkitFullscreenElement?: Element | null;
+      webkitExitFullscreen?: () => Promise<void> | void;
+    };
+    const element = document.documentElement as HTMLElement & {
+      webkitRequestFullscreen?: () => Promise<void> | void;
+    };
+    if (doc.fullscreenElement ?? doc.webkitFullscreenElement) {
+      if (typeof doc.exitFullscreen === "function") {
+        const request = doc.exitFullscreen();
+        if (request && typeof request.catch === "function") request.catch(() => {});
+      } else if (typeof doc.webkitExitFullscreen === "function") {
+        doc.webkitExitFullscreen();
+      }
+      return;
+    }
+    if (typeof element.requestFullscreen === "function") {
+      const request = element.requestFullscreen();
+      if (request && typeof request.catch === "function") request.catch(() => {});
+    } else if (typeof element.webkitRequestFullscreen === "function") {
+      element.webkitRequestFullscreen();
+    }
+  };
+
   useEffect(() => {
     const venueId = tvState.data?.venueId;
     if (!paired || !venueId) return;
