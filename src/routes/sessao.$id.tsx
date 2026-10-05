@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { ArrowLeft, Mic2, Music, Pause, Play, Plus, Square, Tv, Smartphone, Check, QrCode, Copy, Download, Printer, ThumbsDown, ThumbsUp } from "lucide-react";
+import { ArrowLeft, Mic2, Music, Pause, Play, Plus, RotateCcw, Square, Tv, Smartphone, Check, QrCode, Copy, Download, Printer, ThumbsDown, ThumbsUp } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -66,7 +66,8 @@ function SessionPage() {
     chRef.current = ch;
     return () => { supabase.removeChannel(ch); };
   }, [id]);
-  const sendTv = (action: "play" | "pause") => chRef.current?.send({ type: "broadcast", event: "command", payload: { action } });
+  const sendTv = (action: "play" | "pause" | "restart") => chRef.current?.send({ type: "broadcast", event: "command", payload: { action } });
+  const restartActive = () => { if (!confirm_("Reiniciar apresentação do início? A música atual voltará para 0:00.")) return; if (localPlayer) playerRef.current?.restart(); else sendTv("restart"); };
 
   const session = live.session.data;
   const venueSlug = session?.venue_id ? venues.data?.find((venue) => venue.id === session.venue_id)?.slug : null;
@@ -131,6 +132,7 @@ function SessionPage() {
             <ActivePanel perf={active} votingMode={session.voting_mode} busy={busy} tvEnabled={session.tv_enabled} localPlayer={localPlayer} setLocalPlayer={setLocalPlayer} playerRef={playerRef}
               onPlay={() => (localPlayer ? playerRef.current?.play() : sendTv("play"))}
               onPause={() => (localPlayer ? playerRef.current?.pause() : sendTv("pause"))}
+              onRestart={restartActive}
               onEnd={() => act(() => endActive(active), "Apresentação encerrada")}
               onEnded={() => act(() => endActive(active), "Música terminou — apresentação concluída")} />
           ) : nextQueued ? (
@@ -152,6 +154,7 @@ function SessionPage() {
           <ActivePanel perf={active} votingMode={session.voting_mode} busy={busy} tvEnabled={session.tv_enabled} localPlayer={localPlayer} setLocalPlayer={setLocalPlayer} playerRef={playerRef}
             onPlay={() => (localPlayer ? playerRef.current?.play() : sendTv("play"))}
             onPause={() => (localPlayer ? playerRef.current?.pause() : sendTv("pause"))}
+            onRestart={restartActive}
             onEnd={() => act(() => endActive(active), "Apresentação encerrada")}
             onEnded={() => act(() => endActive(active), "Música terminou — apresentação concluída")} />
         </section>
@@ -360,7 +363,7 @@ function Singer({ perf }: { perf: Performance }) {
 
 function ActivePanel(props: {
   perf: Performance; votingMode: "like_only" | "like_dislike"; busy: boolean; tvEnabled: boolean; localPlayer: boolean; setLocalPlayer: (v: boolean) => void; playerRef: React.RefObject<PlaybackPlayerRef | null>;
-  onPlay: () => void; onPause: () => void; onEnd: () => void; onEnded: () => void;
+  onPlay: () => void; onPause: () => void; onRestart: () => void; onEnd: () => void; onEnded: () => void;
 }) {
   const { perf } = props;
   return (
@@ -380,6 +383,7 @@ function ActivePanel(props: {
         <Button size="lg" className="h-14" onClick={props.onPlay}><Play className="size-5" /> Iniciar playback</Button>
         <Button size="lg" variant="secondary" className="h-14" onClick={props.onPause}><Pause className="size-5" /> Pausar</Button>
       </div>
+      <Button size="lg" variant="secondary" className="h-14" onClick={props.onRestart}><RotateCcw className="size-5" /> Reiniciar apresentação</Button>
       <Button size="lg" variant="destructive" className="h-14 text-base font-semibold" disabled={props.busy} onClick={props.onEnd}><Square className="size-5" /> Encerrar apresentação</Button>
     </div>
   );

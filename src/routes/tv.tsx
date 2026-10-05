@@ -207,6 +207,7 @@ function TvPage() {
       .on("broadcast", { event: "command" }, ({ payload }) => {
         if (payload?.action === "play") playerRef.current?.play();
         if (payload?.action === "pause") playerRef.current?.pause();
+        if (payload?.action === "restart") playerRef.current?.restart();
       })
       .subscribe();
     return () => { supabase.removeChannel(ch); };
