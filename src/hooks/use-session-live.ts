@@ -9,7 +9,9 @@ export function useSessionLive(sessionId: string | undefined) {
   const enabled = !!sessionId;
   const session = useQuery({ queryKey: ["session", sessionId], queryFn: () => getSession(sessionId!), enabled, retry: 1 });
   const participants = useQuery({ queryKey: ["participants", sessionId], queryFn: () => listParticipants(sessionId!), enabled, retry: 1 });
-  const performances = useQuery({ queryKey: ["performances", sessionId], queryFn: () => listPerformances(sessionId!), enabled, retry: 1 });
+  // Safety polling: refetch performances every 3s so a lost/delayed Realtime
+  // event (or zombie channel) never leaves the TV stuck on the waiting screen.
+  const performances = useQuery({ queryKey: ["performances", sessionId], queryFn: () => listPerformances(sessionId!), enabled, retry: 1, refetchInterval: 3000 });
   const isX1 = session.data?.session_type === "x1";
   const matches = useQuery({
     queryKey: ["matches", sessionId],
@@ -29,14 +31,15 @@ export function useSessionLive(sessionId: string | undefined) {
         qc.invalidateQueries({ queryKey: ["performances", sessionId] });
       })
       .on("postgres_changes", { event: "*", schema: "public", table: "sessions", filter: `id=eq.${sessionId}` }, () => qc.invalidateQueries({ queryKey: ["session", sessionId] }));
-    if (isX1) {
-      ch = ch.on("postgres_changes", { event: "*", schema: "public", table: "matches", filter: f }, () => {
-        qc.invalidateQueries({ queryKey: ["matches", sessionId] });
-      });
-    }
+    // Always subscribe to matches too: the channel must be created once per
+    // sessionId and never recreated when session_type resolves to "x1"
+    // (recreating the same topic can leave the channel in a zombie state).
+    ch = ch.on("postgres_changes", { event: "*", schema: "public", table: "matches", filter: f }, () => {
+      qc.invalidateQueries({ queryKey: ["matches", sessionId] });
+    });
     ch.subscribe();
     return () => { supabase.removeChannel(ch); };
-  }, [sessionId, isX1, qc]);
+  }, [sessionId, qc]);
 
   const perfs = performances.data ?? [];
   return {
