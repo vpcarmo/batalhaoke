@@ -25,6 +25,7 @@ export interface PlayerEvents {
 export interface PlayerHandle {
   play(): void;
   pause(): void;
+  restart(): void;
   destroy(): void;
 }
 

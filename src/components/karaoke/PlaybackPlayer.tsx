@@ -2,7 +2,7 @@ import { useEffect, useImperativeHandle, useRef, useState, forwardRef } from "re
 import { getProvider } from "@/lib/playback/registry";
 import type { PlayerHandle, PlayerState } from "@/lib/playback/types";
 
-export interface PlaybackPlayerRef { play(): void; pause(): void }
+export interface PlaybackPlayerRef { play(): void; pause(): void; restart(): void }
 
 interface Props {
   provider: string;
@@ -20,7 +20,7 @@ export const PlaybackPlayer = forwardRef<PlaybackPlayerRef, Props>(function Play
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useImperativeHandle(ref, () => ({ play: () => handle.current?.play(), pause: () => handle.current?.pause() }), []);
+  useImperativeHandle(ref, () => ({ play: () => handle.current?.play(), pause: () => handle.current?.pause(), restart: () => handle.current?.restart() }), []);
 
   /* useEffect(() => {
     let alive = true;

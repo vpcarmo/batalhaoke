@@ -55,6 +55,7 @@ export const youtubeProvider: PlaybackProvider = {
     return {
       play: () => player.playVideo?.(),
       pause: () => player.pauseVideo?.(),
+      restart: () => { player.seekTo?.(0, true); player.playVideo?.(); },
       destroy: () => { try { player.destroy(); } catch { /* noop */ } container.innerHTML = ""; },
     };
   },
