@@ -22,3 +22,5 @@
 - `performances.like_count` is maintained by a trigger on votes and protected from client edits; Realtime on performances delivers counts to TV/operator/voter.
 - ESP32/controllers are out of the MVP flow; `controllers` table and `votes.controller_id` (now nullable) are kept for the future.
 - Every YouTube API call is logged in `provider_api_calls` for quota tracking.
+- X1 has two voting models (`sessions.x1_voting_mode`): `during_performance` uses the existing `votes` flow untouched; `after_both_performances` uses `x1_match_votes` only, opened atomically by a DB trigger when performance B completes and deadline-enforced by a DB trigger on `voting_ends_at` — so the server clock, not the client, is the authority.
+- `x1_voting_mode` is locked by a DB trigger once a session has any match — the lock holds even though `sessions` RLS is open.
