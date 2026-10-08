@@ -36,6 +36,7 @@ function VotePage() {
   const live = useSessionLive(session?.id);
   const currentSession = live.session.data ?? session;
   const active = live.active;
+  const afterBoth = currentSession?.session_type === "x1" && currentSession.x1_voting_mode === "after_both_performances";
   const [token, setToken] = useState<string | null>(null);
   useEffect(() => { setToken(getVoterToken()); }, []);
 
@@ -62,7 +63,6 @@ function VotePage() {
     queryFn: () => status({ data: { code, token: token!, voteType: "like" } }),
     enabled: !!token && !!active?.id && !afterBoth,
   });
-  const afterBoth = currentSession?.session_type === "x1" && currentSession.x1_voting_mode === "after_both_performances";
   const hasVoted = !!active && (voted[active.id] || (statusQ.data?.performanceId === active.id && statusQ.data.hasVoted));
 
   async function onVote(voteType: "like" | "dislike") {
