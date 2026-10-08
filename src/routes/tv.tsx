@@ -12,7 +12,8 @@ import { getTvState, listVenues, registerTvDevice } from "@/lib/venue.functions"
 import { PlaybackPlayer, type PlaybackPlayerRef } from "@/components/karaoke/PlaybackPlayer";
 import { SessionQr } from "@/components/karaoke/SessionQr";
 import { getX1CompetitionState } from "@/lib/x1-state";
-import { completeMatchPerformance } from "@/lib/x1.functions";
+import { completeMatchPerformance, getX1MatchTally } from "@/lib/x1.functions";
+import { useVoteCountdown } from "@/hooks/use-vote-countdown";
 
 type CompletedPerformance = Performance & {
   participant: NonNullable<Performance["participant"]>;
@@ -116,6 +117,10 @@ function TvPage() {
   const x1State = showX1Arena
     ? getX1CompetitionState(x1Matches, live.participants.data ?? [])
     : null;
+  const x1AfterBoth = session?.session_type === "x1" && session.x1_voting_mode === "after_both_performances";
+  const directVoteMatch = showX1Arena && x1AfterBoth
+    ? x1Matches.find((match) => match.status === "in_progress" && match.voting_status !== "idle")
+    : undefined;
   const completedPerformances = (live.performances.data ?? []).filter(isCompletedPerformance);
   const latestPerformance = [...completedPerformances].sort((a, b) =>
     completionTime(b).localeCompare(completionTime(a)) || b.id.localeCompare(a.id),
@@ -295,7 +300,7 @@ function TvPage() {
             <p className="mt-6 inline-flex items-center gap-3 rounded-full bg-accent/15 px-5 py-2 text-lg font-semibold uppercase tracking-widest text-accent lg:text-2xl">
               <span className="size-3 animate-pulse rounded-full bg-accent" /> Apresentação em andamento
             </p>
-            <p className="mt-6 font-display text-5xl lg:text-7xl" aria-live="polite">👍 {active.like_count} {active.like_count === 1 ? "voto" : "votos"}{session?.voting_mode === "like_dislike" && <>   👎 {active.dislike_count}</>}</p>
+            {!x1AfterBoth && <p className="mt-6 font-display text-5xl lg:text-7xl" aria-live="polite">👍 {active.like_count} {active.like_count === 1 ? "voto" : "votos"}{session?.voting_mode === "like_dislike" && <>   👎 {active.dislike_count}</>}</p>}
           </section>
           <section className="w-full">
             <PlaybackPlayer key={active.id} ref={playerRef} provider={active.source.provider} externalId={active.source.external_id}
@@ -349,6 +354,8 @@ function TvPage() {
               {completedPerformances.length} {completedPerformances.length === 1 ? "apresentação realizada" : "apresentações realizadas"} · {completedVotes} {completedVotes === 1 ? "voto registrado" : "votos registrados"} pelo público
             </p>
           </section>
+        ) : directVoteMatch ? (
+          <X1DirectVoteTv match={directVoteMatch} participants={live.participants.data ?? []} />
         ) : showX1Arena && x1State ? (
           <X1Arena
             state={x1State}
@@ -490,6 +497,43 @@ function X1Arena({ state, participants, performances }: {
           <p className="text-xl font-semibold text-muted-foreground lg:text-2xl">Aguardando participantes para iniciar a Arena</p>
         )}
       </article>
+    </section>
+  );
+}
+
+/** X1 after_both_performances: "QUEM VOCÊ PREFERE?" screen; player is not mounted (no active performance). */
+function X1DirectVoteTv({ match, participants }: { match: Match; participants: Participant[] }) {
+  const open = match.voting_status === "open";
+  const tally = useQuery({
+    queryKey: ["x1-tally", match.id, match.voting_status],
+    queryFn: () => getX1MatchTally({ data: { matchId: match.id } }),
+    refetchInterval: open ? 2000 : false,
+  });
+  const offset = tally.data ? tally.data.serverNow - Date.now() : 0;
+  const remaining = useVoteCountdown(open ? match.voting_ends_at : null, offset);
+  const a = participants.find((p) => p.id === match.participant_a_id);
+  const b = participants.find((p) => p.id === match.participant_b_id);
+  const isOpen = open && remaining > 0;
+  return (
+    <section className="flex flex-col justify-center gap-6 rounded-2xl border border-primary/40 bg-card/70 p-6 text-center lg:p-10">
+      <h1 className="font-display text-6xl leading-none text-primary lg:text-8xl">QUEM VOCÊ PREFERE?</h1>
+      <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-4">
+        <p className="break-words font-display text-5xl lg:text-7xl">{a ? displayName(a) : "—"}</p>
+        <span className="font-display text-5xl text-accent">×</span>
+        <p className="break-words font-display text-5xl lg:text-7xl">{b ? displayName(b) : "—"}</p>
+      </div>
+      {isOpen ? (
+        <>
+          <p className="font-display text-8xl text-primary" aria-live="polite">{remaining}</p>
+          <p className="text-2xl text-muted-foreground lg:text-3xl">Escaneie o QR Code e vote pelo celular!</p>
+        </>
+      ) : (
+        <>
+          <p className="font-display text-5xl lg:text-6xl">Votação encerrada</p>
+          {tally.data && <p className="font-display text-4xl lg:text-5xl">{tally.data.a} × {tally.data.b}</p>}
+          <p className="text-2xl text-muted-foreground lg:text-3xl">Aguardando a decisão do operador…</p>
+        </>
+      )}
     </section>
   );
 }
