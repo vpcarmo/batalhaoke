@@ -30,7 +30,7 @@ async function getX1Match(matchId: string) {
   if (error || !match) fail("Confronto não encontrado");
   const { data: session } = await supabaseAdmin
     .from("sessions")
-    .select("session_type, status")
+    .select("session_type, status, x1_voting_mode")
     .eq("id", match.session_id)
     .maybeSingle();
   if (!session || session.session_type !== "x1") fail("Confronto indisponível para esta sessão");
@@ -289,7 +289,7 @@ export const completeMatchPerformance = createServerFn({ method: "POST" })
 export const confirmMatchWinner = createServerFn({ method: "POST" })
   .inputValidator((d) => z.object({ matchId: Id, winnerParticipantId: Id }).parse(d))
   .handler(async ({ data }) => {
-    const { supabaseAdmin, match } = await getX1Match(data.matchId);
+    const { supabaseAdmin, match, session } = await getX1Match(data.matchId);
     if (match.status !== "in_progress") fail("O confronto não está pronto para resultado");
     if (![match.participant_a_id, match.participant_b_id].includes(data.winnerParticipantId))
       fail("O vencedor deve participar do confronto");
@@ -302,6 +302,16 @@ export const confirmMatchWinner = createServerFn({ method: "POST" })
       !performances.every((performance) => performance.status === "completed")
     )
       fail("As duas apresentações precisam estar concluídas");
+    if (session.x1_voting_mode === "after_both_performances") {
+      // Direct A/B vote must be finished before a winner can be confirmed.
+      if (match.voting_status === "idle") fail("A votação direta ainda não foi aberta");
+      if (match.voting_status === "open") {
+        if (match.voting_ends_at && new Date(match.voting_ends_at).getTime() > Date.now())
+          fail("Aguarde o encerramento da votação");
+        await supabaseAdmin.from("matches").update({ voting_status: "closed" })
+          .eq("id", match.id).eq("voting_status", "open");
+      }
+    }
     const { error } = await supabaseAdmin
       .from("matches")
       .update({ status: "completed", winner_participant_id: data.winnerParticipantId })
@@ -332,4 +342,149 @@ export const cancelMatch = createServerFn({ method: "POST" })
       .eq("status", "queued")
       .select("id");
     if (performancesError || !removedPerformances) fail("Não foi possível remover as apresentações preparadas do confronto");
+  });
+
+// ---------------------------------------------------------------------------
+// X1 "after_both_performances" voting model. Fully separate from `votes`:
+// the direct A/B vote lives in `x1_match_votes`. The window opens atomically in
+// the database when performance B completes (trigger open_x1_vote_on_b_complete),
+// and a DB trigger rejects any vote after `voting_ends_at`.
+// ---------------------------------------------------------------------------
+const X1VotingModeInput = z.enum(["during_performance", "after_both_performances"]);
+const VoterCode = z.string().trim().min(4).max(40).regex(/^[a-zA-Z0-9_-]+$/);
+const VoterToken = z.string().min(16).max(128).regex(/^[a-zA-Z0-9_-]+$/);
+
+/** Same hash format as votes.functions so voter_sessions rows are shared. */
+async function hashVoterToken(sessionId: string, token: string) {
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(`${sessionId}:${token}`));
+  return Array.from(new Uint8Array(buf), (b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+/** Resolves a public code (venue slug or legacy session code) to its session. */
+async function resolveX1VotingSession(code: string) {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data: venue } = await supabaseAdmin.from("venues").select("id").eq("slug", code).maybeSingle();
+  const query = supabaseAdmin.from("sessions").select("id, status, session_type, x1_voting_mode");
+  const { data: session } = venue
+    ? await query.eq("venue_id", venue.id).eq("status", "active").maybeSingle()
+    : await query.eq("public_code", code).maybeSingle();
+  return { supabaseAdmin, session };
+}
+
+async function getAfterBothMatch(matchId: string) {
+  const ctx = await getX1Match(matchId);
+  if (ctx.session.x1_voting_mode !== "after_both_performances")
+    fail("Este confronto não usa votação direta");
+  return ctx;
+}
+
+/** Changes the X1 voting model; only allowed while the session has no matches (also DB-enforced). */
+export const updateX1VotingMode = createServerFn({ method: "POST" })
+  .inputValidator((d) => z.object({ sessionId: Id, mode: X1VotingModeInput }).parse(d))
+  .handler(async ({ data }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: session } = await supabaseAdmin.from("sessions").select("session_type").eq("id", data.sessionId).maybeSingle();
+    if (!session || session.session_type !== "x1") fail("Disponível apenas para sessões X1");
+    const { count } = await supabaseAdmin.from("matches").select("id", { count: "exact", head: true }).eq("session_id", data.sessionId);
+    if ((count ?? 0) > 0) fail("O modelo de votação fica bloqueado após o primeiro confronto");
+    const { error } = await supabaseAdmin.from("sessions").update({ x1_voting_mode: data.mode }).eq("id", data.sessionId);
+    if (error) fail("Não foi possível alterar o modelo de votação");
+  });
+
+/** Fallback/manual opening. Idempotent: never creates a second window. */
+export const openX1MatchVoting = createServerFn({ method: "POST" })
+  .inputValidator((d) => MatchIdInput.parse(d))
+  .handler(async ({ data }) => {
+    const { supabaseAdmin, match } = await getAfterBothMatch(data.matchId);
+    if (match.status !== "in_progress") fail("O confronto não está em andamento");
+    if (match.voting_status !== "idle") return { opened: false };
+    const { data: performances } = await supabaseAdmin.from("performances").select("match_slot, status").eq("match_id", match.id);
+    const done = (slot: string) => performances?.some((p) => p.match_slot === slot && p.status === "completed");
+    if (!done("a") || !done("b")) fail("As duas apresentações precisam estar concluídas");
+    const { data: opened, error } = await supabaseAdmin.from("matches")
+      .update({ voting_status: "open", voting_ends_at: new Date(Date.now() + 30_000).toISOString() })
+      .eq("id", match.id).eq("voting_status", "idle").eq("status", "in_progress")
+      .select("id").maybeSingle();
+    if (error) fail("Não foi possível abrir a votação");
+    return { opened: !!opened };
+  });
+
+export const closeX1MatchVoting = createServerFn({ method: "POST" })
+  .inputValidator((d) => MatchIdInput.parse(d))
+  .handler(async ({ data }) => {
+    const { supabaseAdmin, match } = await getAfterBothMatch(data.matchId);
+    if (match.voting_status !== "open") fail("A votação não está aberta");
+    const { error } = await supabaseAdmin.from("matches")
+      .update({ voting_status: "closed", voting_ends_at: new Date().toISOString() })
+      .eq("id", match.id).eq("voting_status", "open");
+    if (error) fail("Não foi possível encerrar a votação");
+  });
+
+/** Direct A/B counts, read only from x1_match_votes (never like/dislike). */
+export const getX1MatchTally = createServerFn({ method: "POST" })
+  .inputValidator((d) => MatchIdInput.parse(d))
+  .handler(async ({ data }) => {
+    const { supabaseAdmin, match } = await getAfterBothMatch(data.matchId);
+    const count = async (participantId: string) => {
+      const { count: c } = await supabaseAdmin.from("x1_match_votes").select("id", { count: "exact", head: true })
+        .eq("match_id", match.id).eq("chosen_participant_id", participantId);
+      return c ?? 0;
+    };
+    const [a, b] = await Promise.all([count(match.participant_a_id), count(match.participant_b_id)]);
+    return { a, b, serverNow: Date.now() };
+  });
+
+/** The device's view of the current direct vote: which match, its window and whether it voted. */
+export const getX1MatchVoteStatus = createServerFn({ method: "POST" })
+  .inputValidator((d) => z.object({ code: VoterCode, token: VoterToken }).parse(d))
+  .handler(async ({ data }) => {
+    const { supabaseAdmin, session } = await resolveX1VotingSession(data.code);
+    const none = { match: null, hasVoted: false, chosenParticipantId: null as string | null, serverNow: Date.now() };
+    if (!session || session.session_type !== "x1" || session.x1_voting_mode !== "after_both_performances") return none;
+    const { data: match } = await supabaseAdmin.from("matches")
+      .select("id, participant_a_id, participant_b_id, voting_status, voting_ends_at")
+      .eq("session_id", session.id).eq("status", "in_progress").maybeSingle();
+    if (!match) return none;
+    const hash = await hashVoterToken(session.id, data.token);
+    const { data: voter } = await supabaseAdmin.from("voter_sessions").select("id").eq("session_id", session.id).eq("voter_token_hash", hash).maybeSingle();
+    let chosen: string | null = null;
+    if (voter) {
+      const { data: vote } = await supabaseAdmin.from("x1_match_votes").select("chosen_participant_id")
+        .eq("match_id", match.id).eq("voter_session_id", voter.id).maybeSingle();
+      chosen = vote?.chosen_participant_id ?? null;
+    }
+    return { match, hasVoted: !!chosen, chosenParticipantId: chosen, serverNow: Date.now() };
+  });
+
+export const castX1MatchVote = createServerFn({ method: "POST" })
+  .inputValidator((d) => z.object({ code: VoterCode, token: VoterToken, matchId: Id, chosenParticipantId: Id }).parse(d))
+  .handler(async ({ data }) => {
+    const { supabaseAdmin, session } = await resolveX1VotingSession(data.code);
+    if (!session || session.status !== "active") return { result: "session_closed" as const };
+    if (session.session_type !== "x1" || session.x1_voting_mode !== "after_both_performances")
+      return { result: "vote_not_allowed" as const };
+    const { data: match } = await supabaseAdmin.from("matches")
+      .select("id, session_id, status, participant_a_id, participant_b_id, voting_status, voting_ends_at")
+      .eq("id", data.matchId).maybeSingle();
+    if (!match || match.session_id !== session.id) return { result: "invalid_match" as const };
+    if (![match.participant_a_id, match.participant_b_id].includes(data.chosenParticipantId))
+      return { result: "invalid_choice" as const };
+    if (match.status !== "in_progress" || match.voting_status !== "open" || !match.voting_ends_at ||
+        new Date(match.voting_ends_at).getTime() <= Date.now())
+      return { result: "voting_closed" as const };
+
+    const hash = await hashVoterToken(session.id, data.token);
+    const { data: voter, error: vErr } = await supabaseAdmin.from("voter_sessions")
+      .upsert({ session_id: session.id, voter_token_hash: hash, last_seen_at: new Date().toISOString() }, { onConflict: "session_id,voter_token_hash" })
+      .select("id").single();
+    if (vErr || !voter) throw new Error("Não foi possível registrar o voto. Tente novamente.");
+    // The DB trigger re-checks the window with the database clock (authoritative).
+    const { error } = await supabaseAdmin.from("x1_match_votes")
+      .insert({ match_id: match.id, voter_session_id: voter.id, chosen_participant_id: data.chosenParticipantId });
+    if (error) {
+      if (error.code === "23505") return { result: "already_voted" as const };
+      if (error.code === "P0001") return { result: "voting_closed" as const };
+      throw new Error("Não foi possível registrar o voto. Tente novamente.");
+    }
+    return { result: "ok" as const };
   });
