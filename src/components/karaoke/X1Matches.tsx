@@ -6,8 +6,9 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { supabase } from "@/integrations/supabase/client";
-import { displayName, type Match, type Participant, type Performance } from "@/lib/karaoke";
-import { cancelMatch, confirmMatchWinner, createMatch, createMatchPerformance, startMatch } from "@/lib/x1.functions";
+import { displayName, getSession, type Match, type Participant, type Performance } from "@/lib/karaoke";
+import { cancelMatch, closeX1MatchVoting, confirmMatchWinner, createMatch, createMatchPerformance, getX1MatchTally, openX1MatchVoting, startMatch, updateX1VotingMode } from "@/lib/x1.functions";
+import { useVoteCountdown } from "@/hooks/use-vote-countdown";
 import { getX1CompetitionState } from "@/lib/x1-state";
 import { MusicSearch } from "@/components/karaoke/MusicSearch";
 import type { PlaybackSearchResult } from "@/lib/playback/types";
@@ -33,6 +34,8 @@ export function X1Matches(props: {
     },
   });
   const list = matches.data ?? [];
+  const session = useQuery({ queryKey: ["session", sessionId], queryFn: () => getSession(sessionId) });
+  const afterBoth = session.data?.x1_voting_mode === "after_both_performances";
   const { completed, eliminatedIds, withdrawnIds, currentChampion, openMatches, activeCompetitorIds, waitingQueue, nextChallenger, firstPair } =
     getX1CompetitionState(list, participants);
   const sessionActive = props.sessionStatus === "active";
@@ -43,6 +46,17 @@ export function X1Matches(props: {
       <div className="flex items-center justify-between">
         <h2 id="x1" className="font-display text-3xl">Confrontos X1</h2>
       </div>
+      {session.data && (
+        <div className="rounded-xl border bg-card p-3 text-sm">
+          <p className="font-medium">Modelo de votação: {afterBoth ? "Após as apresentações" : "Durante as apresentações"}</p>
+          {matches.isSuccess && list.length === 0 && sessionActive ? (
+            <Button variant="ghost" size="sm" className="mt-1 h-8 px-2" disabled={props.busy}
+              onClick={() => props.act(() => updateX1VotingMode({ data: { sessionId, mode: afterBoth ? "during_performance" : "after_both_performances" } }), "Modelo de votação alterado")}>
+              Trocar para {afterBoth ? "Durante as apresentações" : "Após as apresentações"}
+            </Button>
+          ) : <p className="mt-1 text-xs text-muted-foreground">🔒 Bloqueado após o primeiro confronto.</p>}
+        </div>
+      )}
       {participants.length < 2 && <p className="text-sm text-muted-foreground">Cadastre pelo menos dois cantores para criar um confronto.</p>}
       <QueueSummary participants={participants} currentChampion={currentChampion} activeCompetitorIds={activeCompetitorIds} eliminatedIds={eliminatedIds} withdrawnIds={withdrawnIds} waitingQueue={waitingQueue} />
       {sessionActive && firstPair && (
@@ -83,7 +97,9 @@ export function X1Matches(props: {
                 <div className="mt-4 flex flex-col gap-2">
                   <SlotRow label="A" p={a} perf={pa} />
                   <SlotRow label="B" p={b} perf={pb} />
-                  {done ? (
+                  {done && afterBoth ? (
+                    <DirectVotePanel match={m} participantA={a} participantB={b} busy={props.busy} act={props.act} />
+                  ) : done ? (
                     <MatchResult match={m} participantA={a} participantB={b} performanceA={pa} performanceB={pb} busy={props.busy}
                       onConfirm={(winnerParticipantId) => props.act(() => confirmMatchWinner({ data: { matchId: m.id, winnerParticipantId } }), "Vencedor confirmado")} />
                   ) : null}
@@ -93,7 +109,8 @@ export function X1Matches(props: {
                 <div className="mt-4 flex flex-col gap-2">
                   <SlotRow label="A" p={a} perf={pa} />
                   <SlotRow label="B" p={b} perf={pb} />
-                  <MatchResult match={m} participantA={a} participantB={b} performanceA={pa} performanceB={pb} busy={props.busy} />
+                  {afterBoth ? <DirectVotePanel match={m} participantA={a} participantB={b} busy={props.busy} act={props.act} />
+                    : <MatchResult match={m} participantA={a} participantB={b} performanceA={pa} performanceB={pb} busy={props.busy} />}
                 </div>
               )}
               {m.status === "scheduled" && sessionActive && (
@@ -254,6 +271,64 @@ function SongPreparation({ label, participant, performance, busy, onPick }: {
       <p className="text-sm text-muted-foreground">Música do cantor {label} ({participant ? displayName(participant) : "—"}) pendente de preparação.</p>
       {searching ? <div className="mt-3"><MusicSearch onPick={(playback) => { onPick(playback); setSearching(false); }} /></div>
         : <Button type="button" variant="secondary" className="mt-3 h-11" disabled={busy || !participant} onClick={() => setSearching(true)}>Preparar música do cantor {label}</Button>}
+    </div>
+  );
+}
+
+/** after_both_performances only: direct A/B vote counted from x1_match_votes. */
+function DirectVotePanel({ match, participantA, participantB, busy, act }: {
+  match: Match; participantA: Participant | undefined; participantB: Participant | undefined; busy: boolean;
+  act: (fn: () => Promise<unknown>, ok?: string) => void;
+}) {
+  const open = match.voting_status === "open";
+  const tally = useQuery({
+    queryKey: ["x1-tally", match.id, match.voting_status],
+    queryFn: () => getX1MatchTally({ data: { matchId: match.id } }),
+    refetchInterval: open ? 1500 : false,
+  });
+  const offset = tally.data ? tally.data.serverNow - Date.now() : 0;
+  const remaining = useVoteCountdown(open ? match.voting_ends_at : null, offset);
+  const expired = open && remaining === 0;
+  const closed = match.voting_status === "closed" || expired;
+  const a = tally.data?.a ?? 0, b = tally.data?.b ?? 0;
+  const winner = match.winner_participant_id ? (match.winner_participant_id === participantA?.id ? participantA : participantB) : undefined;
+  const suggested = a > b ? participantA : b > a ? participantB : undefined;
+  const other = suggested === participantA ? participantB : participantA;
+  const confirm = (id: string) => act(() => confirmMatchWinner({ data: { matchId: match.id, winnerParticipantId: id } }), "Vencedor confirmado");
+
+  return (
+    <div className="mt-1 rounded-lg bg-secondary px-3 py-3 text-center">
+      {match.status === "completed" ? <p className="font-semibold">Vencedor: {winner ? displayName(winner) : "—"}</p>
+        : <p className="font-display text-2xl">QUEM VOCÊ PREFERE?</p>}
+      <div className="mt-3 grid grid-cols-2 gap-2">
+        <div className="rounded-md bg-background/60 p-2"><p className="truncate text-sm font-semibold">Cantor A · {participantA ? displayName(participantA) : "—"}</p><p className="font-display text-3xl">{a}</p><p className="text-xs text-muted-foreground">{a === 1 ? "voto" : "votos"}</p></div>
+        <div className="rounded-md bg-background/60 p-2"><p className="truncate text-sm font-semibold">Cantor B · {participantB ? displayName(participantB) : "—"}</p><p className="font-display text-3xl">{b}</p><p className="text-xs text-muted-foreground">{b === 1 ? "voto" : "votos"}</p></div>
+      </div>
+      {match.status === "in_progress" && match.voting_status === "idle" && (
+        <Button className="mt-3 w-full" disabled={busy} onClick={() => act(() => openX1MatchVoting({ data: { matchId: match.id } }), "Votação aberta")}>Abrir votação</Button>
+      )}
+      {match.status === "in_progress" && open && !expired && (
+        <>
+          <p className="mt-3 font-display text-4xl text-primary" aria-live="polite">{remaining}s</p>
+          <Button variant="secondary" className="mt-2 w-full" disabled={busy} onClick={() => act(() => closeX1MatchVoting({ data: { matchId: match.id } }), "Votação encerrada")}>Encerrar votação agora</Button>
+        </>
+      )}
+      {match.status === "in_progress" && closed && (
+        <>
+          <p className="mt-3 font-semibold">{a === b ? "Empate — escolha o vencedor" : `Vencedor sugerido: ${suggested ? displayName(suggested) : "—"}`}</p>
+          {a === b ? (
+            <div className="mt-2 grid grid-cols-2 gap-2">
+              <Button disabled={busy || !participantA} onClick={() => participantA && confirm(participantA.id)}>Declarar Cantor A vencedor</Button>
+              <Button disabled={busy || !participantB} onClick={() => participantB && confirm(participantB.id)}>Declarar Cantor B vencedor</Button>
+            </div>
+          ) : (
+            <div className="mt-2 flex flex-col gap-2">
+              <Button disabled={busy || !suggested} onClick={() => suggested && confirm(suggested.id)}>Confirmar vitória de {suggested ? displayName(suggested) : "—"}</Button>
+              <Button variant="secondary" disabled={busy || !other} onClick={() => other && confirm(other.id)}>Declarar vitória de {other ? displayName(other) : "—"}</Button>
+            </div>
+          )}
+        </>
+      )}
     </div>
   );
 }

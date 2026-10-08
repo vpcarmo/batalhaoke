@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { createSession, getActiveSession, type VotingMode } from "@/lib/karaoke";
-import type { SessionType } from "@/lib/karaoke";
+import type { SessionType, X1VotingMode } from "@/lib/karaoke";
 import { createVenue, deleteVenueDevice, disableVenueDevice, enableVenueDevice, listVenueDevices, listVenues, pairVenueDevice } from "@/lib/venue.functions";
 
 export const Route = createFileRoute("/")({
@@ -37,6 +37,7 @@ function Home() {
   const [name, setName] = useState(defaultName);
   const [sessionType, setSessionType] = useState<SessionType>("free");
   const [votingMode, setVotingMode] = useState<VotingMode>("like_only");
+  const [x1VotingMode, setX1VotingMode] = useState<X1VotingMode>("during_performance");
   const [err, setErr] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -70,7 +71,7 @@ function Home() {
         const venue = await createVenueFn({ data: { name: newVenueName.trim() } });
         selectedVenueId = venue.id;
       }
-      const s = await createSession(name.trim() || defaultName(), { sessionType, votingMode, venueId: selectedVenueId });
+      const s = await createSession(name.trim() || defaultName(), { sessionType, votingMode, venueId: selectedVenueId, x1VotingMode });
       nav({ to: "/sessao/$id", params: { id: s.id } });
     } catch (e) { setErr((e as Error).message); setBusy(false); }
   }
@@ -176,6 +177,20 @@ function Home() {
                 <div className="grid gap-2" role="radiogroup" aria-label="Modo de votação">
                   <Button variant={votingMode === "like_only" ? "default" : "secondary"} className="h-11 justify-start" role="radio" aria-checked={votingMode === "like_only"} onClick={() => setVotingMode("like_only")}>👍 Apenas Gostei</Button>
                   <Button variant={votingMode === "like_dislike" ? "default" : "secondary"} className="h-11 justify-start" role="radio" aria-checked={votingMode === "like_dislike"} onClick={() => setVotingMode("like_dislike")}>👍 Gostei / 👎 Não gostei</Button>
+                </div>
+              </div>
+            ) : sessionType === "x1" ? (
+              <div className="mt-4">
+                <p className="mb-2 text-sm font-medium">Modelo de votação no X1</p>
+                <div className="grid gap-2" role="radiogroup" aria-label="Modelo de votação no X1">
+                  <Button variant={x1VotingMode === "during_performance" ? "default" : "secondary"} className="h-auto flex-col items-start whitespace-normal py-3 text-left" role="radio" aria-checked={x1VotingMode === "during_performance"} onClick={() => setX1VotingMode("during_performance")}>
+                    <span className="font-semibold">Durante as apresentações</span>
+                    <span className="text-xs font-normal opacity-80">O público vota em cada cantor enquanto ele se apresenta.</span>
+                  </Button>
+                  <Button variant={x1VotingMode === "after_both_performances" ? "default" : "secondary"} className="h-auto flex-col items-start whitespace-normal py-3 text-left" role="radio" aria-checked={x1VotingMode === "after_both_performances"} onClick={() => setX1VotingMode("after_both_performances")}>
+                    <span className="font-semibold">Após as apresentações</span>
+                    <span className="text-xs font-normal opacity-80">O público escolhe entre os dois cantores depois que ambos terminarem. Votação de até 30 segundos.</span>
+                  </Button>
                 </div>
               </div>
             ) : (

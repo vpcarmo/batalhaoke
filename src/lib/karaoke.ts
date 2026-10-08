@@ -4,10 +4,11 @@ import type { Tables } from "@/integrations/supabase/types";
 // Narrowed DB enums (values are enforced by database CHECK constraints).
 export type SessionType = "free" | "x1" | "championship";
 type DatabaseVotingMode = "like_only" | "like_dislike";
+export type X1VotingMode = "during_performance" | "after_both_performances";
 type DatabaseMatchStatus = "scheduled" | "in_progress" | "completed" | "cancelled";
 import type { PlaybackSearchResult } from "@/lib/playback/types";
 
-export type Session = Omit<Tables<"sessions">, "session_type" | "voting_mode"> & { session_type: SessionType; voting_mode: DatabaseVotingMode };
+export type Session = Omit<Tables<"sessions">, "session_type" | "voting_mode" | "x1_voting_mode"> & { session_type: SessionType; voting_mode: DatabaseVotingMode; x1_voting_mode: X1VotingMode };
 export type VotingMode = DatabaseVotingMode;
 export type Participant = Tables<"participants">;
 export type Match = Tables<"matches">;
@@ -28,7 +29,7 @@ export async function getActiveSession(): Promise<Session | null> {
   return data as Session | null;
 }
 
-export async function createSession(name: string, options: { sessionType?: SessionType; votingMode?: VotingMode; venueId: string }): Promise<Session> {
+export async function createSession(name: string, options: { sessionType?: SessionType; votingMode?: VotingMode; venueId: string; x1VotingMode?: X1VotingMode }): Promise<Session> {
   const venueId = options.venueId.trim();
   if (!venueId) throw new Error("Selecione ou crie um estabelecimento antes de iniciar a sessão.");
   const sessionType = options.sessionType ?? "free";
@@ -37,7 +38,7 @@ export async function createSession(name: string, options: { sessionType?: Sessi
   }
   const votingMode = sessionType === "free" ? options.votingMode ?? "like_only" : "like_dislike";
   const now = new Date().toISOString();
-  const { data, error } = await supabase.from("sessions").insert({ name, status: "active", started_at: now, session_type: sessionType, voting_mode: votingMode, venue_id: venueId }).select().single();
+  const { data, error } = await supabase.from("sessions").insert({ name, status: "active", started_at: now, session_type: sessionType, voting_mode: votingMode, venue_id: venueId, ...(sessionType === "x1" && options.x1VotingMode ? { x1_voting_mode: options.x1VotingMode } : {}) }).select().single();
   fail(error, "Erro ao criar sessão");
   return data as Session;
 }

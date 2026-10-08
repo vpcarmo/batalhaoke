@@ -7,6 +7,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSessionLive } from "@/hooks/use-session-live";
 import { displayName, getVoterToken } from "@/lib/karaoke";
 import { castVote, getVoterStatus, getVotingSession } from "@/lib/votes.functions";
+import { castX1MatchVote, getX1MatchVoteStatus } from "@/lib/x1.functions";
+import { useVoteCountdown } from "@/hooks/use-vote-countdown";
+import type { Participant } from "@/lib/karaoke";
 
 export const Route = createFileRoute("/votar/$code")({
   ssr: false,
@@ -33,6 +36,7 @@ function VotePage() {
   const live = useSessionLive(session?.id);
   const currentSession = live.session.data ?? session;
   const active = live.active;
+  const afterBoth = currentSession?.session_type === "x1" && currentSession.x1_voting_mode === "after_both_performances";
   const [token, setToken] = useState<string | null>(null);
   useEffect(() => { setToken(getVoterToken()); }, []);
 
@@ -57,7 +61,7 @@ function VotePage() {
   const statusQ = useQuery({
     queryKey: ["voter-status", code, active?.id],
     queryFn: () => status({ data: { code, token: token!, voteType: "like" } }),
-    enabled: !!token && !!active?.id,
+    enabled: !!token && !!active?.id && !afterBoth,
   });
   const hasVoted = !!active && (voted[active.id] || (statusQ.data?.performanceId === active.id && statusQ.data.hasVoted));
 
@@ -91,6 +95,8 @@ function VotePage() {
           <p className="text-lg text-muted-foreground">QR Code inválido.</p>
         ) : currentSession?.status !== "active" ? (
           <p className="text-lg text-muted-foreground">Esta sessão foi encerrada. Obrigado por participar!</p>
+        ) : afterBoth ? (
+          <X1DirectVote code={code} token={token} active={!!active?.participant} activeName={active?.participant ? displayName(active.participant) : null} participants={live.participants.data ?? []} />
         ) : !active?.participant ? (
           <div>
             <p className="font-display text-4xl">Aguardando o próximo cantor.</p>
@@ -128,5 +134,75 @@ function VotePage() {
         )}
       </section>
     </main>
+  );
+}
+
+/** X1 after_both_performances: no A/B voting while singing; direct choice once the window opens. */
+function X1DirectVote({ code, token, active, activeName, participants }: {
+  code: string; token: string | null; active: boolean; activeName: string | null; participants: Participant[];
+}) {
+  const statusFn = useServerFn(getX1MatchVoteStatus);
+  const voteFn = useServerFn(castX1MatchVote);
+  const q = useQuery({
+    queryKey: ["x1-vote-status", code],
+    queryFn: () => statusFn({ data: { code, token: token! } }),
+    enabled: !!token,
+    refetchInterval: 2000,
+  });
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const [localVote, setLocalVote] = useState<Record<string, boolean>>({});
+  const match = q.data?.match ?? null;
+  const offset = q.data ? q.data.serverNow - Date.now() : 0;
+  const remaining = useVoteCountdown(match?.voting_status === "open" ? match.voting_ends_at : null, offset);
+  const byId = (id: string) => participants.find((p) => p.id === id);
+  const voted = !!match && (localVote[match.id] || q.data?.hasVoted);
+
+  async function vote(chosenParticipantId: string) {
+    if (!token || !match || busy) return;
+    setBusy(true); setErr(null);
+    try {
+      const r = await voteFn({ data: { code, token, matchId: match.id, chosenParticipantId } });
+      if (r.result === "ok" || r.result === "already_voted") setLocalVote((v) => ({ ...v, [match.id]: true }));
+      else if (r.result === "voting_closed") setErr("Votação encerrada.");
+      else setErr("Não foi possível registrar o voto.");
+      void q.refetch();
+    } catch (e) { setErr((e as Error).message); } finally { setBusy(false); }
+  }
+
+  if (active) return (
+    <div className="w-full min-w-0">
+      {activeName && <p className="break-words font-display text-5xl leading-none text-primary">🎤 {activeName}</p>}
+      <p className="mt-6 text-xl">Apresentação em andamento.</p>
+      <p className="mt-2 text-muted-foreground">A votação abrirá após as apresentações dos dois cantores.</p>
+    </div>
+  );
+  if (!match || match.voting_status === "idle") return (
+    <div>
+      <p className="font-display text-4xl">Aguardando o próximo duelo.</p>
+      <p className="mt-4 text-muted-foreground">A votação abrirá após as apresentações dos dois cantores.</p>
+    </div>
+  );
+  const isOpen = match.voting_status === "open" && remaining > 0;
+  if (!isOpen) return <p className="font-display text-4xl">Votação encerrada.</p>;
+  if (voted) return (
+    <div className="w-full rounded-2xl border bg-card p-6" role="status">
+      <p className="flex items-center justify-center gap-2 font-display text-3xl text-success"><Check className="size-7" /> Voto registrado!</p>
+      <p className="mt-3">Aguarde o resultado no telão.</p>
+    </div>
+  );
+  const a = byId(match.participant_a_id), b = byId(match.participant_b_id);
+  return (
+    <div className="flex w-full flex-col gap-4">
+      <p className="font-display text-4xl">QUEM VOCÊ PREFERE?</p>
+      <p className="font-display text-5xl text-primary" aria-live="polite">{remaining}s</p>
+      {[a, b].map((p, i) => p && (
+        <button key={p.id} onClick={() => { void vote(p.id); }} disabled={busy || !token}
+          className="h-28 w-full rounded-3xl bg-primary px-4 font-display text-4xl text-primary-foreground shadow-glow transition active:scale-95 disabled:opacity-70 focus-visible:outline-2 focus-visible:outline-ring">
+          {i === 0 ? "A" : "B"} · {displayName(p)}
+        </button>
+      ))}
+      {err && <p role="alert" className="text-destructive">{err}</p>}
+    </div>
   );
 }

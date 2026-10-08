@@ -53,6 +53,8 @@ export type Database = {
           session_id: string
           status: string
           updated_at: string
+          voting_ends_at: string | null
+          voting_status: string
           winner_participant_id: string | null
           withdrawn_slot: string | null
         }
@@ -64,6 +66,8 @@ export type Database = {
           session_id: string
           status?: string
           updated_at?: string
+          voting_ends_at?: string | null
+          voting_status?: string
           winner_participant_id?: string | null
           withdrawn_slot?: string | null
         }
@@ -75,6 +79,8 @@ export type Database = {
           session_id?: string
           status?: string
           updated_at?: string
+          voting_ends_at?: string | null
+          voting_status?: string
           winner_participant_id?: string | null
           withdrawn_slot?: string | null
         }
@@ -301,6 +307,7 @@ export type Database = {
           updated_at: string
           venue_id: string | null
           voting_mode: string
+          x1_voting_mode: string
         }
         Insert: {
           created_at?: string
@@ -316,6 +323,7 @@ export type Database = {
           updated_at?: string
           venue_id?: string | null
           voting_mode?: string
+          x1_voting_mode?: string
         }
         Update: {
           created_at?: string
@@ -331,6 +339,7 @@ export type Database = {
           updated_at?: string
           venue_id?: string | null
           voting_mode?: string
+          x1_voting_mode?: string
         }
         Relationships: [
           {
@@ -487,6 +496,52 @@ export type Database = {
           },
           {
             foreignKeyName: "votes_voter_session_id_fkey"
+            columns: ["voter_session_id"]
+            isOneToOne: false
+            referencedRelation: "voter_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      x1_match_votes: {
+        Row: {
+          chosen_participant_id: string
+          created_at: string
+          id: string
+          match_id: string
+          voter_session_id: string
+        }
+        Insert: {
+          chosen_participant_id: string
+          created_at?: string
+          id?: string
+          match_id: string
+          voter_session_id: string
+        }
+        Update: {
+          chosen_participant_id?: string
+          created_at?: string
+          id?: string
+          match_id?: string
+          voter_session_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "x1_match_votes_chosen_participant_id_fkey"
+            columns: ["chosen_participant_id"]
+            isOneToOne: false
+            referencedRelation: "participants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "x1_match_votes_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: false
+            referencedRelation: "matches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "x1_match_votes_voter_session_id_fkey"
             columns: ["voter_session_id"]
             isOneToOne: false
             referencedRelation: "voter_sessions"

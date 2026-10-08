@@ -18,6 +18,8 @@ export function useSessionLive(sessionId: string | undefined) {
     queryFn: () => listMatches(sessionId!),
     enabled: enabled && isX1,
     retry: 1,
+    // Fallback when a Realtime matches event is missed (voting window changes).
+    refetchInterval: 3000,
   });
 
   useEffect(() => {
