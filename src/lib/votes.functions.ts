@@ -62,6 +62,8 @@ export const castVote = createServerFn({ method: "POST" })
     const { kind, session: s } = await resolveVotingSession(data.code);
     if (!s) return kind === "venue" ? { result: "no_active_session" as const } : { result: "invalid_session" as const };
     if (s.status !== "active") return { result: "session_closed" as const };
+    // X1 direct A/B model: per-performance like/dislike is not part of this session.
+    if (s.session_type === "x1" && s.x1_voting_mode === "after_both_performances") return { result: "voting_disabled" as const };
     if (data.voteType === "dislike" && s.voting_mode !== "like_dislike") return { result: "vote_not_allowed" as const };
     const { data: perf } = await supabaseAdmin.from("performances").select("id").eq("session_id", s.id).eq("status", "active").limit(1).maybeSingle();
     if (!perf) return { result: "no_performance" as const };

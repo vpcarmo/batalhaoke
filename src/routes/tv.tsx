@@ -459,15 +459,16 @@ function X1Arena({ state, participants, performances, directVote = false }: {
       {last && (
         <article className="rounded-2xl border border-border/70 bg-background/50 p-4 text-center sm:p-5">
           <p className="text-base font-bold uppercase tracking-[0.18em] text-muted-foreground lg:text-xl">Último duelo</p>
+          {directVote && lastTally.data && <p className="mt-1 text-sm text-muted-foreground lg:text-base">Votação direta A/B</p>}
           <div className="mt-3 grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2">
             <div className="min-w-0">
               {lastA && <p className="truncate font-display text-3xl text-primary sm:text-4xl lg:text-5xl">{displayName(lastA)}</p>}
-              {performanceA && <p className="mt-1 text-2xl font-bold lg:text-3xl">{score(performanceA)}</p>}
+              {lastScoreA && <p className="mt-1 text-2xl font-bold lg:text-3xl">{lastScoreA}</p>}
             </div>
             <span className="font-display text-2xl text-muted-foreground lg:text-3xl">×</span>
             <div className="min-w-0">
               {lastB && <p className="truncate font-display text-3xl text-primary sm:text-4xl lg:text-5xl">{displayName(lastB)}</p>}
-              {performanceB && <p className="mt-1 text-2xl font-bold lg:text-3xl">{score(performanceB)}</p>}
+              {lastScoreB && <p className="mt-1 text-2xl font-bold lg:text-3xl">{lastScoreB}</p>}
             </div>
           </div>
           {winner && <p className="mt-3 text-xl font-bold text-accent lg:text-2xl">🏆 {displayName(winner)} avançou</p>}
