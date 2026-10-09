@@ -361,6 +361,7 @@ function TvPage() {
             state={x1State}
             participants={live.participants.data ?? []}
             performances={live.performances.data ?? []}
+            directVote={x1AfterBoth}
           />
         ) : showX1Arena ? (
           <section className="grid place-items-center rounded-2xl border border-primary/40 bg-card/70 p-8 text-center">
@@ -395,10 +396,11 @@ function TvPage() {
   );
 }
 
-function X1Arena({ state, participants, performances }: {
+function X1Arena({ state, participants, performances, directVote = false }: {
   state: ReturnType<typeof getX1CompetitionState>;
   participants: Participant[];
   performances: Performance[];
+  directVote?: boolean;
 }) {
   const participantById = (id: string) => participants.find((participant) => participant.id === id);
   const last = state.latestCompleted;
@@ -409,6 +411,14 @@ function X1Arena({ state, participants, performances }: {
     performances.find((performance) => performance.match_id === match.id && performance.match_slot === slot);
   const performanceA = last ? scoreForSlot(last, "a") : undefined;
   const performanceB = last ? scoreForSlot(last, "b") : undefined;
+  // after_both_performances: last duel score = direct A/B votes (server-side count, never like/dislike).
+  const lastTally = useQuery({
+    queryKey: ["x1-tally", last?.id, "final"],
+    queryFn: () => getX1MatchTally({ data: { matchId: last!.id } }),
+    enabled: directVote && !!last,
+    staleTime: Infinity,
+    retry: 1,
+  });
   const nextMatch = state.currentMatch;
   const nextA = nextMatch ? participantById(nextMatch.participant_a_id) : undefined;
   const nextB = nextMatch ? participantById(nextMatch.participant_b_id) : undefined;
@@ -418,6 +428,13 @@ function X1Arena({ state, participants, performances }: {
     const value = performance.like_count - performance.dislike_count;
     return value > 0 ? `+${value}` : String(value);
   };
+  const votes = (n: number) => `${n} ${n === 1 ? "voto" : "votos"}`;
+  const lastScoreA = directVote
+    ? (lastTally.data ? votes(lastTally.data.a) : null)
+    : (performanceA ? score(performanceA) : null);
+  const lastScoreB = directVote
+    ? (lastTally.data ? votes(lastTally.data.b) : null)
+    : (performanceB ? score(performanceB) : null);
 
   return (
     <section className="flex flex-col justify-center gap-5 rounded-2xl border border-primary/40 bg-card/70 p-5 sm:p-7 lg:gap-6 lg:p-8">
