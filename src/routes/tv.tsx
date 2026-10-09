@@ -361,6 +361,7 @@ function TvPage() {
             state={x1State}
             participants={live.participants.data ?? []}
             performances={live.performances.data ?? []}
+            directVote={x1AfterBoth}
           />
         ) : showX1Arena ? (
           <section className="grid place-items-center rounded-2xl border border-primary/40 bg-card/70 p-8 text-center">
@@ -395,10 +396,11 @@ function TvPage() {
   );
 }
 
-function X1Arena({ state, participants, performances }: {
+function X1Arena({ state, participants, performances, directVote = false }: {
   state: ReturnType<typeof getX1CompetitionState>;
   participants: Participant[];
   performances: Performance[];
+  directVote?: boolean;
 }) {
   const participantById = (id: string) => participants.find((participant) => participant.id === id);
   const last = state.latestCompleted;
@@ -409,6 +411,14 @@ function X1Arena({ state, participants, performances }: {
     performances.find((performance) => performance.match_id === match.id && performance.match_slot === slot);
   const performanceA = last ? scoreForSlot(last, "a") : undefined;
   const performanceB = last ? scoreForSlot(last, "b") : undefined;
+  // after_both_performances: last duel score = direct A/B votes (server-side count, never like/dislike).
+  const lastTally = useQuery({
+    queryKey: ["x1-tally", last?.id, "final"],
+    queryFn: () => getX1MatchTally({ data: { matchId: last!.id } }),
+    enabled: directVote && !!last,
+    staleTime: Infinity,
+    retry: 1,
+  });
   const nextMatch = state.currentMatch;
   const nextA = nextMatch ? participantById(nextMatch.participant_a_id) : undefined;
   const nextB = nextMatch ? participantById(nextMatch.participant_b_id) : undefined;
@@ -418,6 +428,13 @@ function X1Arena({ state, participants, performances }: {
     const value = performance.like_count - performance.dislike_count;
     return value > 0 ? `+${value}` : String(value);
   };
+  const votes = (n: number) => `${n} ${n === 1 ? "voto" : "votos"}`;
+  const lastScoreA = directVote
+    ? (lastTally.data ? votes(lastTally.data.a) : null)
+    : (performanceA ? score(performanceA) : null);
+  const lastScoreB = directVote
+    ? (lastTally.data ? votes(lastTally.data.b) : null)
+    : (performanceB ? score(performanceB) : null);
 
   return (
     <section className="flex flex-col justify-center gap-5 rounded-2xl border border-primary/40 bg-card/70 p-5 sm:p-7 lg:gap-6 lg:p-8">
@@ -442,15 +459,16 @@ function X1Arena({ state, participants, performances }: {
       {last && (
         <article className="rounded-2xl border border-border/70 bg-background/50 p-4 text-center sm:p-5">
           <p className="text-base font-bold uppercase tracking-[0.18em] text-muted-foreground lg:text-xl">Último duelo</p>
+          {directVote && lastTally.data && <p className="mt-1 text-sm text-muted-foreground lg:text-base">Votação direta A/B</p>}
           <div className="mt-3 grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2">
             <div className="min-w-0">
               {lastA && <p className="truncate font-display text-3xl text-primary sm:text-4xl lg:text-5xl">{displayName(lastA)}</p>}
-              {performanceA && <p className="mt-1 text-2xl font-bold lg:text-3xl">{score(performanceA)}</p>}
+              {lastScoreA && <p className="mt-1 text-2xl font-bold lg:text-3xl">{lastScoreA}</p>}
             </div>
             <span className="font-display text-2xl text-muted-foreground lg:text-3xl">×</span>
             <div className="min-w-0">
               {lastB && <p className="truncate font-display text-3xl text-primary sm:text-4xl lg:text-5xl">{displayName(lastB)}</p>}
-              {performanceB && <p className="mt-1 text-2xl font-bold lg:text-3xl">{score(performanceB)}</p>}
+              {lastScoreB && <p className="mt-1 text-2xl font-bold lg:text-3xl">{lastScoreB}</p>}
             </div>
           </div>
           {winner && <p className="mt-3 text-xl font-bold text-accent lg:text-2xl">🏆 {displayName(winner)} avançou</p>}
