@@ -78,6 +78,13 @@
       "when": 1791668976106,
       "tag": "0010_championship_core",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1791672590741,
+      "tag": "0011_0011_championship_auth_and_guards",
+      "breakpoints": true
     }
   ]
 }
