@@ -71,6 +71,13 @@
       "when": 1791455228622,
       "tag": "0009_x1_after_both_voting",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1791668976106,
+      "tag": "0010_championship_core",
+      "breakpoints": true
     }
   ]
 }

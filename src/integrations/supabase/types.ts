@@ -14,6 +14,307 @@ export type Database = {
   }
   public: {
     Tables: {
+      championship_entries: {
+        Row: {
+          admin_notes: string | null
+          championship_id: string
+          contact_email: string | null
+          contact_phone: string | null
+          created_at: string
+          group_letter: string | null
+          id: string
+          name: string
+          participant_id: string | null
+          seed_number: number | null
+          stage_name: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          championship_id: string
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          group_letter?: string | null
+          id?: string
+          name: string
+          participant_id?: string | null
+          seed_number?: number | null
+          stage_name?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          admin_notes?: string | null
+          championship_id?: string
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          group_letter?: string | null
+          id?: string
+          name?: string
+          participant_id?: string | null
+          seed_number?: number | null
+          stage_name?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "championship_entries_championship_id_fkey"
+            columns: ["championship_id"]
+            isOneToOne: false
+            referencedRelation: "championships"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "championship_entries_participant_id_fkey"
+            columns: ["participant_id"]
+            isOneToOne: false
+            referencedRelation: "participants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      championship_entry_songs: {
+        Row: {
+          created_at: string
+          entry_id: string
+          id: string
+          playback_source_id: string
+          song_order: number
+          song_type: string
+        }
+        Insert: {
+          created_at?: string
+          entry_id: string
+          id?: string
+          playback_source_id: string
+          song_order: number
+          song_type: string
+        }
+        Update: {
+          created_at?: string
+          entry_id?: string
+          id?: string
+          playback_source_id?: string
+          song_order?: number
+          song_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "championship_entry_songs_entry_id_fkey"
+            columns: ["entry_id"]
+            isOneToOne: false
+            referencedRelation: "championship_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "championship_entry_songs_playback_source_id_fkey"
+            columns: ["playback_source_id"]
+            isOneToOne: false
+            referencedRelation: "playback_sources"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      championship_match_votes: {
+        Row: {
+          chosen_entry_id: string
+          created_at: string
+          id: string
+          match_id: string
+          voter_session_id: string
+        }
+        Insert: {
+          chosen_entry_id: string
+          created_at?: string
+          id?: string
+          match_id: string
+          voter_session_id: string
+        }
+        Update: {
+          chosen_entry_id?: string
+          created_at?: string
+          id?: string
+          match_id?: string
+          voter_session_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "championship_match_votes_chosen_entry_id_fkey"
+            columns: ["chosen_entry_id"]
+            isOneToOne: false
+            referencedRelation: "championship_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "championship_match_votes_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: false
+            referencedRelation: "championship_matches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "championship_match_votes_voter_session_id_fkey"
+            columns: ["voter_session_id"]
+            isOneToOne: false
+            referencedRelation: "voter_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      championship_matches: {
+        Row: {
+          championship_id: string
+          created_at: string
+          entry_a_id: string | null
+          entry_b_id: string | null
+          id: string
+          match_number: number
+          performance_a_id: string | null
+          performance_b_id: string | null
+          stage: string
+          status: string
+          updated_at: string
+          voting_ends_at: string | null
+          voting_status: string
+          winner_entry_id: string | null
+        }
+        Insert: {
+          championship_id: string
+          created_at?: string
+          entry_a_id?: string | null
+          entry_b_id?: string | null
+          id?: string
+          match_number: number
+          performance_a_id?: string | null
+          performance_b_id?: string | null
+          stage: string
+          status?: string
+          updated_at?: string
+          voting_ends_at?: string | null
+          voting_status?: string
+          winner_entry_id?: string | null
+        }
+        Update: {
+          championship_id?: string
+          created_at?: string
+          entry_a_id?: string | null
+          entry_b_id?: string | null
+          id?: string
+          match_number?: number
+          performance_a_id?: string | null
+          performance_b_id?: string | null
+          stage?: string
+          status?: string
+          updated_at?: string
+          voting_ends_at?: string | null
+          voting_status?: string
+          winner_entry_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "championship_matches_championship_id_fkey"
+            columns: ["championship_id"]
+            isOneToOne: false
+            referencedRelation: "championships"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "championship_matches_entry_a_id_fkey"
+            columns: ["entry_a_id"]
+            isOneToOne: false
+            referencedRelation: "championship_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "championship_matches_entry_b_id_fkey"
+            columns: ["entry_b_id"]
+            isOneToOne: false
+            referencedRelation: "championship_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "championship_matches_performance_a_id_fkey"
+            columns: ["performance_a_id"]
+            isOneToOne: false
+            referencedRelation: "performances"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "championship_matches_performance_b_id_fkey"
+            columns: ["performance_b_id"]
+            isOneToOne: false
+            referencedRelation: "performances"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "championship_matches_winner_entry_id_fkey"
+            columns: ["winner_entry_id"]
+            isOneToOne: false
+            referencedRelation: "championship_entries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      championships: {
+        Row: {
+          created_at: string
+          event_starts_at: string | null
+          fee_info: string | null
+          format: number
+          id: string
+          location: string | null
+          prize_info: string | null
+          registration_deadline: string | null
+          rules: string | null
+          status: string
+          title: string
+          updated_at: string
+          venue_id: string
+        }
+        Insert: {
+          created_at?: string
+          event_starts_at?: string | null
+          fee_info?: string | null
+          format: number
+          id?: string
+          location?: string | null
+          prize_info?: string | null
+          registration_deadline?: string | null
+          rules?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+          venue_id: string
+        }
+        Update: {
+          created_at?: string
+          event_starts_at?: string | null
+          fee_info?: string | null
+          format?: number
+          id?: string
+          location?: string | null
+          prize_info?: string | null
+          registration_deadline?: string | null
+          rules?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+          venue_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "championships_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       controllers: {
         Row: {
           created_at: string
@@ -294,6 +595,7 @@ export type Database = {
       }
       sessions: {
         Row: {
+          championship_id: string | null
           created_at: string
           ended_at: string | null
           id: string
@@ -310,6 +612,7 @@ export type Database = {
           x1_voting_mode: string
         }
         Insert: {
+          championship_id?: string | null
           created_at?: string
           ended_at?: string | null
           id?: string
@@ -326,6 +629,7 @@ export type Database = {
           x1_voting_mode?: string
         }
         Update: {
+          championship_id?: string | null
           created_at?: string
           ended_at?: string | null
           id?: string
@@ -342,6 +646,13 @@ export type Database = {
           x1_voting_mode?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "sessions_championship_id_fkey"
+            columns: ["championship_id"]
+            isOneToOne: false
+            referencedRelation: "championships"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "sessions_venue_id_fkey"
             columns: ["venue_id"]
