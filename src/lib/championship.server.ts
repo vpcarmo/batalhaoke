@@ -134,7 +134,7 @@ export async function updateChampionship(db: Db, raw: unknown) {
   // Whitelisted columns only: status is never writable here; format only when explicitly changed.
   const update: Database["public"]["Tables"]["championships"]["Update"] = {};
   if (patch.title !== undefined) update.title = patch.title;
-  if (formatChanges) update.format = patch.format;
+  if (formatChanges && patch.format !== undefined) update.format = patch.format;
   if (patch.eventStartsAt !== undefined) update.event_starts_at = patch.eventStartsAt;
   if (patch.registrationDeadline !== undefined) update.registration_deadline = patch.registrationDeadline;
   if (patch.location !== undefined) update.location = patch.location;

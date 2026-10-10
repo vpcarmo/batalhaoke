@@ -24,3 +24,5 @@
 - Every YouTube API call is logged in `provider_api_calls` for quota tracking.
 - X1 has two voting models (`sessions.x1_voting_mode`): `during_performance` uses the existing `votes` flow untouched; `after_both_performances` uses `x1_match_votes` only, opened atomically by a DB trigger when performance B completes and deadline-enforced by a DB trigger on `voting_ends_at` — so the server clock, not the client, is the authority.
 - `x1_voting_mode` is locked by a DB trigger once a session has any match — the lock holds even though `sessions` RLS is open.
+- Championship event/stage logic lives in server-only `src/lib/championship.server.ts` (privileged client injected) and is not exposed via createServerFn until operator authorization exists — MVP has no login, so RPC mutations would be public.
+- The Championship stage session is created in draft by `prepareStageSession` (idempotent via `sessions_championship_unique`) and started only by `activateStageSession`, which never ends another session and never changes the event status.
