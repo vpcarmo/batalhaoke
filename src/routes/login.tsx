@@ -21,10 +21,12 @@ export const Route = createFileRoute("/login")({
 });
 
 function LoginPage() {
+  const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [signupSent, setSignupSent] = useState(false);
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
 
@@ -45,10 +47,23 @@ function LoginPage() {
     e.preventDefault();
     setBusy(true);
     setError(null);
-    const { error: err } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+    if (mode === "signin") {
+      const { error: err } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+      setBusy(false);
+      if (err) setError("E-mail ou senha inválidos.");
+      else setPassword("");
+      return;
+    }
+    // Signup: email confirmation is enabled, so data.session is null until the user
+    // clicks the confirmation link. Never treat a successful signUp as signed in.
+    const { error: err } = await supabase.auth.signUp({
+      email: email.trim(),
+      password,
+      options: { emailRedirectTo: window.location.origin },
+    });
     setBusy(false);
-    if (err) setError("E-mail ou senha inválidos.");
-    else setPassword("");
+    if (err) setError("Não foi possível criar a conta. Verifique o e-mail e tente uma senha mais forte.");
+    else setSignupSent(true);
   }
 
   async function onLogout() {
