@@ -21,10 +21,12 @@ export const Route = createFileRoute("/login")({
 });
 
 function LoginPage() {
+  const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [signupSent, setSignupSent] = useState(false);
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
 
@@ -45,10 +47,23 @@ function LoginPage() {
     e.preventDefault();
     setBusy(true);
     setError(null);
-    const { error: err } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+    if (mode === "signin") {
+      const { error: err } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+      setBusy(false);
+      if (err) setError("E-mail ou senha inválidos.");
+      else setPassword("");
+      return;
+    }
+    // Signup: email confirmation is enabled, so data.session is null until the user
+    // clicks the confirmation link. Never treat a successful signUp as signed in.
+    const { error: err } = await supabase.auth.signUp({
+      email: email.trim(),
+      password,
+      options: { emailRedirectTo: window.location.origin },
+    });
     setBusy(false);
-    if (err) setError("E-mail ou senha inválidos.");
-    else setPassword("");
+    if (err) setError("Não foi possível criar a conta. Verifique o e-mail e tente uma senha mais forte.");
+    else setSignupSent(true);
   }
 
   async function onLogout() {
@@ -73,6 +88,19 @@ function LoginPage() {
               {busy ? "Saindo…" : "Sair"}
             </Button>
           </div>
+        ) : signupSent ? (
+          <div className="space-y-4">
+            <p className="text-sm">
+              Conta criada! Enviamos um link de confirmação para <strong>{email.trim()}</strong>.
+              Confirme o e-mail e depois entre com sua senha.
+            </p>
+            <p className="text-sm text-muted-foreground">
+              O acesso administrativo a um estabelecimento é liberado separadamente, por um operador autorizado.
+            </p>
+            <Button variant="outline" className="w-full" onClick={() => { setSignupSent(false); setMode("signin"); setPassword(""); }}>
+              Voltar para entrar
+            </Button>
+          </div>
         ) : (
           <form onSubmit={onSubmit} className="space-y-4">
             <div className="space-y-2">
@@ -81,10 +109,19 @@ function LoginPage() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Senha</Label>
-              <Input id="password" type="password" autoComplete="current-password" required value={password} onChange={(e) => setPassword(e.target.value)} />
+              <Input id="password" type="password" autoComplete={mode === "signin" ? "current-password" : "new-password"} required minLength={mode === "signup" ? 8 : undefined} value={password} onChange={(e) => setPassword(e.target.value)} />
             </div>
             {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
-            <Button type="submit" disabled={busy} className="w-full">{busy ? "Entrando…" : "Entrar"}</Button>
+            <Button type="submit" disabled={busy} className="w-full">
+              {busy ? (mode === "signin" ? "Entrando…" : "Criando conta…") : (mode === "signin" ? "Entrar" : "Criar conta")}
+            </Button>
+            <button
+              type="button"
+              className="w-full text-center text-sm text-muted-foreground underline"
+              onClick={() => { setMode(mode === "signin" ? "signup" : "signin"); setError(null); }}
+            >
+              {mode === "signin" ? "Não tem conta? Cadastre-se" : "Já tem conta? Entrar"}
+            </button>
           </form>
         )}
         <Link to="/" className="block text-center text-sm text-muted-foreground underline">Voltar ao início</Link>
