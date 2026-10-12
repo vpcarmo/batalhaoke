@@ -88,6 +88,19 @@ function LoginPage() {
               {busy ? "Saindo…" : "Sair"}
             </Button>
           </div>
+        ) : signupSent ? (
+          <div className="space-y-4">
+            <p className="text-sm">
+              Conta criada! Enviamos um link de confirmação para <strong>{email.trim()}</strong>.
+              Confirme o e-mail e depois entre com sua senha.
+            </p>
+            <p className="text-sm text-muted-foreground">
+              O acesso administrativo a um estabelecimento é liberado separadamente, por um operador autorizado.
+            </p>
+            <Button variant="outline" className="w-full" onClick={() => { setSignupSent(false); setMode("signin"); setPassword(""); }}>
+              Voltar para entrar
+            </Button>
+          </div>
         ) : (
           <form onSubmit={onSubmit} className="space-y-4">
             <div className="space-y-2">
@@ -96,10 +109,19 @@ function LoginPage() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Senha</Label>
-              <Input id="password" type="password" autoComplete="current-password" required value={password} onChange={(e) => setPassword(e.target.value)} />
+              <Input id="password" type="password" autoComplete={mode === "signin" ? "current-password" : "new-password"} required minLength={mode === "signup" ? 8 : undefined} value={password} onChange={(e) => setPassword(e.target.value)} />
             </div>
             {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
-            <Button type="submit" disabled={busy} className="w-full">{busy ? "Entrando…" : "Entrar"}</Button>
+            <Button type="submit" disabled={busy} className="w-full">
+              {busy ? (mode === "signin" ? "Entrando…" : "Criando conta…") : (mode === "signin" ? "Entrar" : "Criar conta")}
+            </Button>
+            <button
+              type="button"
+              className="w-full text-center text-sm text-muted-foreground underline"
+              onClick={() => { setMode(mode === "signin" ? "signup" : "signin"); setError(null); }}
+            >
+              {mode === "signin" ? "Não tem conta? Cadastre-se" : "Já tem conta? Entrar"}
+            </button>
           </form>
         )}
         <Link to="/" className="block text-center text-sm text-muted-foreground underline">Voltar ao início</Link>
