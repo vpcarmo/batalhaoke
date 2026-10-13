@@ -240,11 +240,20 @@ export const getChampionshipMatchScoreFn = createServerFn({ method: "POST" })
 
 export const castChampionshipMatchVoteFn = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({
-    matchId: Id,
+    code: z.string().trim().min(4).max(40).regex(/^[a-zA-Z0-9_-]+$/),
     chosenEntryId: Id,
     token: z.string().min(16).max(128).regex(/^[a-zA-Z0-9_-]+$/),
   }).strict().parse(d))
   .handler(({ data }) => run((deps) => deps.domain.castChampionshipMatchVote(deps.db, data)));
+
+export const getPublicChampionshipVoterStatusFn = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) => z.object({
+    code: z.string().trim().min(4).max(40).regex(/^[a-zA-Z0-9_-]+$/),
+    token: z.string().min(16).max(128).regex(/^[a-zA-Z0-9_-]+$/),
+  }).strict().parse(d))
+  .handler(({ data }) =>
+    run((deps) => deps.domain.getPublicChampionshipVoterStatus(deps.db, data)),
+  );
 
 export const advanceChampionshipEliminationFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])

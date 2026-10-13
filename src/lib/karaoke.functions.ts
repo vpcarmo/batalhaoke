@@ -37,6 +37,35 @@ export type KaraokeLiveSnapshot = {
     source: Tables<"playback_sources"> | null;
   })[];
   matches: Tables<"matches">[];
+  championship: ChampionshipLiveSnapshot | null;
+};
+
+export type ChampionshipLiveSnapshot = {
+  title: string;
+  status: string;
+  format: number;
+  entries: {
+    id: string;
+    displayName: string;
+    groupLetter: string | null;
+    seedNumber: number | null;
+    participantId: string | null;
+  }[];
+  matches: {
+    id: string;
+    stage: string;
+    matchNumber: number;
+    entryAId: string | null;
+    entryBId: string | null;
+    winnerEntryId: string | null;
+    status: string;
+    votingStatus: string;
+    votingEndsAt: string | null;
+    votesA: number;
+    votesB: number;
+    performanceA: { title: string; status: string } | null;
+    performanceB: { title: string; status: string } | null;
+  }[];
 };
 
 async function loadOperatorDeps() {
@@ -54,7 +83,15 @@ async function loadLiveSnapshot(
   session: Tables<"sessions"> | null,
 ): Promise<KaraokeLiveSnapshot> {
   if (!session)
-    return { kind, venueId, session: null, participants: [], performances: [], matches: [] };
+    return {
+      kind,
+      venueId,
+      session: null,
+      participants: [],
+      performances: [],
+      matches: [],
+      championship: null,
+    };
 
   const [participantsResult, performancesResult, matchesResult] = await Promise.all([
     db.from("participants").select("*").eq("session_id", session.id).order("participant_number"),
@@ -69,6 +106,132 @@ async function loadLiveSnapshot(
   if (performancesResult.error) throw new Error("Não foi possível carregar as apresentações.");
   if (matchesResult.error) throw new Error("Não foi possível carregar os confrontos.");
 
+  let championship: ChampionshipLiveSnapshot | null = null;
+  if (session.session_type === "championship" && session.championship_id) {
+    const [championshipResult, entriesResult, championshipMatchesResult] = await Promise.all([
+      db
+        .from("championships")
+        .select("id, title, status, format")
+        .eq("id", session.championship_id)
+        .maybeSingle(),
+      db
+        .from("championship_entries")
+        .select("id, stage_name, group_letter, seed_number, participant_id")
+        .eq("championship_id", session.championship_id)
+        .in("status", ["confirmed", "withdrawn", "disqualified"])
+        .order("seed_number"),
+      db
+        .from("championship_matches")
+        .select(
+          "id, stage, match_number, entry_a_id, entry_b_id, winner_entry_id, status, voting_status, voting_ends_at, performance_a_id, performance_b_id",
+        )
+        .eq("championship_id", session.championship_id)
+        .order("created_at"),
+    ]);
+    if (championshipResult.error)
+      throw new Error("Não foi possível carregar o Campeonato da sessão.");
+    if (entriesResult.error)
+      throw new Error("Não foi possível carregar os participantes do Campeonato.");
+    if (championshipMatchesResult.error)
+      throw new Error("Não foi possível carregar os confrontos do Campeonato.");
+
+    const countVotesForEntry = async (matchId: string, entryId: string | null) => {
+      if (!entryId) return 0;
+      const { count, error } = await db
+        .from("championship_match_votes")
+        .select("id", { count: "exact", head: true })
+        .eq("match_id", matchId)
+        .eq("chosen_entry_id", entryId);
+      if (error) throw new Error("Não foi possível carregar a apuração do Campeonato.");
+      return count ?? 0;
+    };
+    const championshipStatus = championshipResult.data?.status;
+    const currentStage =
+      championshipStatus === "drawn" || championshipStatus === "quarter_finals"
+        ? "quarter_final"
+        : championshipStatus === "semi_finals"
+          ? "semi_final"
+          : championshipStatus === "final" || championshipStatus === "completed"
+            ? "final"
+            : null;
+    const stageMatches = (championshipMatchesResult.data ?? []).filter(
+      (match) => match.stage === currentStage,
+    );
+    const scoredMatch =
+      stageMatches.find((match) => match.status === "in_progress") ??
+      [...stageMatches].reverse().find(
+        (match) => match.status === "completed" || match.status === "wo",
+      );
+    const tallyResults = scoredMatch
+      ? await Promise.all([
+          countVotesForEntry(scoredMatch.id, scoredMatch.entry_a_id),
+          countVotesForEntry(scoredMatch.id, scoredMatch.entry_b_id),
+        ])
+      : [];
+
+    const participantsById = new Map(
+      (participantsResult.data ?? []).map((participant) => [participant.id, participant]),
+    );
+    const performancesById = new Map(
+      (performancesResult.data ?? []).map((performance) => [performance.id, performance]),
+    );
+    const tallies = new Map<string, { a: number; b: number }>();
+    if (scoredMatch)
+      tallies.set(scoredMatch.id, { a: tallyResults[0] ?? 0, b: tallyResults[1] ?? 0 });
+
+    if (championshipResult.data) {
+      championship = {
+        title: championshipResult.data.title,
+        status: championshipResult.data.status,
+        format: championshipResult.data.format,
+        entries: (entriesResult.data ?? []).map((entry) => {
+          const participant = entry.participant_id
+            ? participantsById.get(entry.participant_id)
+            : undefined;
+          return {
+            id: entry.id,
+            displayName:
+              entry.stage_name?.trim() ||
+              participant?.stage_name?.trim() ||
+              participant?.name ||
+              "Participante",
+            groupLetter: entry.group_letter,
+            seedNumber: entry.seed_number,
+            participantId: entry.participant_id,
+          };
+        }),
+        matches: (championshipMatchesResult.data ?? []).map((match) => {
+          const tally = tallies.get(match.id) ?? { a: 0, b: 0 };
+          const performanceA = match.performance_a_id
+            ? performancesById.get(match.performance_a_id)
+            : undefined;
+          const performanceB = match.performance_b_id
+            ? performancesById.get(match.performance_b_id)
+            : undefined;
+          return {
+            id: match.id,
+            stage: match.stage,
+            matchNumber: match.match_number,
+            entryAId: match.entry_a_id,
+            entryBId: match.entry_b_id,
+            winnerEntryId: match.winner_entry_id,
+            status: match.status,
+            votingStatus: match.voting_status,
+            votingEndsAt: match.voting_ends_at,
+            votesA: tally.a,
+            votesB: tally.b,
+            performanceA: performanceA
+              ? { title: performanceA.source?.title ?? "", status: performanceA.status }
+              : null,
+            performanceB: performanceB
+              ? { title: performanceB.source?.title ?? "", status: performanceB.status }
+              : null,
+          };
+        }),
+      };
+    }
+  }
+
   return {
     kind,
     venueId,
@@ -76,6 +239,7 @@ async function loadLiveSnapshot(
     participants: participantsResult.data ?? [],
     performances: performancesResult.data ?? [],
     matches: matchesResult.data ?? [],
+    championship,
   };
 }
 

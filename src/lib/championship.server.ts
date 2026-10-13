@@ -917,7 +917,7 @@ const MatchWoInput = z.object({
   reason: z.string().trim().min(1).max(1000),
 }).strict();
 const MatchVoteInput = z.object({
-  matchId: z.string().uuid(),
+  code: z.string().trim().min(4).max(40).regex(/^[a-zA-Z0-9_-]+$/),
   chosenEntryId: z.string().uuid(),
   token: z.string().min(16).max(128).regex(/^[a-zA-Z0-9_-]+$/),
 }).strict();
@@ -1010,26 +1010,114 @@ async function hashChampionshipVoterToken(sessionId: string, token: string) {
   return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("");
 }
 
+async function resolvePublicChampionshipSession(db: Db, code: string) {
+  const { data: venue, error: venueError } = await db
+    .from("venues")
+    .select("id")
+    .eq("slug", code)
+    .maybeSingle();
+  if (venueError) fail("Não foi possível localizar o estabelecimento.");
+
+  const sessionQuery = db
+    .from("sessions")
+    .select("id, status, session_type, championship_id")
+    .eq("status", "active");
+  const { data: session, error: sessionError } = venue
+    ? await sessionQuery.eq("venue_id", venue.id).maybeSingle()
+    : await sessionQuery.eq("public_code", code).maybeSingle();
+  if (sessionError) fail("Não foi possível localizar a sessão do Campeonato.");
+  if (
+    !session ||
+    session.session_type !== "championship" ||
+    !session.championship_id
+  )
+    return null;
+
+  const { data: championship, error: championshipError } = await db
+    .from("championships")
+    .select("status")
+    .eq("id", session.championship_id)
+    .maybeSingle();
+  if (championshipError) fail("Não foi possível verificar a fase do Campeonato.");
+  if (!championship) fail("Campeonato não encontrado.");
+  return { session, championshipId: session.championship_id, championshipStatus: championship.status };
+}
+
+async function currentPublicEliminationMatch(db: Db, code: string) {
+  const resolved = await resolvePublicChampionshipSession(db, code);
+  if (!resolved) return null;
+  const stage =
+    resolved.championshipStatus === "quarter_finals"
+      ? "quarter_final"
+      : resolved.championshipStatus === "semi_finals"
+        ? "semi_final"
+        : resolved.championshipStatus === "final"
+          ? "final"
+          : null;
+  if (!stage) return null;
+
+  const { data: match, error } = await db
+    .from("championship_matches")
+    .select("id, entry_a_id, entry_b_id, voting_status, voting_ends_at, status")
+    .eq("championship_id", resolved.championshipId)
+    .eq("stage", stage)
+    .eq("status", "in_progress")
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (error) fail("Não foi possível localizar o confronto atual.");
+  return match ? { ...resolved, match } : null;
+}
+
+export async function getPublicChampionshipVoterStatus(db: Db, raw: unknown) {
+  const input = z.object({
+    code: z.string().trim().min(4).max(40).regex(/^[a-zA-Z0-9_-]+$/),
+    token: z.string().min(16).max(128).regex(/^[a-zA-Z0-9_-]+$/),
+  }).strict().parse(raw);
+  const current = await currentPublicEliminationMatch(db, input.code);
+  if (!current) return { matchId: null, hasVoted: false, serverNow: Date.now() };
+
+  const tokenHash = await hashChampionshipVoterToken(current.session.id, input.token);
+  const { data: voter, error: voterError } = await db
+    .from("voter_sessions")
+    .select("id")
+    .eq("session_id", current.session.id)
+    .eq("voter_token_hash", tokenHash)
+    .maybeSingle();
+  if (voterError) fail("Não foi possível verificar o dispositivo votante.");
+  if (!voter)
+    return { matchId: current.match.id, hasVoted: false, serverNow: Date.now() };
+
+  const { count, error: voteError } = await db
+    .from("championship_match_votes")
+    .select("id", { count: "exact", head: true })
+    .eq("match_id", current.match.id)
+    .eq("voter_session_id", voter.id);
+  if (voteError) fail("Não foi possível verificar o voto do confronto.");
+  return { matchId: current.match.id, hasVoted: (count ?? 0) > 0, serverNow: Date.now() };
+}
+
 export async function castChampionshipMatchVote(db: Db, raw: unknown) {
   const input = MatchVoteInput.parse(raw);
-  const championshipId = await getChampionshipMatchChampionshipId(db, input.matchId);
-  const { data: session, error: sessionError } = await db
-    .from("sessions")
-    .select("id")
-    .eq("championship_id", championshipId)
-    .eq("session_type", "championship")
-    .maybeSingle();
-  if (sessionError) fail("Não foi possível localizar a sessão de palco do Campeonato.");
-  if (!session) fail("A sessão de palco do Campeonato não foi preparada.");
+  const current = await currentPublicEliminationMatch(db, input.code);
+  if (!current) fail("Não há votação eliminatória disponível nesta sessão.");
 
-  const tokenHash = await hashChampionshipVoterToken(session.id, input.token);
+  const tokenHash = await hashChampionshipVoterToken(current.session.id, input.token);
   const { data, error } = await db.rpc("cast_championship_match_vote", {
-    p_match_id: input.matchId,
+    p_match_id: current.match.id,
     p_chosen_entry_id: input.chosenEntryId,
     p_voter_token_hash: tokenHash,
   });
   championshipRpcError(error, "Não foi possível registrar o voto.");
-  return data;
+  const result = z.object({
+    result: z.enum(["ok", "already_voted"]),
+    match_id: z.string().uuid(),
+  }).strict().safeParse(data);
+  if (!result.success || result.data.match_id !== current.match.id) {
+    console.error("[championship] public match vote returned an invalid result", result.success ? data : result.error);
+    return fail("Não foi possível confirmar o voto.");
+  }
+  return { result: result.data.result, matchId: result.data.match_id };
 }
 
 const MatchScoreResult = z.object({

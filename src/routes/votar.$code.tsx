@@ -9,6 +9,11 @@ import { castVote, getVoterStatus } from "@/lib/votes.functions";
 import { castX1MatchVote, getX1MatchVoteStatus } from "@/lib/x1.functions";
 import { useVoteCountdown } from "@/hooks/use-vote-countdown";
 import type { Participant } from "@/lib/karaoke";
+import type { ChampionshipLiveSnapshot } from "@/lib/karaoke.functions";
+import {
+  castChampionshipMatchVoteFn,
+  getPublicChampionshipVoterStatusFn,
+} from "@/lib/championship.functions";
 
 export const Route = createFileRoute("/votar/$code")({
   ssr: false,
@@ -33,6 +38,12 @@ function VotePage() {
   const currentSession = live.session.data ?? session;
   const active = live.active;
   const afterBoth = currentSession?.session_type === "x1" && currentSession.x1_voting_mode === "after_both_performances";
+  const championship = target?.championship ?? null;
+  const championshipElimination =
+    currentSession?.session_type === "championship" &&
+    ["quarter_finals", "semi_finals", "final"].includes(championship?.status ?? "");
+  const groupVoting =
+    currentSession?.session_type !== "championship" || championship?.status === "group_stage";
   const [token, setToken] = useState<string | null>(null);
   useEffect(() => { setToken(getVoterToken()); }, []);
 
@@ -45,7 +56,7 @@ function VotePage() {
   const statusQ = useQuery({
     queryKey: ["voter-status", code, active?.id],
     queryFn: () => status({ data: { code, token: token!, voteType: "like" } }),
-    enabled: !!token && !!active?.id && !afterBoth,
+    enabled: !!token && !!active?.id && !afterBoth && groupVoting,
   });
   const hasVoted = !!active && (voted[active.id] || (statusQ.data?.performanceId === active.id && statusQ.data.hasVoted));
 
@@ -81,6 +92,21 @@ function VotePage() {
           <p className="text-lg text-muted-foreground">Esta sessão foi encerrada. Obrigado por participar!</p>
         ) : afterBoth ? (
           <X1DirectVote code={code} token={token} active={!!active?.participant} activeName={active?.participant ? displayName(active.participant) : null} participants={live.participants.data ?? []} />
+        ) : championshipElimination ? (
+          <ChampionshipDirectVote
+            code={code}
+            token={token}
+            championship={championship}
+            active={active}
+          />
+        ) : currentSession?.session_type === "championship" &&
+          championship?.status !== "group_stage" ? (
+          <div>
+            <p className="font-display text-4xl">Campeonato em preparação.</p>
+            <p className="mt-4 text-muted-foreground">
+              A votação ficará disponível quando a fase atual começar.
+            </p>
+          </div>
         ) : !active?.participant ? (
           <div>
             <p className="font-display text-4xl">Aguardando o próximo cantor.</p>
@@ -102,22 +128,191 @@ function VotePage() {
               <>
                 <p className="text-xl text-muted-foreground">{session.voting_mode === "like_dislike" ? "O que você achou?" : "Você gostou?"}</p>
                 <div className={`grid w-full gap-3 ${session.voting_mode === "like_dislike" ? "grid-cols-2" : "grid-cols-1"}`}>
-                  <button onClick={() => onVote("like")} disabled={busy || !token || statusQ.isLoading}
+                  <button onClick={() => onVote("like")} disabled={busy || !token || statusQ.isLoading || statusQ.isError}
                     className="flex h-40 w-full items-center justify-center gap-4 rounded-3xl bg-primary font-display text-5xl font-semibold text-primary-foreground shadow-glow transition active:scale-95 disabled:opacity-80 focus-visible:outline-2 focus-visible:outline-ring">
                     <ThumbsUp className="size-12" aria-hidden /> {busy ? "…" : "Gostei"}
                   </button>
-                  {session.voting_mode === "like_dislike" && <button onClick={() => onVote("dislike")} disabled={busy || !token || statusQ.isLoading}
+                  {session.voting_mode === "like_dislike" && <button onClick={() => onVote("dislike")} disabled={busy || !token || statusQ.isLoading || statusQ.isError}
                     className="flex h-40 w-full items-center justify-center gap-3 rounded-3xl bg-secondary font-display text-3xl shadow-glow transition active:scale-95 disabled:opacity-60 focus-visible:outline-2 focus-visible:outline-ring">
                     <ThumbsDown className="size-10" aria-hidden /> {busy ? "…" : "Não gostei"}
                   </button>}
                 </div>
               </>
             )}
+            {statusQ.isError && (
+              <p role="alert" className="text-destructive">
+                Não foi possível verificar se você já votou. Recarregue a página para tentar novamente.
+              </p>
+            )}
             {err && <p role="alert" className="text-destructive">{err}</p>}
           </>
         )}
       </section>
     </main>
+  );
+}
+
+function ChampionshipDirectVote({
+  code,
+  token,
+  championship,
+  active,
+}: {
+  code: string;
+  token: string | null;
+  championship: ChampionshipLiveSnapshot | null;
+  active: ReturnType<typeof useSessionLive>["active"];
+}) {
+  const statusFn = useServerFn(getPublicChampionshipVoterStatusFn);
+  const voteFn = useServerFn(castChampionshipMatchVoteFn);
+  const stage =
+    championship?.status === "quarter_finals"
+      ? "quarter_final"
+      : championship?.status === "semi_finals"
+        ? "semi_final"
+        : championship?.status === "final"
+          ? "final"
+          : null;
+  const stageMatches = championship?.matches.filter((item) => item.stage === stage) ?? [];
+  const match =
+    stageMatches.find((item) => item.status === "in_progress") ??
+    [...stageMatches].reverse().find((item) => item.status === "completed" || item.status === "wo") ??
+    stageMatches.find((item) => item.status === "scheduled") ??
+    null;
+  const statusQuery = useQuery({
+    queryKey: ["championship-voter-status", code, token, match?.id],
+    queryFn: () => statusFn({ data: { code, token: token! } }),
+    enabled: !!token && !!match && match.votingStatus === "open",
+  });
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const [votedLocally, setVotedLocally] = useState<Record<string, boolean>>({});
+  const offset = statusQuery.data ? statusQuery.data.serverNow - Date.now() : 0;
+  const remaining = useVoteCountdown(
+    match?.votingStatus === "open" ? match.votingEndsAt : null,
+    offset,
+  );
+  const entry = (id: string | null) =>
+    championship?.entries.find((candidate) => candidate.id === id);
+  const entryA = entry(match?.entryAId ?? null);
+  const entryB = entry(match?.entryBId ?? null);
+  const hasVoted =
+    !!match &&
+    (votedLocally[match.id] ||
+      (statusQuery.data?.matchId === match.id && statusQuery.data.hasVoted));
+
+  async function vote(chosenEntryId: string) {
+    if (!token || !match || busy) return;
+    setBusy(true);
+    setErr(null);
+    try {
+      const result = await voteFn({ data: { code, token, chosenEntryId } });
+      if (result.result === "ok" || result.result === "already_voted")
+        setVotedLocally((previous) => ({ ...previous, [result.matchId]: true }));
+      await statusQuery.refetch();
+    } catch (error) {
+      setErr(error instanceof Error ? error.message : "Não foi possível registrar o voto.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  if (!match) {
+    return (
+      <div>
+        <p className="font-display text-4xl">Aguardando o próximo confronto.</p>
+        <p className="mt-4 text-muted-foreground">
+          A votação abrirá após as apresentações dos dois cantores.
+        </p>
+      </div>
+    );
+  }
+
+  const ended =
+    match.status !== "in_progress" ||
+    match.votingStatus === "closed" ||
+    (match.votingStatus === "open" && remaining === 0);
+  const label = (side: "A" | "B", displayName: string) => `${side} · ${displayName}`;
+
+  return (
+    <div className="flex w-full flex-col gap-4">
+      <p className="font-display text-2xl text-muted-foreground">
+        {match.stage === "quarter_final"
+          ? "Quartas de final"
+          : match.stage === "semi_final"
+            ? "Semifinal"
+            : "Final"}{" "}
+        · Confronto {match.matchNumber}
+      </p>
+      {active?.participant && (
+        <p className="text-lg text-muted-foreground">
+          Apresentação em andamento. A votação abre após os dois cantores.
+        </p>
+      )}
+      <div className="grid w-full gap-3">
+        {[entryA, entryB].map((candidate, index) => {
+          if (!candidate) return null;
+          return (
+            <div key={candidate.id} className="rounded-2xl border bg-card p-4">
+              <p className="font-display text-3xl text-primary">
+                {label(index === 0 ? "A" : "B", candidate.displayName)}
+              </p>
+              {(index === 0 ? match.performanceA : match.performanceB)?.title && (
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {(index === 0 ? match.performanceA : match.performanceB)?.title}
+                </p>
+              )}
+            </div>
+          );
+        })}
+      </div>
+      {ended ? (
+        <p className="font-display text-3xl">Votação encerrada.</p>
+      ) : hasVoted ? (
+        <div className="w-full rounded-2xl border bg-card p-6" role="status">
+          <p className="flex items-center justify-center gap-2 font-display text-3xl text-success">
+            <Check className="size-7" /> Voto registrado!
+          </p>
+          <p className="mt-3">Aguarde o resultado no telão.</p>
+        </div>
+      ) : match.votingStatus !== "open" || active ? (
+        <p className="text-muted-foreground">
+          A votação abrirá após as apresentações dos dois cantores.
+        </p>
+      ) : (
+        <>
+          <p className="font-display text-4xl">QUEM VOCÊ PREFERE?</p>
+          <p className="font-display text-5xl text-primary" aria-live="polite">
+            {remaining}s
+          </p>
+          {[entryA, entryB].map(
+            (candidate, index) =>
+              candidate && (
+                <button
+                  key={candidate.id}
+                  onClick={() => void vote(candidate.id)}
+                  disabled={
+                    busy ||
+                    !token ||
+                    statusQuery.isLoading ||
+                    statusQuery.isError ||
+                    remaining === 0
+                  }
+                  className="h-28 w-full rounded-3xl bg-primary px-4 font-display text-4xl text-primary-foreground shadow-glow transition active:scale-95 disabled:opacity-70 focus-visible:outline-2 focus-visible:outline-ring"
+                >
+                  {label(index === 0 ? "A" : "B", candidate.displayName)}
+                </button>
+              ),
+          )}
+        </>
+      )}
+      {statusQuery.isError && (
+        <p role="alert" className="text-destructive">
+          Não foi possível verificar se você já votou neste confronto.
+        </p>
+      )}
+      {err && <p role="alert" className="text-destructive">{err}</p>}
+    </div>
   );
 }
 

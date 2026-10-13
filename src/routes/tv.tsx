@@ -27,6 +27,7 @@ import {
   getX1MatchTally,
 } from "@/lib/x1.functions";
 import { useVoteCountdown } from "@/hooks/use-vote-countdown";
+import type { ChampionshipLiveSnapshot } from "@/lib/karaoke.functions";
 
 type CompletedPerformance = Performance & {
   participant: NonNullable<Performance["participant"]>;
@@ -140,6 +141,11 @@ function TvPage() {
         : undefined,
   );
   const session = live.session.data;
+  const championship = live.snapshot?.championship ?? null;
+  const isChampionship = session?.session_type === "championship";
+  const isChampionshipElimination =
+    isChampionship &&
+    ["quarter_finals", "semi_finals", "final"].includes(championship?.status ?? "");
   const sessionId = session?.id ?? (!paired ? devSession || undefined : undefined);
   const venues = useQuery({
     queryKey: ["venues"],
@@ -396,7 +402,21 @@ function TvPage() {
       </main>
     );
   }
-  const showQr = !!session?.show_qr_on_tv || isFreeWaiting || isX1Waiting;
+  const isChampionshipWaiting =
+    isChampionship &&
+    !active &&
+    !championship?.matches.some((match) => match.status === "in_progress");
+  const isChampionshipVoting =
+    isChampionship &&
+    championship?.matches.some(
+      (match) => match.status === "in_progress" && match.votingStatus === "open",
+    );
+  const showQr =
+    !!session?.show_qr_on_tv ||
+    isFreeWaiting ||
+    isX1Waiting ||
+    isChampionshipWaiting ||
+    isChampionshipVoting;
 
   return (
     <main className="flex min-h-dvh flex-col gap-6 p-5 sm:p-8 lg:p-12">
@@ -423,11 +443,18 @@ function TvPage() {
                 <span className="size-3 animate-pulse rounded-full bg-accent" /> Apresentação em
                 andamento
               </p>
-              {!x1AfterBoth && (
+              {!x1AfterBoth && !isChampionshipElimination && (
                 <p className="mt-6 font-display text-5xl lg:text-7xl" aria-live="polite">
                   👍 {active.like_count} {active.like_count === 1 ? "voto" : "votos"}
                   {session?.voting_mode === "like_dislike" && <> 👎 {active.dislike_count}</>}
                 </p>
+              )}
+              {isChampionship && championship && (
+                <ChampionshipTvDetails
+                  championship={championship}
+                  performance={active}
+                  performances={live.performances.data ?? []}
+                />
               )}
             </section>
             <section className="w-full">
@@ -456,6 +483,12 @@ function TvPage() {
               />
             </section>
           </div>
+        ) : isChampionship ? (
+          <ChampionshipTvDetails
+            championship={championship}
+            performance={null}
+            performances={live.performances.data ?? []}
+          />
         ) : isFreeWaiting ? (
           <section className="flex flex-col justify-center gap-6 text-center lg:text-left">
             {completedPerformances.length === 0 ? (
@@ -563,7 +596,11 @@ function TvPage() {
               <p className="text-muted-foreground">Carregando QR Code permanente…</p>
             )}
             <p className="font-display text-2xl lg:text-3xl">
-              {isX1Waiting ? "Escaneie para votar no próximo duelo" : "Escaneie para votar"}
+              {isX1Waiting
+                ? "Escaneie para votar no próximo duelo"
+                : isChampionship
+                  ? "Escaneie para votar no Campeonato"
+                  : "Escaneie para votar"}
             </p>
           </aside>
         )}
@@ -577,6 +614,153 @@ function TvPage() {
         </button>
       )}
     </main>
+  );
+}
+
+function ChampionshipTvDetails({
+  championship,
+  performance,
+  performances,
+}: {
+  championship: ChampionshipLiveSnapshot | null;
+  performance: Performance | null;
+  performances: Performance[];
+}) {
+  const stageTitle = (stage: string) =>
+    stage === "quarter_final" ? "Quartas de final" : stage === "semi_final" ? "Semifinal" : "Final";
+  const currentStage =
+    championship?.status === "drawn" || championship?.status === "quarter_finals"
+      ? "quarter_final"
+      : championship?.status === "semi_finals"
+        ? "semi_final"
+        : championship?.status === "final" || championship?.status === "completed"
+          ? "final"
+          : null;
+  const stageMatches = championship?.matches.filter((item) => item.stage === currentStage) ?? [];
+  const match =
+    stageMatches.find((item) => item.status === "in_progress") ??
+    [...stageMatches].reverse().find((item) => item.status === "completed" || item.status === "wo") ??
+    stageMatches.find((item) => item.status === "scheduled") ??
+    null;
+  const remaining = useVoteCountdown(
+    match?.votingStatus === "open" ? match.votingEndsAt : null,
+  );
+
+  if (!championship) {
+    return (
+      <p className="mt-6 text-xl text-muted-foreground">
+        Aguardando a preparação da sessão do Campeonato.
+      </p>
+    );
+  }
+
+  if (championship.status === "group_stage") {
+    const entries = championship.entries.filter(
+      (entry) => entry.groupLetter && entry.participantId,
+    );
+    const completed = performances.filter(
+      (item) => !item.match_id && item.status === "completed",
+    ).length;
+    const currentEntry = performance
+      ? entries.find((entry) => entry.participantId === performance.participant_id)
+      : null;
+    const currentPosition =
+      performance?.participant?.participant_number ?? Math.min(completed + 1, entries.length);
+    return (
+      <div className="mt-6 space-y-2 text-lg text-muted-foreground lg:text-2xl">
+        <p className="font-display text-2xl text-primary lg:text-3xl">
+          Fase de grupos{currentEntry?.groupLetter ? ` · Grupo ${currentEntry.groupLetter}` : ""}
+        </p>
+        {performance ? (
+          <p>
+            Calendário: apresentação {currentPosition} de {entries.length}
+          </p>
+        ) : (
+          <p>Aguardando a próxima apresentação.</p>
+        )}
+        <p>
+          Progresso: {completed} de {entries.length} apresentações concluídas
+        </p>
+      </div>
+    );
+  }
+
+  if (!match) {
+    return (
+      <section className="mt-6 rounded-2xl border border-primary/40 bg-card/70 p-6 text-center">
+        <p className="font-display text-3xl text-primary">Eliminatórias</p>
+        <p className="mt-3 text-xl text-muted-foreground">
+          Aguardando o próximo confronto preparado pelo operador.
+        </p>
+      </section>
+    );
+  }
+
+  const ended =
+    match.status === "completed" ||
+    match.status === "wo" ||
+    match.votingStatus === "closed" ||
+    (match.votingStatus === "open" && remaining === 0);
+  const entry = (id: string | null) =>
+    championship.entries.find((candidate) => candidate.id === id);
+  const entryA = entry(match.entryAId);
+  const entryB = entry(match.entryBId);
+  const winner = entry(match.winnerEntryId);
+
+  return (
+    <section className="mt-6 rounded-2xl border border-primary/40 bg-card/70 p-5 text-center lg:p-7">
+      <p className="text-base font-bold uppercase tracking-[0.18em] text-muted-foreground lg:text-xl">
+        {stageTitle(match.stage)} · Confronto {match.matchNumber}
+      </p>
+      <div className="mt-4 grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3">
+        {[entryA, null, entryB].map((candidate, index) =>
+          index === 1 ? (
+            <span key="versus" className="font-display text-3xl text-accent lg:text-5xl">
+              ×
+            </span>
+          ) : (
+            <div key={candidate?.id ?? index} className="min-w-0">
+              <p className="break-words font-display text-3xl text-primary lg:text-5xl">
+                {index === 0 ? "A · " : "B · "}
+                {candidate?.displayName ?? "Aguardando"}
+              </p>
+              <p className="mt-2 text-sm text-muted-foreground lg:text-lg">
+                {(index === 0 ? match.performanceA : match.performanceB)?.title ||
+                  "Apresentação pendente"}
+              </p>
+              <p className="mt-2 text-xl font-bold lg:text-3xl">
+                {index === 0 ? match.votesA : match.votesB} votos
+              </p>
+            </div>
+          ),
+        )}
+      </div>
+      {winner ? (
+        <p className="mt-5 font-display text-3xl text-accent lg:text-4xl">
+          Vencedor: {winner.displayName}
+        </p>
+      ) : ended ? (
+        <p className="mt-5 text-xl font-semibold text-accent lg:text-2xl">
+          {match.votesA + match.votesB === 0
+            ? "Sem votos. Aguardando decisão do operador."
+            : match.votesA === match.votesB
+              ? "Empate. Aguardando decisão do operador."
+              : "Votação encerrada. Aguardando decisão do operador."}
+        </p>
+      ) : match.votingStatus === "open" ? (
+        <p className="mt-5 font-display text-5xl text-primary lg:text-7xl" aria-live="polite">
+          Votação aberta · {remaining}s
+        </p>
+      ) : performance ? (
+        <p className="mt-5 text-xl text-muted-foreground lg:text-2xl">
+          Apresentação em andamento. A votação abrirá após os dois cantores.
+        </p>
+      ) : (
+        <p className="mt-5 text-xl text-muted-foreground lg:text-2xl">
+          Aguardando início autorizado do confronto.
+        </p>
+      )}
+    </section>
   );
 }
 

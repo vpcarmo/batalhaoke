@@ -59,6 +59,22 @@ async function resolveVotingSession(code: string) {
   return { kind: "legacy" as const, venueId: null, session };
 }
 
+async function isChampionshipGroupSession(session: {
+  session_type: string;
+  championship_id: string | null;
+}) {
+  if (session.session_type !== "championship") return true;
+  if (!session.championship_id) return false;
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data, error } = await supabaseAdmin
+    .from("championships")
+    .select("status")
+    .eq("id", session.championship_id)
+    .maybeSingle();
+  if (error) throw new Error("Não foi possível verificar a fase do Campeonato.");
+  return data?.status === "group_stage";
+}
+
 export const getVotingSession = createServerFn({ method: "POST" })
   .inputValidator((data) => z.object({ code: Code }).parse(data))
   .handler(async ({ data }) => resolveVotingSession(data.code));
@@ -71,15 +87,18 @@ export const getVoterStatus = createServerFn({ method: "POST" })
     const { session: s } = await resolveVotingSession(data.code);
     if (!s || s.status !== "active")
       return { performanceId: null as string | null, hasVoted: false };
+    if (!(await isChampionshipGroupSession(s)))
+      return { performanceId: null as string | null, hasVoted: false };
     const { data: perf, error: perfError } = await supabaseAdmin
       .from("performances")
-      .select("id")
+      .select("id, match_id")
       .eq("session_id", s.id)
       .eq("status", "active")
       .limit(1)
       .maybeSingle();
     if (perfError) throw new Error("Não foi possível verificar a apresentação ativa.");
-    if (!perf) return { performanceId: null, hasVoted: false };
+    if (!perf || (s.session_type === "championship" && perf.match_id))
+      return { performanceId: null, hasVoted: false };
     const hash = await hashToken(s.id, data.token);
     const { data: voter, error: voterError } = await supabaseAdmin
       .from("voter_sessions")
@@ -111,6 +130,8 @@ export const castVote = createServerFn({ method: "POST" })
       return kind === "venue"
         ? { result: "no_active_session" as const }
         : { result: "invalid_session" as const };
+    if (!(await isChampionshipGroupSession(s)))
+      return { result: "voting_disabled" as const };
     const rejection = publicVoteRejection(
       {
         status: s.status,
@@ -123,13 +144,15 @@ export const castVote = createServerFn({ method: "POST" })
     if (rejection) return { result: rejection };
     const { data: perf, error: perfError } = await supabaseAdmin
       .from("performances")
-      .select("id")
+      .select("id, match_id")
       .eq("session_id", s.id)
       .eq("status", "active")
       .limit(1)
       .maybeSingle();
     if (perfError) throw new Error("Não foi possível verificar a apresentação ativa.");
     if (!perf) return { result: "no_performance" as const };
+    if (s.session_type === "championship" && perf.match_id)
+      return { result: "voting_disabled" as const };
 
     const hash = await hashToken(s.id, data.token);
     const now = new Date().toISOString();
