@@ -92,6 +92,13 @@
       "when": 1791905446821,
       "tag": "0012_operator_scoped_karaoke_rls",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1791916685000,
+      "tag": "0013_championship_atomic_registration",
+      "breakpoints": true
     }
   ]
 }

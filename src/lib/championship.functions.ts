@@ -2,8 +2,8 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-// Every wrapper: JWT (middleware) → resolve the real venue server-side → assertVenueOperator → domain fn.
-// Domain rules stay in championship.server.ts; nothing here re-implements them.
+// Administrative wrappers resolve and authorize the real venue server-side.
+// Domain rules stay in championship.server.ts; public registration endpoints intentionally omit auth.
 
 const Id = z.string().uuid();
 
@@ -54,6 +54,26 @@ export const getChampionshipFn = createServerFn({ method: "POST" })
     await deps.auth.assertChampionshipOperator(deps.db, context.userId, data.championshipId);
     return deps.domain.getChampionship(deps.db, data.championshipId);
   }));
+
+export const getPublicChampionshipRegistrationFn = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) => z.object({ championshipId: Id }).strict().parse(d))
+  .handler(({ data }) =>
+    run((deps) => deps.domain.getPublicChampionshipRegistration(deps.db, data.championshipId)),
+  );
+
+export const registerChampionshipEntryFn = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) => d)
+  .handler(({ data }) => run((deps) => deps.domain.registerChampionshipEntry(deps.db, data)));
+
+export const listChampionshipEntriesFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ championshipId: Id }).strict().parse(d))
+  .handler(({ data, context }) =>
+    run(async (deps) => {
+      await deps.auth.assertChampionshipOperator(deps.db, context.userId, data.championshipId);
+      return deps.domain.listChampionshipEntries(deps.db, data.championshipId);
+    }),
+  );
 
 export const updateChampionshipFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])

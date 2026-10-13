@@ -3,6 +3,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
 import type { Database } from "@/integrations/supabase/types";
+import { isValidPlaybackSource } from "./playback/registry";
 
 type Db = SupabaseClient<Database>;
 
@@ -44,6 +45,84 @@ export function assertCoherentDates(registrationDeadline: string | null | undefi
 const Text = (max: number) => z.string().trim().max(max).nullable().optional().transform((v) => (v ? v : null));
 const DateTime = z.string().datetime({ offset: true }).nullable().optional();
 const Format = z.union([z.literal(8), z.literal(12), z.literal(16)]);
+const EntrySong = z
+  .object({
+    type: z.enum(["main", "reserve"]),
+    order: z.number().int().min(1).max(4),
+    provider: z.string().trim().min(1).max(40),
+    externalId: z.string().trim().min(1).max(200),
+    title: z.string().trim().min(1).max(500),
+    channelName: z.string().trim().max(200).nullable().optional(),
+    thumbnailUrl: z.string().url().max(2048).nullable().optional(),
+    duration: z.string().trim().max(32).nullable().optional(),
+  })
+  .strict()
+  .superRefine((song, context) => {
+    if (song.type === "reserve" && song.order > 2) {
+      context.addIssue({
+        code: "custom",
+        message: "As músicas reserva devem ocupar as posições 1 ou 2.",
+      });
+    }
+  });
+
+const EntryInput = z
+  .object({
+    championshipId: z.string().uuid(),
+    name: z.string().trim().min(1, "Informe seu nome").max(120),
+    stageName: z
+      .string()
+      .trim()
+      .max(120)
+      .nullable()
+      .optional()
+      .transform((value) => value || null),
+    contactPhone: z.preprocess(
+      (value) => (typeof value === "string" && !value.trim() ? null : value),
+      z.string().trim().min(1).max(40).nullable().optional(),
+    ),
+    contactEmail: z.preprocess(
+      (value) => (typeof value === "string" && !value.trim() ? null : value),
+      z.string().trim().email("Informe um e-mail válido").max(320).nullable().optional(),
+    ),
+    songs: z.array(EntrySong).max(6, "Informe no máximo seis músicas.").default([]),
+  })
+  .strict()
+  .superRefine((input, context) => {
+    if (!input.contactPhone && !input.contactEmail) {
+      context.addIssue({
+        code: "custom",
+        path: ["contactPhone"],
+        message: "Informe um telefone ou e-mail.",
+      });
+    }
+    if (input.songs.filter((song) => song.type === "main").length > 4) {
+      context.addIssue({
+        code: "custom",
+        path: ["songs"],
+        message: "Informe no máximo quatro músicas principais.",
+      });
+    }
+    if (input.songs.filter((song) => song.type === "reserve").length > 2) {
+      context.addIssue({
+        code: "custom",
+        path: ["songs"],
+        message: "Informe no máximo duas músicas reserva.",
+      });
+    }
+    const slots = new Set<string>();
+    for (const song of input.songs) {
+      const slot = `${song.type}:${song.order}`;
+      if (slots.has(slot)) {
+        context.addIssue({
+          code: "custom",
+          path: ["songs"],
+          message: "Cada posição de música deve ser única.",
+        });
+      }
+      slots.add(slot);
+    }
+  });
 
 export const CreateChampionshipInput = z.object({
   venueId: z.string().uuid(),
@@ -123,6 +202,124 @@ export async function getChampionship(db: Db, championshipId: string) {
   return { championship, entryCount, stageSession };
 }
 
+function assertRegistrationOpen(
+  championship: { status: string; registration_deadline: string | null },
+  now: Date,
+) {
+  if (championship.status !== "registration_open")
+    fail("As inscrições deste Campeonato não estão abertas.");
+  if (
+    championship.registration_deadline &&
+    new Date(championship.registration_deadline).getTime() <= now.getTime()
+  ) {
+    fail("O prazo de inscrição deste Campeonato terminou.");
+  }
+}
+
+/** Public event details are only available while registration is open; no private entry data is selected. */
+export async function getPublicChampionshipRegistration(
+  db: Db,
+  championshipId: string,
+  now = new Date(),
+) {
+  const championship = await loadChampionship(db, z.string().uuid().parse(championshipId));
+  assertRegistrationOpen(championship, now);
+  const { count, error } = await db
+    .from("championship_entries")
+    .select("id", { count: "exact", head: true })
+    .eq("championship_id", championship.id)
+    .eq("status", "confirmed");
+  if (error) fail("Não foi possível verificar as vagas disponíveis.");
+  return {
+    championship: {
+      id: championship.id,
+      title: championship.title,
+      format: championship.format,
+      event_starts_at: championship.event_starts_at,
+      registration_deadline: championship.registration_deadline,
+      location: championship.location,
+      rules: championship.rules,
+      prize_info: championship.prize_info,
+      fee_info: championship.fee_info,
+    },
+    confirmedEntries: count ?? 0,
+  };
+}
+
+function registrationRpcError(error: { code?: string; message?: string } | null) {
+  if (!error) return;
+  const message = error.message ?? "";
+  if (error.code === "23505" && /championship_entries_(phone|email)_unique/.test(message)) {
+    fail("Já existe uma inscrição usando este telefone ou e-mail neste Campeonato.");
+  }
+  if (error.code === "P0002") fail("Campeonato não encontrado.");
+  if (error.code === "P0001" || error.code === "22023") {
+    if (message.includes("prazo")) fail("O prazo de inscrição deste Campeonato terminou.");
+    if (message.includes("não estão abertas")) fail("As inscrições deste Campeonato não estão abertas.");
+    if (message.includes("música") || message.includes("Fonte")) fail(message);
+    if (message.includes("telefone") || message.includes("e-mail") || message.includes("nome")) fail(message);
+  }
+  console.error("[championship] atomic registration failed", error);
+  fail("Não foi possível registrar a inscrição.");
+}
+
+const EntryResult = z.object({
+  id: z.string().uuid(),
+  status: z.enum(["confirmed", "waitlist"]),
+}).strict();
+
+/** Public registration. The database function locks the event and writes the entry and songs atomically. */
+export async function registerChampionshipEntry(db: Db, raw: unknown) {
+  const input = EntryInput.parse(raw);
+  if (input.songs.some((song) => !isValidPlaybackSource(song.provider, song.externalId))) {
+    fail("Fonte de música inválida.");
+  }
+  const { data, error } = await db.rpc("register_championship_entry", {
+    p_championship_id: input.championshipId,
+    p_name: input.name,
+    p_stage_name: input.stageName ?? null,
+    p_contact_phone: input.contactPhone ?? null,
+    p_contact_email: input.contactEmail ?? null,
+    p_songs: input.songs.map((song) => ({
+      song_type: song.type,
+      song_order: song.order,
+      provider: song.provider,
+      external_id: song.externalId,
+    })),
+  });
+  if (error) registrationRpcError(error);
+  const result = EntryResult.safeParse(data);
+  if (!result.success) {
+    console.error("[championship] atomic registration returned an invalid result", result.error);
+    return fail("Não foi possível registrar a inscrição.");
+  }
+  return result.data;
+}
+
+async function countConfirmedEntries(db: Db, championshipId: string) {
+  const { count, error } = await db
+    .from("championship_entries")
+    .select("id", { count: "exact", head: true })
+    .eq("championship_id", championshipId)
+    .eq("status", "confirmed");
+  if (error) fail("Não foi possível verificar as vagas disponíveis.");
+  return count ?? 0;
+}
+
+/** Administrative listing; caller must authorize against the championship's actual venue. */
+export async function listChampionshipEntries(db: Db, championshipId: string) {
+  const id = z.string().uuid().parse(championshipId);
+  const { data, error } = await db
+    .from("championship_entries")
+    .select(
+      "*, songs:championship_entry_songs(song_type, song_order, source:playback_sources(id, provider, external_id, title, channel_name, thumbnail_url, duration))",
+    )
+    .eq("championship_id", id)
+    .order("created_at", { ascending: true });
+  if (error) fail("Não foi possível carregar as inscrições.");
+  return data ?? [];
+}
+
 export async function updateChampionship(db: Db, raw: unknown) {
   const { championshipId, patch } = UpdateChampionshipInput.parse(raw);
   const current = await loadChampionship(db, championshipId);
@@ -178,7 +375,8 @@ export async function transitionChampionshipRegistration(
   if (current.status !== from) {
     fail(action === "open"
       ? "As inscrições só podem ser abertas para um Campeonato em rascunho."
-      : "As inscrições só podem ser encerradas quando estiverem abertas.");
+      : "As inscrições só podem ser encerradas quando estiverem abertas.",
+    );
   }
 
   const { data, error } = await db.from("championships").update({ status: to })
@@ -217,7 +415,8 @@ export async function prepareStageSession(db: Db, raw: unknown) {
 
 /** Explicit start of the stage session. Never ends another session; never changes the event status. */
 export async function activateStageSession(db: Db, raw: unknown) {
-  const input = z.object({ championshipId: z.string().uuid(), sessionId: z.string().uuid(), venueId: z.string().uuid() }).strict().parse(raw);
+  const input = z.object({ championshipId: z.string().uuid(), sessionId: z.string().uuid(), venueId: z.string().uuid(),
+    }).strict().parse(raw);
   const championship = await loadChampionship(db, input.championshipId);
   if (championship.venue_id !== input.venueId) fail("Este Campeonato pertence a outro estabelecimento.");
 
@@ -231,11 +430,13 @@ export async function activateStageSession(db: Db, raw: unknown) {
   if (!canActivateStage(championship.status)) fail("A competição ainda não pode começar: o sorteio não foi realizado.");
 
   const { data: other } = await db.from("sessions").select("id").eq("venue_id", championship.venue_id).eq("status", "active").neq("id", session!.id).limit(1);
-  if (other?.length) fail("Já existe outra sessão ativa neste estabelecimento. Encerre-a antes de iniciar o Campeonato.");
+  if (other?.length) fail("Já existe outra sessão ativa neste estabelecimento. Encerre-a antes de iniciar o Campeonato.",
+    );
 
   const { data, error } = await db.from("sessions").update({ status: "active", started_at: new Date().toISOString() })
     .eq("id", session!.id).eq("status", "draft").select(STAGE_COLUMNS).maybeSingle();
-  if (error?.code === "23505") fail("Já existe outra sessão ativa neste estabelecimento. Encerre-a antes de iniciar o Campeonato.");
+  if (error?.code === "23505") fail("Já existe outra sessão ativa neste estabelecimento. Encerre-a antes de iniciar o Campeonato.",
+    );
   if (error || !data) fail("Não foi possível iniciar a sessão de palco.");
   return data!;
 }

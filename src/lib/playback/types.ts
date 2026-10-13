@@ -34,6 +34,7 @@ export interface PlaybackProvider {
   label: string;
   /** Attribution shown next to the player (never over it). */
   attribution: string;
+  isValidExternalId(externalId: string): boolean;
   search(query: string): Promise<PlaybackSearchResult[]>;
   mount(container: HTMLElement, externalId: string, events: PlayerEvents): Promise<PlayerHandle>;
 }

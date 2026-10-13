@@ -31,6 +31,7 @@ export const youtubeProvider: PlaybackProvider = {
   id: "youtube",
   label: "YouTube",
   attribution: "Playback fornecido pelo YouTube",
+  isValidExternalId: (externalId) => /^[A-Za-z0-9_-]{11}$/.test(externalId),
   async search(query) {
     const r = await youtubeSearch({ data: { query } });
     if (!r.ok) throw new Error(r.message);
