@@ -57,6 +57,24 @@ export async function assertSessionOperator(
   return assertVenueOperator(db, userId, data.venue_id);
 }
 
+export async function assertChampionshipOperator(
+  db: Db,
+  userId: unknown,
+  championshipId: unknown,
+): Promise<string> {
+  const id = z.string().uuid().safeParse(championshipId);
+  if (!id.success) throw new AuthorizationError(DENIED);
+  const { data, error } = await db
+    .from("championships")
+    .select("venue_id")
+    .eq("id", id.data)
+    .maybeSingle();
+  if (error) throw new AuthorizationError("Não foi possível verificar o estabelecimento do Campeonato.");
+  if (!data?.venue_id) throw new AuthorizationError(DENIED);
+  await assertVenueOperator(db, userId, data.venue_id);
+  return data.venue_id;
+}
+
 export async function assertPairedVenueDevice(
   db: Db,
   deviceToken: string,

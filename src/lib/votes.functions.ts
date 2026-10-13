@@ -18,6 +18,9 @@ const Input = z.object({
     .regex(/^[a-zA-Z0-9_-]+$/),
   voteType: z.enum(["like", "dislike"]).default("like"),
 });
+const VoteSessionType = z.enum(["free", "x1", "championship"]);
+const VoteVotingMode = z.enum(["like_only", "like_dislike"]);
+const VoteX1VotingMode = z.enum(["during_performance", "after_both_performances"]);
 
 async function hashToken(sessionId: string, token: string) {
   const buf = await crypto.subtle.digest(
@@ -108,7 +111,15 @@ export const castVote = createServerFn({ method: "POST" })
       return kind === "venue"
         ? { result: "no_active_session" as const }
         : { result: "invalid_session" as const };
-    const rejection = publicVoteRejection(s, data.voteType);
+    const rejection = publicVoteRejection(
+      {
+        status: s.status,
+        session_type: VoteSessionType.parse(s.session_type),
+        voting_mode: VoteVotingMode.parse(s.voting_mode),
+        x1_voting_mode: VoteX1VotingMode.parse(s.x1_voting_mode),
+      },
+      data.voteType,
+    );
     if (rejection) return { result: rejection };
     const { data: perf, error: perfError } = await supabaseAdmin
       .from("performances")

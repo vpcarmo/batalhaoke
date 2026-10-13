@@ -18,13 +18,6 @@ async function loadDeps() {
 
 type Deps = Awaited<ReturnType<typeof loadDeps>>;
 
-async function venueOfChampionship(deps: Deps, championshipId: string) {
-  const { data, error } = await deps.db.from("championships").select("venue_id").eq("id", championshipId).maybeSingle();
-  // Same message for "missing" and "not yours" so IDs from other venues are not probeable.
-  if (error || !data) throw new deps.auth.AuthorizationError("Você não tem permissão para administrar este estabelecimento.");
-  return data.venue_id;
-}
-
 async function run<T>(fn: (deps: Deps) => Promise<T>): Promise<T> {
   const deps = await loadDeps();
   try {
@@ -46,12 +39,19 @@ export const createChampionshipFn = createServerFn({ method: "POST" })
     return deps.domain.createChampionship(deps.db, input);
   }));
 
+export const listChampionshipsFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ venueId: Id }).strict().parse(d))
+  .handler(({ data, context }) => run(async (deps) => {
+    await deps.auth.assertVenueOperator(deps.db, context.userId, data.venueId);
+    return deps.domain.listChampionships(deps.db, data.venueId);
+  }));
+
 export const getChampionshipFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.object({ championshipId: Id }).strict().parse(d))
   .handler(({ data, context }) => run(async (deps) => {
-    const venueId = await venueOfChampionship(deps, data.championshipId);
-    await deps.auth.assertVenueOperator(deps.db, context.userId, venueId);
+    await deps.auth.assertChampionshipOperator(deps.db, context.userId, data.championshipId);
     return deps.domain.getChampionship(deps.db, data.championshipId);
   }));
 
@@ -60,17 +60,31 @@ export const updateChampionshipFn = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => d)
   .handler(({ data, context }) => run(async (deps) => {
     const input = deps.domain.UpdateChampionshipInput.parse(data);
-    const venueId = await venueOfChampionship(deps, input.championshipId);
-    await deps.auth.assertVenueOperator(deps.db, context.userId, venueId);
+    await deps.auth.assertChampionshipOperator(deps.db, context.userId, input.championshipId);
     return deps.domain.updateChampionship(deps.db, input);
+  }));
+
+export const openChampionshipRegistrationFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ championshipId: Id }).strict().parse(d))
+  .handler(({ data, context }) => run(async (deps) => {
+    await deps.auth.assertChampionshipOperator(deps.db, context.userId, data.championshipId);
+    return deps.domain.transitionChampionshipRegistration(deps.db, data, "open");
+  }));
+
+export const closeChampionshipRegistrationFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ championshipId: Id }).strict().parse(d))
+  .handler(({ data, context }) => run(async (deps) => {
+    await deps.auth.assertChampionshipOperator(deps.db, context.userId, data.championshipId);
+    return deps.domain.transitionChampionshipRegistration(deps.db, data, "close");
   }));
 
 export const prepareStageSessionFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.object({ championshipId: Id }).strict().parse(d))
   .handler(({ data, context }) => run(async (deps) => {
-    const venueId = await venueOfChampionship(deps, data.championshipId);
-    await deps.auth.assertVenueOperator(deps.db, context.userId, venueId);
+    const venueId = await deps.auth.assertChampionshipOperator(deps.db, context.userId, data.championshipId);
     return deps.domain.prepareStageSession(deps.db, { championshipId: data.championshipId, venueId });
   }));
 
@@ -78,7 +92,6 @@ export const activateStageSessionFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.object({ championshipId: Id, sessionId: Id }).strict().parse(d))
   .handler(({ data, context }) => run(async (deps) => {
-    const venueId = await venueOfChampionship(deps, data.championshipId);
-    await deps.auth.assertVenueOperator(deps.db, context.userId, venueId);
+    const venueId = await deps.auth.assertChampionshipOperator(deps.db, context.userId, data.championshipId);
     return deps.domain.activateStageSession(deps.db, { ...data, venueId });
   }));

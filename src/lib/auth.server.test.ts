@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   assertPairedVenueDevice,
+  assertChampionshipOperator,
   assertSessionOperator,
   assertVenueOperator,
   isOperatorRole,
@@ -8,6 +9,8 @@ import {
 
 const U = "11111111-1111-4111-8111-111111111111";
 const V = "22222222-2222-4222-8222-222222222222";
+const OTHER_VENUE = "44444444-4444-4444-8444-444444444444";
+const CHAMPIONSHIP = "55555555-5555-4555-8555-555555555555";
 const fakeDb = (row: { role: string } | null) =>
   ({
     from: () => ({
@@ -40,6 +43,45 @@ function fakeScopedDb(session: { venue_id: string | null } | null, role: string 
   } as never;
 }
 
+function fakeChampionshipDb(championshipVenue: string, operatorVenue: string | null) {
+  return {
+    from(table: string) {
+      let id = "";
+      let venueId = "";
+      let userId = "";
+      return {
+        select: () => ({
+          eq: (key: string, value: string) => {
+            if (key === "id") id = value;
+            if (key === "venue_id") venueId = value;
+            if (key === "user_id") userId = value;
+            return {
+              eq: (nextKey: string, nextValue: string) => {
+                if (nextKey === "venue_id") venueId = nextValue;
+                if (nextKey === "user_id") userId = nextValue;
+                return {
+                  maybeSingle: async () => ({
+                    data: table === "championships"
+                      ? id === CHAMPIONSHIP ? { venue_id: championshipVenue } : null
+                      : operatorVenue === venueId && userId === U ? { role: "operator" } : null,
+                    error: null,
+                  }),
+                };
+              },
+              maybeSingle: async () => ({
+                data: table === "championships"
+                  ? id === CHAMPIONSHIP ? { venue_id: championshipVenue } : null
+                  : null,
+                error: null,
+              }),
+            };
+          },
+        }),
+      };
+    },
+  } as never;
+}
+
 describe("assertVenueOperator", () => {
   it("allows owner and operator", async () => {
     await expect(assertVenueOperator(fakeDb({ role: "owner" }), U, V)).resolves.toBe("owner");
@@ -54,6 +96,18 @@ describe("assertVenueOperator", () => {
   });
   it("rejects invalid ids", async () => {
     await expect(assertVenueOperator(fakeDb({ role: "owner" }), "x", V)).rejects.toThrow();
+  });
+});
+
+describe("assertChampionshipOperator", () => {
+  it("authorizes an operator through the venue stored on the championship", async () => {
+    await expect(assertChampionshipOperator(fakeChampionshipDb(V, V), U, CHAMPIONSHIP)).resolves.toBe(V);
+  });
+  it("rejects a user without venue authorization", async () => {
+    await expect(assertChampionshipOperator(fakeChampionshipDb(V, null), U, CHAMPIONSHIP)).rejects.toThrow();
+  });
+  it("rejects a championship attached to another venue", async () => {
+    await expect(assertChampionshipOperator(fakeChampionshipDb(OTHER_VENUE, V), U, CHAMPIONSHIP)).rejects.toThrow();
   });
 });
 

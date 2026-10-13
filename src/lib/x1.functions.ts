@@ -70,7 +70,7 @@ export const createMatch = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     if (data.participantAId === data.participantBId) fail("Escolha dois participantes diferentes");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: session } = await supabaseAdmin
+    const { data: session, error: sessionError } = await supabaseAdmin
       .from("sessions")
       .select("id, session_type, status, venue_id")
       .eq("id", data.sessionId)

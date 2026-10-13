@@ -304,7 +304,12 @@ export const updateKaraokeSession = createServerFn({ method: "POST" })
       if (session.session_type !== "free" && data.patch.voting_mode !== "like_dislike")
         throw new Error("Este formato exige votação com Gostei / Não gostei.");
     }
-    const { error } = await db.from("sessions").update(data.patch).eq("id", session.id);
+    const patch = {
+      ...(data.patch.tv_enabled !== undefined && { tv_enabled: data.patch.tv_enabled }),
+      ...(data.patch.show_qr_on_tv !== undefined && { show_qr_on_tv: data.patch.show_qr_on_tv }),
+      ...(data.patch.voting_mode !== undefined && { voting_mode: data.patch.voting_mode }),
+    };
+    const { error } = await db.from("sessions").update(patch).eq("id", session.id);
     if (error) throw new Error("Não foi possível salvar a configuração da sessão.");
   });
 

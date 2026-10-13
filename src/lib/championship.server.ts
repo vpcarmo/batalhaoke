@@ -1,8 +1,5 @@
 // Championship event domain (Etapa 2). SERVER-ONLY: every function receives a
 // privileged client and must only be called after the caller is authorized.
-// It is intentionally NOT exposed through createServerFn yet — the project has
-// no verifiable operator authorization (MVP without login), so publishing these
-// mutations as RPC endpoints would make them public and unrestricted.
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
 import type { Database } from "@/integrations/supabase/types";
@@ -16,8 +13,8 @@ export const CHAMPIONSHIP_STATUSES = [
 export type ChampionshipStatus = (typeof CHAMPIONSHIP_STATUSES)[number];
 export const CHAMPIONSHIP_FORMATS = [8, 12, 16] as const;
 
-/** Basic data may be edited only before registrations close. */
-export const EDITABLE_STATUSES: readonly ChampionshipStatus[] = ["draft", "registration_open"];
+/** Basic data may be edited only while the event is a draft. */
+export const EDITABLE_STATUSES: readonly ChampionshipStatus[] = ["draft"];
 /** The stage session can be prepared any time before the event ends. */
 export const STAGE_PREPARABLE_STATUSES: readonly ChampionshipStatus[] = CHAMPIONSHIP_STATUSES.filter((s) => s !== "completed" && s !== "cancelled");
 /** Competition can only start after the draw (implemented in a later stage). */
@@ -99,7 +96,8 @@ async function findStageSession(db: Db, championshipId: string) {
 export async function createChampionship(db: Db, raw: unknown) {
   const input = CreateChampionshipInput.parse(raw);
   assertCoherentDates(input.registrationDeadline, input.eventStartsAt);
-  const { data: venue } = await db.from("venues").select("id").eq("id", input.venueId).maybeSingle();
+  const { data: venue, error: venueError } = await db.from("venues").select("id").eq("id", input.venueId).maybeSingle();
+  if (venueError) fail("Não foi possível verificar o estabelecimento.");
   if (!venue) fail("Estabelecimento não encontrado.");
   const { data, error } = await db.from("championships").insert({
     venue_id: input.venueId, title: input.title, format: input.format, status: "draft",
@@ -108,6 +106,14 @@ export async function createChampionship(db: Db, raw: unknown) {
   }).select(CHAMPIONSHIP_COLUMNS).single();
   if (error || !data) fail("Não foi possível criar o Campeonato.");
   return data!;
+}
+
+export async function listChampionships(db: Db, venueId: unknown) {
+  const id = z.string().uuid().parse(venueId);
+  const { data, error } = await db.from("championships").select(CHAMPIONSHIP_COLUMNS)
+    .eq("venue_id", id).order("created_at", { ascending: false });
+  if (error) fail("Não foi possível listar os Campeonatos.");
+  return data ?? [];
 }
 
 /** Administrative view: event data + stage session summary. Never includes entry contacts. */
@@ -150,6 +156,37 @@ export async function updateChampionship(db: Db, raw: unknown) {
   if (error) fail("Não foi possível atualizar o Campeonato.");
   if (!data) fail("O Campeonato foi alterado por outra operação. Recarregue e tente novamente.");
   return data!;
+}
+
+export const RegistrationTransitionInput = z.object({
+  championshipId: z.string().uuid(),
+}).strict();
+
+const REGISTRATION_TRANSITIONS = {
+  open: { from: "draft", to: "registration_open" },
+  close: { from: "registration_open", to: "registration_closed" },
+} as const;
+
+export async function transitionChampionshipRegistration(
+  db: Db,
+  raw: unknown,
+  action: keyof typeof REGISTRATION_TRANSITIONS,
+) {
+  const { championshipId } = RegistrationTransitionInput.parse(raw);
+  const { from, to } = REGISTRATION_TRANSITIONS[action];
+  const current = await loadChampionship(db, championshipId);
+  if (current.status !== from) {
+    fail(action === "open"
+      ? "As inscrições só podem ser abertas para um Campeonato em rascunho."
+      : "As inscrições só podem ser encerradas quando estiverem abertas.");
+  }
+
+  const { data, error } = await db.from("championships").update({ status: to })
+    .eq("id", championshipId).eq("status", from)
+    .select(CHAMPIONSHIP_COLUMNS).maybeSingle();
+  if (error) fail("Não foi possível alterar o estado das inscrições.");
+  if (!data) fail("O Campeonato foi alterado por outra operação. Recarregue e tente novamente.");
+  return data;
 }
 
 /** Idempotent: returns the existing stage session or creates exactly one (draft, never active). */
