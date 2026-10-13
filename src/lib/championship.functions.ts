@@ -30,6 +30,11 @@ async function run<T>(fn: (deps: Deps) => Promise<T>): Promise<T> {
   }
 }
 
+async function authorizeMatch(deps: Deps, userId: string, matchId: string) {
+  const championshipId = await deps.domain.getChampionshipMatchChampionshipId(deps.db, matchId);
+  await deps.auth.assertChampionshipOperator(deps.db, userId, championshipId);
+}
+
 export const createChampionshipFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => d)
@@ -155,4 +160,100 @@ export const activateStageSessionFn = createServerFn({ method: "POST" })
   .handler(({ data, context }) => run(async (deps) => {
     const venueId = await deps.auth.assertChampionshipOperator(deps.db, context.userId, data.championshipId);
     return deps.domain.activateStageSession(deps.db, { ...data, venueId });
+  }));
+
+export const setChampionshipMatchPerformancesFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({
+    matchId: Id,
+    performanceAId: Id,
+    performanceBId: Id,
+  }).strict().parse(d))
+  .handler(({ data, context }) => run(async (deps) => {
+    await authorizeMatch(deps, context.userId, data.matchId);
+    return deps.domain.setChampionshipMatchPerformances(deps.db, data, context.userId);
+  }));
+
+export const startChampionshipMatchFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ matchId: Id }).strict().parse(d))
+  .handler(({ data, context }) => run(async (deps) => {
+    await authorizeMatch(deps, context.userId, data.matchId);
+    return deps.domain.startChampionshipMatch(deps.db, data, context.userId);
+  }));
+
+export const startChampionshipPresentationFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ matchId: Id, slot: z.enum(["a", "b"]) }).strict().parse(d))
+  .handler(({ data, context }) => run(async (deps) => {
+    await authorizeMatch(deps, context.userId, data.matchId);
+    return deps.domain.startChampionshipPresentation(deps.db, data, context.userId);
+  }));
+
+export const completeChampionshipPresentationFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ matchId: Id, slot: z.enum(["a", "b"]) }).strict().parse(d))
+  .handler(({ data, context }) => run(async (deps) => {
+    await authorizeMatch(deps, context.userId, data.matchId);
+    return deps.domain.completeChampionshipPresentation(deps.db, data, context.userId);
+  }));
+
+export const openChampionshipMatchVotingFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ matchId: Id }).strict().parse(d))
+  .handler(({ data, context }) => run(async (deps) => {
+    await authorizeMatch(deps, context.userId, data.matchId);
+    return deps.domain.openChampionshipMatchVoting(deps.db, data, context.userId);
+  }));
+
+export const closeChampionshipMatchVotingFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ matchId: Id }).strict().parse(d))
+  .handler(({ data, context }) => run(async (deps) => {
+    await authorizeMatch(deps, context.userId, data.matchId);
+    return deps.domain.closeChampionshipMatchVoting(deps.db, data, context.userId);
+  }));
+
+export const getChampionshipMatchScoreFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ matchId: Id }).strict().parse(d))
+  .handler(({ data, context }) => run(async (deps) => {
+    await authorizeMatch(deps, context.userId, data.matchId);
+    return deps.domain.getChampionshipMatchScore(deps.db, data.matchId, context.userId);
+  }));
+
+export const castChampionshipMatchVoteFn = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) => z.object({
+    matchId: Id,
+    chosenEntryId: Id,
+    token: z.string().min(16).max(128).regex(/^[a-zA-Z0-9_-]+$/),
+  }).strict().parse(d))
+  .handler(({ data }) => run((deps) => deps.domain.castChampionshipMatchVote(deps.db, data)));
+
+export const advanceChampionshipEliminationFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ championshipId: Id }).strict().parse(d))
+  .handler(({ data, context }) => run(async (deps) => {
+    await deps.auth.assertChampionshipOperator(deps.db, context.userId, data.championshipId);
+    return deps.domain.advanceChampionshipElimination(deps.db, data, context.userId);
+  }));
+
+export const recordChampionshipMatchWoFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({
+    matchId: Id,
+    withdrawnEntryId: Id,
+    reason: z.string().trim().min(1).max(1000),
+  }).strict().parse(d))
+  .handler(({ data, context }) => run(async (deps) => {
+    await authorizeMatch(deps, context.userId, data.matchId);
+    return deps.domain.recordChampionshipMatchWo(deps.db, data, context.userId);
+  }));
+
+export const completeChampionshipFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ championshipId: Id }).strict().parse(d))
+  .handler(({ data, context }) => run(async (deps) => {
+    await deps.auth.assertChampionshipOperator(deps.db, context.userId, data.championshipId);
+    return deps.domain.completeChampionship(deps.db, data, context.userId);
   }));

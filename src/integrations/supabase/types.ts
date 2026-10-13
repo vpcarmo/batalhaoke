@@ -900,9 +900,69 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      advance_championship_elimination: {
+        Args: {
+          p_championship_id: string
+          p_operator_user_id: string
+        }
+        Returns: Json
+      }
+      cast_championship_match_vote: {
+        Args: {
+          p_chosen_entry_id: string
+          p_match_id: string
+          p_voter_token_hash: string
+        }
+        Returns: Json
+      }
+      close_championship_match_voting: {
+        Args: {
+          p_match_id: string
+          p_operator_user_id: string
+        }
+        Returns: Json
+      }
+      complete_championship: {
+        Args: {
+          p_championship_id: string
+          p_operator_user_id: string
+        }
+        Returns: Json
+      }
+      complete_championship_presentation: {
+        Args: {
+          p_match_id: string
+          p_operator_user_id: string
+          p_slot: string
+        }
+        Returns: Json
+      }
       draw_championship: {
         Args: {
           p_championship_id: string
+        }
+        Returns: Json
+      }
+      get_championship_match_score: {
+        Args: {
+          p_match_id: string
+          p_operator_user_id: string
+        }
+        Returns: Json
+      }
+      open_championship_match_voting: {
+        Args: {
+          p_match_id: string
+          p_operator_user_id: string
+        }
+        Returns: Json
+      }
+      record_championship_match_wo: {
+        Args: {
+          p_match_id: string
+          p_operator_user_id: string
+          p_reason: string
+          p_withdrawn_entry_id: string
         }
         Returns: Json
       }
@@ -914,6 +974,30 @@ export type Database = {
           p_name: string
           p_songs: Json
           p_stage_name: string | null
+        }
+        Returns: Json
+      }
+      set_championship_match_performances: {
+        Args: {
+          p_match_id: string
+          p_operator_user_id: string
+          p_performance_a_id: string
+          p_performance_b_id: string
+        }
+        Returns: Json
+      }
+      start_championship_match: {
+        Args: {
+          p_match_id: string
+          p_operator_user_id: string
+        }
+        Returns: Json
+      }
+      start_championship_presentation: {
+        Args: {
+          p_match_id: string
+          p_operator_user_id: string
+          p_slot: string
         }
         Returns: Json
       }

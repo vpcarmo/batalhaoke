@@ -638,3 +638,212 @@ export async function activateStageSession(db: Db, raw: unknown) {
   if (error || !data) fail("Não foi possível iniciar a sessão de palco.");
   return data!;
 }
+
+const MatchIdInput = z.object({ matchId: z.string().uuid() }).strict();
+const MatchSlotInput = z.object({
+  matchId: z.string().uuid(),
+  slot: z.enum(["a", "b"]),
+}).strict();
+const MatchPerformancesInput = z.object({
+  matchId: z.string().uuid(),
+  performanceAId: z.string().uuid(),
+  performanceBId: z.string().uuid(),
+}).strict();
+const MatchWoInput = z.object({
+  matchId: z.string().uuid(),
+  withdrawnEntryId: z.string().uuid(),
+  reason: z.string().trim().min(1).max(1000),
+}).strict();
+const MatchVoteInput = z.object({
+  matchId: z.string().uuid(),
+  chosenEntryId: z.string().uuid(),
+  token: z.string().min(16).max(128).regex(/^[a-zA-Z0-9_-]+$/),
+}).strict();
+
+function championshipRpcError(error: { message?: string } | null, fallback: string) {
+  if (error) fail(error.message || fallback);
+}
+
+export async function getChampionshipMatchChampionshipId(db: Db, rawMatchId: unknown) {
+  const { matchId } = MatchIdInput.parse({ matchId: rawMatchId });
+  const { data, error } = await db
+    .from("championship_matches")
+    .select("championship_id")
+    .eq("id", matchId)
+    .maybeSingle();
+  if (error) fail("Não foi possível carregar o confronto do Campeonato.");
+  if (!data) fail("Confronto do Campeonato não encontrado.");
+  return data.championship_id;
+}
+
+export async function setChampionshipMatchPerformances(db: Db, raw: unknown, operatorUserId: string) {
+  const input = MatchPerformancesInput.parse(raw);
+  const { data, error } = await db.rpc("set_championship_match_performances", {
+    p_match_id: input.matchId,
+    p_performance_a_id: input.performanceAId,
+    p_performance_b_id: input.performanceBId,
+    p_operator_user_id: operatorUserId,
+  });
+  championshipRpcError(error, "Não foi possível associar as apresentações ao confronto.");
+  return data;
+}
+
+export async function startChampionshipMatch(db: Db, raw: unknown, operatorUserId: string) {
+  const input = MatchIdInput.parse(raw);
+  const { data, error } = await db.rpc("start_championship_match", {
+    p_match_id: input.matchId,
+    p_operator_user_id: operatorUserId,
+  });
+  championshipRpcError(error, "Não foi possível iniciar o confronto.");
+  return data;
+}
+
+export async function startChampionshipPresentation(db: Db, raw: unknown, operatorUserId: string) {
+  const input = MatchSlotInput.parse(raw);
+  const { data, error } = await db.rpc("start_championship_presentation", {
+    p_match_id: input.matchId,
+    p_slot: input.slot,
+    p_operator_user_id: operatorUserId,
+  });
+  championshipRpcError(error, "Não foi possível iniciar a apresentação.");
+  return data;
+}
+
+export async function completeChampionshipPresentation(db: Db, raw: unknown, operatorUserId: string) {
+  const input = MatchSlotInput.parse(raw);
+  const { data, error } = await db.rpc("complete_championship_presentation", {
+    p_match_id: input.matchId,
+    p_slot: input.slot,
+    p_operator_user_id: operatorUserId,
+  });
+  championshipRpcError(error, "Não foi possível concluir a apresentação.");
+  return data;
+}
+
+export async function openChampionshipMatchVoting(db: Db, raw: unknown, operatorUserId: string) {
+  const input = MatchIdInput.parse(raw);
+  const { data, error } = await db.rpc("open_championship_match_voting", {
+    p_match_id: input.matchId,
+    p_operator_user_id: operatorUserId,
+  });
+  championshipRpcError(error, "Não foi possível abrir a votação do confronto.");
+  return data;
+}
+
+export async function closeChampionshipMatchVoting(db: Db, raw: unknown, operatorUserId: string) {
+  const input = MatchIdInput.parse(raw);
+  const { data, error } = await db.rpc("close_championship_match_voting", {
+    p_match_id: input.matchId,
+    p_operator_user_id: operatorUserId,
+  });
+  championshipRpcError(error, "Não foi possível encerrar a votação do confronto.");
+  return data;
+}
+
+async function hashChampionshipVoterToken(sessionId: string, token: string) {
+  const digest = await crypto.subtle.digest(
+    "SHA-256",
+    new TextEncoder().encode(`${sessionId}:${token}`),
+  );
+  return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("");
+}
+
+export async function castChampionshipMatchVote(db: Db, raw: unknown) {
+  const input = MatchVoteInput.parse(raw);
+  const championshipId = await getChampionshipMatchChampionshipId(db, input.matchId);
+  const { data: session, error: sessionError } = await db
+    .from("sessions")
+    .select("id")
+    .eq("championship_id", championshipId)
+    .eq("session_type", "championship")
+    .maybeSingle();
+  if (sessionError) fail("Não foi possível localizar a sessão de palco do Campeonato.");
+  if (!session) fail("A sessão de palco do Campeonato não foi preparada.");
+
+  const tokenHash = await hashChampionshipVoterToken(session.id, input.token);
+  const { data, error } = await db.rpc("cast_championship_match_vote", {
+    p_match_id: input.matchId,
+    p_chosen_entry_id: input.chosenEntryId,
+    p_voter_token_hash: tokenHash,
+  });
+  championshipRpcError(error, "Não foi possível registrar o voto.");
+  return data;
+}
+
+const MatchScoreResult = z.object({
+  match_id: z.string().uuid(),
+  stage: z.enum(["quarter_final", "semi_final", "final"]),
+  match_number: z.number().int(),
+  entry_a_id: z.string().uuid(),
+  entry_b_id: z.string().uuid(),
+  winner_entry_id: z.string().uuid().nullable(),
+  status: z.enum(["scheduled", "in_progress", "completed", "cancelled", "wo"]),
+  voting_status: z.enum(["idle", "open", "closed"]),
+  voting_ends_at: z.string().datetime({ offset: true }).nullable(),
+  votes_a: z.number().int().nonnegative(),
+  votes_b: z.number().int().nonnegative(),
+  result: z.enum(["pending", "winner", "tie", "no_votes"]),
+  is_final: z.boolean(),
+  venue_id: z.string().uuid(),
+}).strict();
+
+export async function getChampionshipMatchScore(db: Db, raw: unknown, operatorUserId: string) {
+  const { matchId } = MatchIdInput.parse({ matchId: raw });
+  const { data, error } = await db.rpc("get_championship_match_score", {
+    p_match_id: matchId,
+    p_operator_user_id: operatorUserId,
+  });
+  championshipRpcError(error, "Não foi possível carregar o placar do confronto.");
+  const result = MatchScoreResult.safeParse(data);
+  if (!result.success) {
+    console.error("[championship] match score returned an invalid result", result.error);
+    return fail("Não foi possível carregar o placar do confronto.");
+  }
+  return {
+    matchId: result.data.match_id,
+    stage: result.data.stage,
+    matchNumber: result.data.match_number,
+    entryAId: result.data.entry_a_id,
+    entryBId: result.data.entry_b_id,
+    votesA: result.data.votes_a,
+    votesB: result.data.votes_b,
+    votingStatus: result.data.voting_status,
+    votingEndsAt: result.data.voting_ends_at,
+    status: result.data.status,
+    result: result.data.result,
+    winnerEntryId: result.data.winner_entry_id,
+    isFinal: result.data.is_final,
+  };
+}
+
+export async function advanceChampionshipElimination(db: Db, raw: unknown, operatorUserId: string) {
+  const { championshipId } = GroupStageAdvanceInput.parse(raw);
+  const { data, error } = await db.rpc("advance_championship_elimination", {
+    p_championship_id: championshipId,
+    p_operator_user_id: operatorUserId,
+  });
+  championshipRpcError(error, "Não foi possível gerar a próxima fase.");
+  return data;
+}
+
+export async function recordChampionshipMatchWo(db: Db, raw: unknown, operatorUserId: string) {
+  const input = MatchWoInput.parse(raw);
+  const { data, error } = await db.rpc("record_championship_match_wo", {
+    p_match_id: input.matchId,
+    p_withdrawn_entry_id: input.withdrawnEntryId,
+    p_reason: input.reason,
+    p_operator_user_id: operatorUserId,
+  });
+  championshipRpcError(error, "Não foi possível registrar o WO.");
+  return data;
+}
+
+export async function completeChampionship(db: Db, raw: unknown, operatorUserId: string) {
+  const { championshipId } = GroupStageAdvanceInput.parse(raw);
+  const { data, error } = await db.rpc("complete_championship", {
+    p_championship_id: championshipId,
+    p_operator_user_id: operatorUserId,
+  });
+  championshipRpcError(error, "Não foi possível encerrar o Campeonato.");
+  return data;
+}
