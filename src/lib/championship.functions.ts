@@ -100,6 +100,30 @@ export const closeChampionshipRegistrationFn = createServerFn({ method: "POST" }
     return deps.domain.transitionChampionshipRegistration(deps.db, data, "close");
   }));
 
+export const drawChampionshipFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ championshipId: Id }).strict().parse(d))
+  .handler(({ data, context }) => run(async (deps) => {
+    await deps.auth.assertChampionshipOperator(deps.db, context.userId, data.championshipId);
+    return deps.domain.drawChampionship(deps.db, data.championshipId);
+  }));
+
+export const getChampionshipDrawFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ championshipId: Id }).strict().parse(d))
+  .handler(({ data, context }) => run(async (deps) => {
+    await deps.auth.assertChampionshipOperator(deps.db, context.userId, data.championshipId);
+    return deps.domain.getChampionshipDraw(deps.db, data.championshipId);
+  }));
+
+export const getChampionshipScheduleFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ championshipId: Id }).strict().parse(d))
+  .handler(({ data, context }) => run(async (deps) => {
+    await deps.auth.assertChampionshipOperator(deps.db, context.userId, data.championshipId);
+    return deps.domain.getChampionshipSchedule(deps.db, data.championshipId);
+  }));
+
 export const prepareStageSessionFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.object({ championshipId: Id }).strict().parse(d))

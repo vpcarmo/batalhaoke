@@ -296,6 +296,114 @@ export async function registerChampionshipEntry(db: Db, raw: unknown) {
   return result.data;
 }
 
+const DrawResult = z.object({
+  championship_id: z.string().uuid(),
+  format: Format,
+  status: z.literal("drawn"),
+  entry_count: z.number().int(),
+}).strict();
+
+function drawRpcError(error: { code?: string; message?: string } | null) {
+  if (!error) return;
+  if (error.code === "P0002") fail("Campeonato não encontrado.");
+  if (error.code === "P0001") {
+    if (error.message?.includes("encerramento das inscrições")) {
+      fail("O sorteio só pode ser realizado após o encerramento das inscrições.");
+    }
+    if (error.message?.includes("inscrições confirmadas")) {
+      fail("A quantidade de inscrições confirmadas deve corresponder ao formato do Campeonato.");
+    }
+    if (error.message?.includes("já foi realizado")) {
+      fail("O sorteio deste Campeonato já foi realizado.");
+    }
+    if (error.message?.includes("Formato")) fail("Formato de Campeonato inválido.");
+  }
+  console.error("[championship] draw failed", error);
+  fail("Não foi possível realizar o sorteio.");
+}
+
+/** Administrative draw. The database performs the complete operation atomically. */
+export async function drawChampionship(db: Db, championshipId: string) {
+  const id = z.string().uuid().parse(championshipId);
+  const { data, error } = await db.rpc("draw_championship", { p_championship_id: id });
+  if (error) drawRpcError(error);
+  const result = DrawResult.safeParse(data);
+  if (!result.success || result.data.championship_id !== id || result.data.entry_count !== result.data.format) {
+    console.error("[championship] draw returned an invalid result", result.success ? result.data : result.error);
+    return fail("Não foi possível realizar o sorteio.");
+  }
+  return result.data;
+}
+
+const DrawEntryColumns = "id, name, stage_name, group_letter, seed_number";
+
+async function loadDrawEntries(db: Db, championshipId: string) {
+  const id = z.string().uuid().parse(championshipId);
+  const championship = await loadChampionship(db, id);
+  if (["draft", "registration_open", "registration_closed"].includes(championship.status)) {
+    fail("O sorteio deste Campeonato ainda não foi realizado.");
+  }
+  const { data, error } = await db
+    .from("championship_entries")
+    .select(DrawEntryColumns)
+    .eq("championship_id", id)
+    .not("seed_number", "is", null)
+    .order("seed_number", { ascending: true });
+  if (error) fail("Não foi possível carregar o resultado do sorteio.");
+  if (!data || data.length !== championship.format || data.some((entry) => entry.seed_number === null)) {
+    fail("O resultado do sorteio está incompleto.");
+  }
+  return { championship, entries: data };
+}
+
+/** Administrative draw result; only public participant identity and draw positions are selected. */
+export async function getChampionshipDraw(db: Db, championshipId: string) {
+  const { championship, entries } = await loadDrawEntries(db, championshipId);
+  if (championship.format === 8) {
+    return { championshipId: championship.id, format: championship.format, groups: [], entries };
+  }
+  const groupCount = championship.format / 4;
+  const groups = Array.from({ length: groupCount }, (_, index) => {
+    const letter = String.fromCharCode(65 + index);
+    return {
+      groupLetter: letter,
+      entries: entries.filter((entry) => entry.group_letter === letter),
+    };
+  });
+  if (groups.some((group) => group.entries.length !== 4)) {
+    fail("O resultado do sorteio está incompleto.");
+  }
+  return { championshipId: championship.id, format: championship.format, groups, entries };
+}
+
+/** Presentation order is encoded by seed_number, interleaving each group's relative position. */
+export async function getChampionshipSchedule(db: Db, championshipId: string) {
+  const { championship, entries } = await loadDrawEntries(db, championshipId);
+  const groupCount = championship.format === 8 ? null : championship.format / 4;
+  const presentations = entries.map((entry) => ({
+    ...entry,
+    presentation_number: entry.seed_number!,
+    group_position: groupCount === null ? null : Math.floor((entry.seed_number! - 1) / groupCount) + 1,
+  }));
+
+  if (championship.format !== 8) {
+    if (entries.some((entry) => !entry.group_letter)) fail("O resultado do sorteio está incompleto.");
+    return { championshipId: championship.id, format: championship.format, presentations, matches: [] };
+  }
+
+  const { data: matches, error } = await db
+    .from("championship_matches")
+    .select("id, match_number, entry_a_id, entry_b_id, status")
+    .eq("championship_id", championship.id)
+    .eq("stage", "quarter_final")
+    .order("match_number", { ascending: true });
+  if (error) fail("Não foi possível carregar o calendário das quartas de final.");
+  if (!matches || matches.length !== 4 || matches.some((match) => !match.entry_a_id || !match.entry_b_id)) {
+    fail("O calendário das quartas de final está incompleto.");
+  }
+  return { championshipId: championship.id, format: championship.format, presentations, matches };
+}
+
 async function countConfirmedEntries(db: Db, championshipId: string) {
   const { count, error } = await db
     .from("championship_entries")

@@ -900,6 +900,12 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      draw_championship: {
+        Args: {
+          p_championship_id: string
+        }
+        Returns: Json
+      }
       register_championship_entry: {
         Args: {
           p_championship_id: string

@@ -99,6 +99,13 @@
       "when": 1791916685000,
       "tag": "0013_championship_atomic_registration",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1791916686000,
+      "tag": "0014_championship_draw_and_schedule",
+      "breakpoints": true
     }
   ]
 }
