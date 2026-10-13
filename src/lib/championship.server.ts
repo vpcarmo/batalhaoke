@@ -847,6 +847,66 @@ export async function transitionChampionshipRegistration(
   return data;
 }
 
+export async function startChampionshipGroupStage(db: Db, raw: unknown) {
+  const input = z.object({
+    championshipId: z.string().uuid(),
+    venueId: z.string().uuid(),
+  }).strict().parse(raw);
+  const championship = await loadChampionship(db, input.championshipId);
+  if (championship.venue_id !== input.venueId)
+    fail("Este Campeonato pertence a outro estabelecimento.");
+  if (championship.format !== 12 && championship.format !== 16)
+    fail("A fase de grupos só existe nos formatos 12 e 16.");
+  if (championship.status !== "drawn")
+    fail("A fase de grupos só pode ser iniciada após o sorteio e uma única vez.");
+
+  const stageSession = await findStageSession(db, championship.id);
+  if (!stageSession)
+    fail("Prepare a sessão de palco do Campeonato antes de iniciar a fase de grupos.");
+  if (stageSession.status !== "draft" && stageSession.status !== "active")
+    fail("A sessão de palco deste Campeonato já foi encerrada.");
+
+  const { data: entries, error: entriesError } = await db
+    .from("championship_entries")
+    .select("id, group_letter, seed_number")
+    .eq("championship_id", championship.id)
+    .eq("status", "confirmed");
+  if (entriesError) fail("Não foi possível validar o sorteio do Campeonato.");
+
+  const confirmedEntries = entries ?? [];
+  const validGroups = new Set(["A", "B", "C", "D"].slice(0, championship.format / 4));
+  const validDraw =
+    confirmedEntries.length === championship.format &&
+    confirmedEntries.every(
+      (entry) =>
+        !!entry.group_letter &&
+        validGroups.has(entry.group_letter) &&
+        entry.seed_number !== null &&
+        entry.seed_number >= 1 &&
+        entry.seed_number <= championship.format,
+    ) &&
+    new Set(confirmedEntries.map((entry) => entry.seed_number)).size === championship.format &&
+    [...validGroups].every(
+      (group) => confirmedEntries.filter((entry) => entry.group_letter === group).length === 4,
+    );
+  if (!validDraw)
+    fail("O sorteio está incompleto ou inválido. Verifique os grupos e as posições antes de continuar.");
+
+  const { data, error } = await db
+    .from("championships")
+    .update({ status: "group_stage" })
+    .eq("id", championship.id)
+    .eq("venue_id", input.venueId)
+    .eq("status", "drawn")
+    .eq("format", championship.format)
+    .select(CHAMPIONSHIP_COLUMNS)
+    .maybeSingle();
+  if (error) fail("Não foi possível iniciar a fase de grupos.");
+  if (!data)
+    fail("O Campeonato foi alterado por outra operação. Recarregue e tente novamente.");
+  return data;
+}
+
 /** Idempotent: returns the existing stage session or creates exactly one (draft, never active). */
 export async function prepareStageSession(db: Db, raw: unknown) {
   const input = z.object({ championshipId: z.string().uuid(), venueId: z.string().uuid() }).strict().parse(raw);

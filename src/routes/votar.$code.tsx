@@ -41,9 +41,11 @@ function VotePage() {
   const championship = target?.championship ?? null;
   const championshipElimination =
     currentSession?.session_type === "championship" &&
-    ["quarter_finals", "semi_finals", "final"].includes(championship?.status ?? "");
+    (["quarter_finals", "semi_finals", "final"].includes(championship?.status ?? "") ||
+      (championship?.status === "drawn" && championship.format === 8));
   const groupVoting =
-    currentSession?.session_type !== "championship" || championship?.status === "group_stage";
+    currentSession?.session_type !== "championship" ||
+    championship?.status === "group_stage";
   const [token, setToken] = useState<string | null>(null);
   useEffect(() => { setToken(getVoterToken()); }, []);
 
@@ -166,7 +168,8 @@ function ChampionshipDirectVote({
   const statusFn = useServerFn(getPublicChampionshipVoterStatusFn);
   const voteFn = useServerFn(castChampionshipMatchVoteFn);
   const stage =
-    championship?.status === "quarter_finals"
+    championship?.status === "quarter_finals" ||
+    (championship?.status === "drawn" && championship.format === 8)
       ? "quarter_final"
       : championship?.status === "semi_finals"
         ? "semi_final"
@@ -229,7 +232,9 @@ function ChampionshipDirectVote({
   }
 
   const ended =
-    match.status !== "in_progress" ||
+    match.status === "completed" ||
+    match.status === "wo" ||
+    match.status === "cancelled" ||
     match.votingStatus === "closed" ||
     (match.votingStatus === "open" && remaining === 0);
   const label = (side: "A" | "B", displayName: string) => `${side} · ${displayName}`;

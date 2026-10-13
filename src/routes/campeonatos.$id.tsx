@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { supabase } from "@/integrations/supabase/client";
 import {
   activateStageSessionFn,
   advanceChampionshipEliminationFn,
@@ -30,6 +31,7 @@ import {
   recordChampionshipMatchWoFn,
   recordGroupStageTieBreakDecisionFn,
   setChampionshipMatchPerformancesFn,
+  startChampionshipGroupStageFn,
   startChampionshipMatchFn,
   startChampionshipPresentationFn,
   updateChampionshipFn,
@@ -98,6 +100,7 @@ function ChampionshipAdminPage() {
   const openRegistrationFn = useServerFn(openChampionshipRegistrationFn);
   const closeRegistrationFn = useServerFn(closeChampionshipRegistrationFn);
   const drawActionFn = useServerFn(drawChampionshipFn);
+  const startGroupStageFn = useServerFn(startChampionshipGroupStageFn);
   const tieBreakFn = useServerFn(recordGroupStageTieBreakDecisionFn);
   const finalizeGroupsFn = useServerFn(finalizeGroupStageAndGenerateQuarterFinalsFn);
   const prepareStageFn = useServerFn(prepareStageSessionFn);
@@ -182,6 +185,29 @@ function ChampionshipAdminPage() {
     setPrizeInfo(event.prize_info ?? "");
     setFeeInfo(event.fee_info ?? "");
   }, [championship.data]);
+
+  useEffect(() => {
+    const venueId = championship.data?.championship.venue_id;
+    if (!venueId) return;
+    const channel = supabase
+      .channel(`venue-live:${venueId}`)
+      .on("broadcast", { event: "invalidate" }, () => {
+        void Promise.all([
+          queryClient.invalidateQueries({ queryKey: ["championship", id] }),
+          queryClient.invalidateQueries({ queryKey: ["championship-entries", id] }),
+          queryClient.invalidateQueries({ queryKey: ["championship-draw", id] }),
+          queryClient.invalidateQueries({ queryKey: ["championship-schedule", id] }),
+          queryClient.invalidateQueries({ queryKey: ["championship-standings", id] }),
+          queryClient.invalidateQueries({ queryKey: ["championship-elimination-board", id] }),
+          queryClient.invalidateQueries({ queryKey: ["championship-match-score", id] }),
+          queryClient.invalidateQueries({ queryKey: ["championships"] }),
+        ]);
+      })
+      .subscribe();
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+  }, [championship.data?.championship.venue_id, id, queryClient]);
 
   const event = championship.data?.championship;
   const allEntries = entries.data ?? [];
@@ -297,6 +323,12 @@ function ChampionshipAdminPage() {
                 () => drawActionFn({ data: { championshipId: id } }),
                 "Sorteio realizado pelo servidor.",
               )}>Executar sorteio</Button>
+            )}
+            {event.status === "drawn" && event.format !== 8 && (
+              <Button disabled={busy} onClick={() => void act(
+                () => startGroupStageFn({ data: { championshipId: id } }),
+                "Fase de grupos iniciada.",
+              )}>Iniciar fase de grupos</Button>
             )}
           </div>
         </div>

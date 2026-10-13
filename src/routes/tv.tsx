@@ -145,7 +145,8 @@ function TvPage() {
   const isChampionship = session?.session_type === "championship";
   const isChampionshipElimination =
     isChampionship &&
-    ["quarter_finals", "semi_finals", "final"].includes(championship?.status ?? "");
+    (["quarter_finals", "semi_finals", "final"].includes(championship?.status ?? "") ||
+      (championship?.status === "drawn" && championship.format === 8));
   const sessionId = session?.id ?? (!paired ? devSession || undefined : undefined);
   const venues = useQuery({
     queryKey: ["venues"],
@@ -654,7 +655,10 @@ function ChampionshipTvDetails({
     );
   }
 
-  if (championship.status === "group_stage") {
+  if (
+    championship.status === "group_stage" ||
+    (championship.status === "drawn" && championship.format !== 8)
+  ) {
     const entries = championship.entries.filter(
       (entry) => entry.groupLetter && entry.participantId,
     );

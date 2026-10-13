@@ -105,6 +105,21 @@ export const closeChampionshipRegistrationFn = createServerFn({ method: "POST" }
     return deps.domain.transitionChampionshipRegistration(deps.db, data, "close");
   }));
 
+export const startChampionshipGroupStageFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ championshipId: Id }).strict().parse(d))
+  .handler(({ data, context }) => run(async (deps) => {
+    const venueId = await deps.auth.assertChampionshipOperator(
+      deps.db,
+      context.userId,
+      data.championshipId,
+    );
+    return deps.domain.startChampionshipGroupStage(deps.db, {
+      championshipId: data.championshipId,
+      venueId,
+    });
+  }));
+
 export const drawChampionshipFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.object({ championshipId: Id }).strict().parse(d))
