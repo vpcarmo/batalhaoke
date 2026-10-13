@@ -146,6 +146,22 @@ export const getChampionshipScheduleFn = createServerFn({ method: "POST" })
     return deps.domain.getChampionshipSchedule(deps.db, data.championshipId);
   }));
 
+export const getChampionshipStandingsFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ championshipId: Id }).strict().parse(d))
+  .handler(({ data, context }) => run(async (deps) => {
+    await deps.auth.assertChampionshipOperator(deps.db, context.userId, data.championshipId);
+    return deps.domain.getChampionshipStandings(deps.db, data.championshipId);
+  }));
+
+export const getChampionshipEliminationBoardFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ championshipId: Id }).strict().parse(d))
+  .handler(({ data, context }) => run(async (deps) => {
+    await deps.auth.assertChampionshipOperator(deps.db, context.userId, data.championshipId);
+    return deps.domain.getChampionshipEliminationBoard(deps.db, data.championshipId);
+  }));
+
 export const prepareStageSessionFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.object({ championshipId: Id }).strict().parse(d))

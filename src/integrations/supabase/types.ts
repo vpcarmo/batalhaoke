@@ -315,6 +315,53 @@ export type Database = {
           },
         ]
       }
+      championship_group_stage_tie_decisions: {
+        Row: {
+          championship_id: string
+          chosen_order: string[]
+          created_at: string
+          criteria_applied: string[]
+          group_letter: string | null
+          id: string
+          operator_user_id: string
+          rationale: string | null
+          tied_entry_ids: string[]
+          updated_at: string
+        }
+        Insert: {
+          championship_id: string
+          chosen_order: string[]
+          created_at?: string
+          criteria_applied: string[]
+          group_letter?: string | null
+          id?: string
+          operator_user_id: string
+          rationale?: string | null
+          tied_entry_ids: string[]
+          updated_at?: string
+        }
+        Update: {
+          championship_id?: string
+          chosen_order?: string[]
+          created_at?: string
+          criteria_applied?: string[]
+          group_letter?: string | null
+          id?: string
+          operator_user_id?: string
+          rationale?: string | null
+          tied_entry_ids?: string[]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "championship_group_stage_tie_decisions_championship_id_fkey"
+            columns: ["championship_id"]
+            isOneToOne: false
+            referencedRelation: "championships"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       controllers: {
         Row: {
           created_at: string

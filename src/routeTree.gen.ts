@@ -10,6 +10,8 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as CampeonatosRouteImport } from './routes/campeonatos'
+import { Route as CampeonatosIdRouteImport } from './routes/campeonatos.$id'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as TvRouteImport } from './routes/tv'
 import { Route as QrCodeRouteImport } from './routes/qr.$code'
@@ -19,6 +21,16 @@ import { Route as VotarCodeRouteImport } from './routes/votar.$code'
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CampeonatosRoute = CampeonatosRouteImport.update({
+  id: '/campeonatos',
+  path: '/campeonatos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CampeonatosIdRoute = CampeonatosIdRouteImport.update({
+  id: '/campeonatos/$id',
+  path: '/campeonatos/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -49,6 +61,8 @@ const VotarCodeRoute = VotarCodeRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/campeonatos': typeof CampeonatosRoute
+  '/campeonatos/$id': typeof CampeonatosIdRoute
   '/login': typeof LoginRoute
   '/tv': typeof TvRoute
   '/qr/$code': typeof QrCodeRoute
@@ -57,6 +71,8 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/campeonatos': typeof CampeonatosRoute
+  '/campeonatos/$id': typeof CampeonatosIdRoute
   '/login': typeof LoginRoute
   '/tv': typeof TvRoute
   '/qr/$code': typeof QrCodeRoute
@@ -66,6 +82,8 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/campeonatos': typeof CampeonatosRoute
+  '/campeonatos/$id': typeof CampeonatosIdRoute
   '/login': typeof LoginRoute
   '/tv': typeof TvRoute
   '/qr/$code': typeof QrCodeRoute
@@ -75,12 +93,22 @@ export interface FileRoutesById {
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    '/' | '/login' | '/tv' | '/qr/$code' | '/sessao/$id' | '/votar/$code'
+    '/' | '/campeonatos' | '/campeonatos/$id' | '/login' | '/tv' | '/qr/$code' | '/sessao/$id' | '/votar/$code'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/login' | '/tv' | '/qr/$code' | '/sessao/$id' | '/votar/$code'
+  to:
+    | '/'
+    | '/campeonatos'
+    | '/campeonatos/$id'
+    | '/login'
+    | '/tv'
+    | '/qr/$code'
+    | '/sessao/$id'
+    | '/votar/$code'
   id:
     | '__root__'
     | '/'
+    | '/campeonatos'
+    | '/campeonatos/$id'
     | '/login'
     | '/tv'
     | '/qr/$code'
@@ -90,6 +118,8 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  CampeonatosRoute: typeof CampeonatosRoute
+  CampeonatosIdRoute: typeof CampeonatosIdRoute
   LoginRoute: typeof LoginRoute
   TvRoute: typeof TvRoute
   QrCodeRoute: typeof QrCodeRoute
@@ -111,6 +141,20 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/campeonatos': {
+      id: '/campeonatos'
+      path: '/campeonatos'
+      fullPath: '/campeonatos'
+      preLoaderRoute: typeof CampeonatosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/campeonatos/$id': {
+      id: '/campeonatos/$id'
+      path: '/campeonatos/$id'
+      fullPath: '/campeonatos/$id'
+      preLoaderRoute: typeof CampeonatosIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/tv': {
@@ -146,6 +190,8 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  CampeonatosRoute: CampeonatosRoute,
+  CampeonatosIdRoute: CampeonatosIdRoute,
   LoginRoute: LoginRoute,
   TvRoute: TvRoute,
   QrCodeRoute: QrCodeRoute,

@@ -494,6 +494,268 @@ export async function getChampionshipSchedule(db: Db, championshipId: string) {
   return { championshipId: championship.id, format: championship.format, presentations, matches };
 }
 
+export async function getChampionshipStandings(db: Db, championshipId: string) {
+  const id = z.string().uuid().parse(championshipId);
+  const championship = await loadChampionship(db, id);
+  if (championship.format === 8) return { format: 8 as const, groups: [], thirdPlace: [], unresolvedTies: [], tieDecisions: [] };
+  if (championship.format !== 12 && championship.format !== 16) fail("Formato de Campeonato inválido.");
+
+  const { data: entries, error: entriesError } = await db
+    .from("championship_entries")
+    .select("id, name, stage_name, group_letter, seed_number, participant_id")
+    .eq("championship_id", id)
+    .eq("status", "confirmed")
+    .not("seed_number", "is", null)
+    .order("seed_number", { ascending: true });
+  if (entriesError) fail("Não foi possível carregar os participantes sorteados.");
+  if (!entries?.length) return { format: championship.format, groups: [], thirdPlace: [], unresolvedTies: [], tieDecisions: [] };
+
+  const stageSession = await findStageSession(db, id);
+  const participantIds = [...new Set(entries.flatMap((entry) => entry.participant_id ? [entry.participant_id] : []))];
+  let performances: { id: string; participant_id: string }[] = [];
+  if (stageSession && participantIds.length) {
+    const { data, error } = await db
+      .from("performances")
+      .select("id, participant_id")
+      .eq("session_id", stageSession.id)
+      .in("participant_id", participantIds);
+    if (error) fail("Não foi possível carregar as apresentações da fase de grupos.");
+    performances = data ?? [];
+  }
+
+  const { data: matches, error: matchesError } = await db
+    .from("championship_matches")
+    .select("performance_a_id, performance_b_id")
+    .eq("championship_id", id);
+  if (matchesError) fail("Não foi possível identificar as apresentações das eliminatórias.");
+  const eliminationPerformanceIds = new Set(
+    (matches ?? []).flatMap((match) => [match.performance_a_id, match.performance_b_id].filter((value): value is string => !!value)),
+  );
+  const groupPerformances = performances.filter((performance) => !eliminationPerformanceIds.has(performance.id));
+  const votesByPerformance = new Map<string, { likes: number; dislikes: number }>();
+  if (groupPerformances.length) {
+    const { data: votes, error } = await db
+      .from("votes")
+      .select("performance_id, vote_type")
+      .in("performance_id", groupPerformances.map((performance) => performance.id));
+    if (error) fail("Não foi possível carregar os votos da fase de grupos.");
+    for (const vote of votes ?? []) {
+      const tally = votesByPerformance.get(vote.performance_id) ?? { likes: 0, dislikes: 0 };
+      if (vote.vote_type === "like") tally.likes += 1;
+      if (vote.vote_type === "dislike") tally.dislikes += 1;
+      votesByPerformance.set(vote.performance_id, tally);
+    }
+  }
+
+  const tallyByParticipant = new Map<string, { likes: number; dislikes: number }>();
+  for (const performance of groupPerformances) {
+    const tally = votesByPerformance.get(performance.id);
+    if (!tally) continue;
+    const total = tallyByParticipant.get(performance.participant_id) ?? { likes: 0, dislikes: 0 };
+    total.likes += tally.likes;
+    total.dislikes += tally.dislikes;
+    tallyByParticipant.set(performance.participant_id, total);
+  }
+
+  const { data: decisions, error: decisionsError } = await db
+    .from("championship_group_stage_tie_decisions")
+    .select("group_letter, tied_entry_ids, criteria_applied, chosen_order, rationale")
+    .eq("championship_id", id);
+  if (decisionsError) fail("Não foi possível carregar as decisões de desempate.");
+
+  const standings = entries.map((entry) => {
+    const tally = entry.participant_id ? tallyByParticipant.get(entry.participant_id) : undefined;
+    const likes = tally?.likes ?? 0;
+    const dislikes = tally?.dislikes ?? 0;
+    const totalVotes = likes + dislikes;
+    return {
+      id: entry.id,
+      name: entry.name,
+      stageName: entry.stage_name,
+      groupLetter: entry.group_letter,
+      seedNumber: entry.seed_number!,
+      likes,
+      dislikes,
+      approval: totalVotes ? (likes / totalVotes) * 100 : null,
+      noVotes: totalVotes === 0,
+    };
+  });
+  const scoreKey = (entry: (typeof standings)[number]) =>
+    `${entry.approval ?? 0}:${entry.likes}:${entry.dislikes}`;
+  const sameScore = (left: (typeof standings)[number], right: (typeof standings)[number]) =>
+    left.approval === right.approval && left.likes === right.likes && left.dislikes === right.dislikes;
+  const decisionFor = (groupLetter: string | null, tiedEntryIds: string[]) =>
+    (decisions ?? []).find((decision) =>
+      decision.group_letter === groupLetter &&
+      decision.tied_entry_ids.length === tiedEntryIds.length &&
+      decision.tied_entry_ids.every((entryId) => tiedEntryIds.includes(entryId)),
+    );
+  const unresolvedTies: {
+    groupLetter: string | null;
+    tiedEntryIds: string[];
+    entries: { id: string; name: string; stageName: string | null }[];
+    criteriaApplied: string[];
+    rationale: string | null;
+  }[] = [];
+
+  const groups = Array.from({ length: championship.format / 4 }, (_, index) => {
+    const groupLetter = String.fromCharCode(65 + index);
+    const group = standings.filter((entry) => entry.groupLetter === groupLetter);
+    const tieBuckets = new Map<string, typeof group>();
+    for (const entry of group) {
+      const bucket = tieBuckets.get(scoreKey(entry)) ?? [];
+      bucket.push(entry);
+      tieBuckets.set(scoreKey(entry), bucket);
+    }
+    for (const bucket of tieBuckets.values()) {
+      if (bucket.length < 2) continue;
+      const tiedEntryIds = bucket.map((entry) => entry.id).sort();
+      const decision = decisionFor(groupLetter, tiedEntryIds);
+      if (!decision) {
+        unresolvedTies.push({
+          groupLetter,
+          tiedEntryIds,
+          entries: bucket.map(({ id, name, stageName }) => ({ id, name, stageName })),
+          criteriaApplied: ["approval", "likes", "dislikes"],
+          rationale: null,
+        });
+      }
+    }
+    group.sort((left, right) => {
+      const score = (right.approval ?? 0) - (left.approval ?? 0) ||
+        right.likes - left.likes || left.dislikes - right.dislikes;
+      if (score) return score;
+      const decision = decisionFor(groupLetter, tieBuckets.get(scoreKey(left))?.map((entry) => entry.id).sort() ?? []);
+      const leftRank = decision?.chosen_order.indexOf(left.id) ?? -1;
+      const rightRank = decision?.chosen_order.indexOf(right.id) ?? -1;
+      if (leftRank >= 0 && rightRank >= 0) return leftRank - rightRank;
+      return left.seedNumber - right.seedNumber;
+    });
+    return {
+      groupLetter,
+      entries: group.map((entry, index) => {
+        const prior = group[index - 1];
+        const next = group[index + 1];
+        const tiesPrior = !!prior && sameScore(entry, prior) &&
+          !decisionFor(groupLetter, tieBuckets.get(scoreKey(entry))?.map((item) => item.id).sort() ?? []);
+        const tiesNext = !!next && sameScore(entry, next) &&
+          !decisionFor(groupLetter, tieBuckets.get(scoreKey(entry))?.map((item) => item.id).sort() ?? []);
+        const tiedRange = group.filter((item) => sameScore(entry, item));
+        const firstPosition = group.findIndex((item) => sameScore(entry, item)) + 1;
+        const lastPosition = firstPosition + tiedRange.length - 1;
+        return {
+          ...entry,
+          position: tiesPrior ? firstPosition : index + 1,
+          tied: tiesPrior || tiesNext,
+            qualified: (!tiesPrior && !tiesNext)
+              ? index < 2
+              : lastPosition <= 2 ? true : firstPosition > 2 ? false : null,
+        };
+      }),
+    };
+  });
+
+  let thirdPlace: ((typeof standings)[number] & { groupPosition: number; qualified: boolean | null; tied: boolean })[] = [];
+  if (championship.format === 12) {
+    const thirdEntries = groups.flatMap((group) => {
+      const entry = group.entries.find((candidate) => candidate.position === 3);
+      return entry ? [{ ...entry, groupPosition: entry.position }] : [];
+    });
+    thirdEntries.sort((left, right) =>
+      (right.approval ?? 0) - (left.approval ?? 0) ||
+      right.likes - left.likes ||
+      left.dislikes - right.dislikes ||
+      left.groupLetter!.localeCompare(right.groupLetter!),
+    );
+    const tieBuckets = new Map<string, typeof thirdEntries>();
+    for (const entry of thirdEntries) {
+      const bucket = tieBuckets.get(scoreKey(entry)) ?? [];
+      bucket.push(entry);
+      tieBuckets.set(scoreKey(entry), bucket);
+    }
+    for (const bucket of tieBuckets.values()) {
+      if (bucket.length < 2) continue;
+      const tiedEntryIds = bucket.map((entry) => entry.id).sort();
+      const decision = decisionFor(null, tiedEntryIds);
+      if (!decision) {
+        unresolvedTies.push({
+          groupLetter: null,
+          tiedEntryIds,
+          entries: bucket.map(({ id, name, stageName }) => ({ id, name, stageName })),
+          criteriaApplied: ["approval", "likes", "dislikes"],
+          rationale: null,
+        });
+      } else {
+        const order = new Map(decision.chosen_order.map((entryId, position) => [entryId, position]));
+        bucket.sort((left, right) => (order.get(left.id) ?? 0) - (order.get(right.id) ?? 0));
+      }
+    }
+    thirdEntries.sort((left, right) =>
+      (right.approval ?? 0) - (left.approval ?? 0) ||
+      right.likes - left.likes ||
+      left.dislikes - right.dislikes ||
+      ((decisionFor(null, tieBuckets.get(scoreKey(left))?.map((entry) => entry.id).sort() ?? [])?.chosen_order.indexOf(left.id) ?? -1) -
+        (decisionFor(null, tieBuckets.get(scoreKey(right))?.map((entry) => entry.id).sort() ?? [])?.chosen_order.indexOf(right.id) ?? -1)) ||
+      left.groupLetter!.localeCompare(right.groupLetter!),
+    );
+    thirdPlace = thirdEntries.map((entry, index) => {
+      const tiedRange = thirdEntries.filter((item) => sameScore(entry, item));
+      const firstPosition = thirdEntries.findIndex((item) => sameScore(entry, item)) + 1;
+      const lastPosition = firstPosition + tiedRange.length - 1;
+      const hasDecision = !!decisionFor(null, tieBuckets.get(scoreKey(entry))?.map((item) => item.id).sort() ?? []);
+      return {
+        ...entry,
+        groupPosition: 3,
+        position: hasDecision || tiedRange.length === 1 ? index + 1 : firstPosition,
+        tied: tiedRange.length > 1 && !hasDecision,
+        qualified: hasDecision || tiedRange.length === 1
+          ? index < 2
+          : lastPosition <= 2 ? true : firstPosition > 2 ? false : null,
+      };
+    });
+  }
+  const tieDecisions = (decisions ?? []).map((decision) => ({
+    groupLetter: decision.group_letter,
+    criteriaApplied: decision.criteria_applied,
+    tiedEntryIds: decision.tied_entry_ids,
+    tiedEntries: decision.tied_entry_ids.map((entryId) => {
+      const entry = standings.find((candidate) => candidate.id === entryId);
+      return { id: entryId, name: entry?.name ?? "Participante" };
+    }),
+    chosenOrder: decision.chosen_order.map((entryId) => {
+      const entry = standings.find((candidate) => candidate.id === entryId);
+      return { id: entryId, name: entry?.name ?? "Participante" };
+    }),
+    rationale: decision.rationale,
+  }));
+  return { format: championship.format, groups, thirdPlace, unresolvedTies, tieDecisions };
+}
+
+/** Elimination data is read only on the server after the championship operator check. */
+export async function getChampionshipEliminationBoard(db: Db, championshipId: string) {
+  const id = z.string().uuid().parse(championshipId);
+  const championship = await loadChampionship(db, id);
+  const { data: matches, error } = await db
+    .from("championship_matches")
+    .select("id, stage, match_number, entry_a_id, entry_b_id, performance_a_id, performance_b_id, status, voting_status, voting_ends_at, winner_entry_id")
+    .eq("championship_id", id)
+    .order("stage")
+    .order("match_number");
+  if (error) fail("Não foi possível carregar os confrontos eliminatórios.");
+  const stageSession = await findStageSession(db, id);
+  let performances: { id: string; participant_id: string; status: string }[] = [];
+  if (stageSession) {
+    const { data, error: performanceError } = await db
+      .from("performances")
+      .select("id, participant_id, status")
+      .eq("session_id", stageSession.id)
+      .order("created_at", { ascending: true });
+    if (performanceError) fail("Não foi possível carregar as apresentações da sessão de palco.");
+    performances = data ?? [];
+  }
+  return { championship, stageSession, matches: matches ?? [], performances };
+}
+
 async function countConfirmedEntries(db: Db, championshipId: string) {
   const { count, error } = await db
     .from("championship_entries")
