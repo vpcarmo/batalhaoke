@@ -1,12 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Check, Mic2, ThumbsDown, ThumbsUp } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import { useSessionLive } from "@/hooks/use-session-live";
 import { displayName, getVoterToken } from "@/lib/karaoke";
-import { castVote, getVoterStatus, getVotingSession } from "@/lib/votes.functions";
+import { castVote, getVoterStatus } from "@/lib/votes.functions";
 import { castX1MatchVote, getX1MatchVoteStatus } from "@/lib/x1.functions";
 import { useVoteCountdown } from "@/hooks/use-vote-countdown";
 import type { Participant } from "@/lib/karaoke";
@@ -28,12 +27,9 @@ export const Route = createFileRoute("/votar/$code")({
 
 function VotePage() {
   const { code } = Route.useParams();
-  const queryClient = useQueryClient();
-  const getVotingSessionFn = useServerFn(getVotingSession);
-  const sessionQ = useQuery({ queryKey: ["voting-target", code], queryFn: () => getVotingSessionFn({ data: { code } }), retry: 2 });
-  const target = sessionQ.data;
+  const live = useSessionLive({ kind: "public", code });
+  const target = live.snapshot;
   const session = target?.session;
-  const live = useSessionLive(session?.id);
   const currentSession = live.session.data ?? session;
   const active = live.active;
   const afterBoth = currentSession?.session_type === "x1" && currentSession.x1_voting_mode === "after_both_performances";
@@ -45,18 +41,6 @@ function VotePage() {
   const [voted, setVoted] = useState<Record<string, boolean>>({});
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (target?.kind !== "venue") return;
-    const channel = supabase.channel(`venue-voting:${target.venueId}`)
-      .on("postgres_changes", { event: "*", schema: "public", table: "sessions", filter: `venue_id=eq.${target.venueId}` }, () => {
-        void queryClient.invalidateQueries({ queryKey: ["voting-target", code] });
-      })
-      .subscribe((status) => {
-        if (status === "SUBSCRIBED") void queryClient.invalidateQueries({ queryKey: ["voting-target", code] });
-      });
-    return () => { void supabase.removeChannel(channel); };
-  }, [code, queryClient, target?.kind, target?.venueId]);
 
   const statusQ = useQuery({
     queryKey: ["voter-status", code, active?.id],
@@ -85,9 +69,9 @@ function VotePage() {
         <p className="font-display text-3xl">BatalhaOkê</p>
       </header>
       <section className="flex flex-1 flex-col items-center justify-center gap-6">
-        {sessionQ.isLoading ? (
+        {live.session.isLoading ? (
           <p className="text-muted-foreground">Carregando…</p>
-        ) : sessionQ.error ? (
+        ) : live.error ? (
           <p role="alert" className="text-destructive">Sem conexão. Verifique a internet e recarregue.</p>
         ) : target?.kind === "venue" && !session ? (
           <p className="text-lg text-muted-foreground">Este estabelecimento não possui uma batalha ativa no momento.</p>

@@ -5,8 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { supabase } from "@/integrations/supabase/client";
-import { displayName, getSession, type Match, type Participant, type Performance } from "@/lib/karaoke";
+import { displayName, type Match, type Participant, type Performance, type X1VotingMode } from "@/lib/karaoke";
 import { cancelMatch, closeX1MatchVoting, confirmMatchWinner, createMatch, createMatchPerformance, getX1MatchTally, openX1MatchVoting, startMatch, updateX1VotingMode } from "@/lib/x1.functions";
 import { useVoteCountdown } from "@/hooks/use-vote-countdown";
 import { getX1CompetitionState } from "@/lib/x1-state";
@@ -15,27 +14,17 @@ import type { PlaybackSearchResult } from "@/lib/playback/types";
 
 const statusLabel: Record<string, string> = { scheduled: "Agendado", in_progress: "Em andamento", completed: "Concluído", cancelled: "Cancelado" };
 
-export const matchesKey = (sessionId: string) => ["matches", sessionId];
-
 /** X1 confrontations panel. Reads matches; all writes go through x1 server functions. */
 export function X1Matches(props: {
-  sessionId: string; sessionStatus: string; participants: Participant[]; perfs: Performance[]; hasActive: boolean; busy: boolean;
+  sessionId: string; sessionStatus: string; x1VotingMode: X1VotingMode; matches: Match[];
+  participants: Participant[]; perfs: Performance[]; hasActive: boolean; busy: boolean;
   act: (fn: () => Promise<unknown>, ok?: string) => void;
 }) {
   const { sessionId, participants, perfs } = props;
   const [matchToCancel, setMatchToCancel] = useState<Match | null>(null);
   const byId = (pid: string) => participants.find((participant) => participant.id === pid);
-  const matches = useQuery({
-    queryKey: matchesKey(sessionId),
-    queryFn: async () => {
-      const { data, error } = await supabase.from("matches").select("*").eq("session_id", sessionId).order("created_at");
-      if (error) throw error;
-      return data as Match[];
-    },
-  });
-  const list = matches.data ?? [];
-  const session = useQuery({ queryKey: ["session", sessionId], queryFn: () => getSession(sessionId) });
-  const afterBoth = session.data?.x1_voting_mode === "after_both_performances";
+  const list = props.matches;
+  const afterBoth = props.x1VotingMode === "after_both_performances";
   const { completed, eliminatedIds, withdrawnIds, currentChampion, openMatches, activeCompetitorIds, waitingQueue, nextChallenger, firstPair } =
     getX1CompetitionState(list, participants);
   const sessionActive = props.sessionStatus === "active";
@@ -46,10 +35,10 @@ export function X1Matches(props: {
       <div className="flex items-center justify-between">
         <h2 id="x1" className="font-display text-3xl">Confrontos X1</h2>
       </div>
-      {session.data && (
+      {props.x1VotingMode && (
         <div className="rounded-xl border bg-card p-3 text-sm">
           <p className="font-medium">Modelo de votação: {afterBoth ? "Após as apresentações" : "Durante as apresentações"}</p>
-          {matches.isSuccess && list.length === 0 && sessionActive ? (
+          {list.length === 0 && sessionActive ? (
             <Button variant="ghost" size="sm" className="mt-1 h-8 px-2" disabled={props.busy}
               onClick={() => props.act(() => updateX1VotingMode({ data: { sessionId, mode: afterBoth ? "during_performance" : "after_both_performances" } }), "Modelo de votação alterado")}>
               Trocar para {afterBoth ? "Durante as apresentações" : "Após as apresentações"}

@@ -85,6 +85,13 @@
       "when": 1791672590741,
       "tag": "0011_0011_championship_auth_and_guards",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1791905446821,
+      "tag": "0012_operator_scoped_karaoke_rls",
+      "breakpoints": true
     }
   ]
 }

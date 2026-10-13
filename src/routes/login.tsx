@@ -8,9 +8,13 @@ import { Label } from "@/components/ui/label";
 export const Route = createFileRoute("/login")({
   head: () => ({
     meta: [
-      { title: "Entrar — Administração do Campeonato · BatalhaOkê" },
-      { name: "description", content: "Acesso restrito para operadores autorizados administrarem Campeonatos BatalhaOkê." },
-      { property: "og:title", content: "Entrar — Administração do Campeonato · BatalhaOkê" },
+      { title: "Entrar — Administração · BatalhaOkê" },
+      {
+        name: "description",
+        content:
+          "Acesso restrito para operadores autorizados administrarem seus estabelecimentos e Campeonatos.",
+      },
+      { property: "og:title", content: "Entrar — Administração · BatalhaOkê" },
       { property: "og:description", content: "Acesso restrito para operadores autorizados." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -33,12 +37,14 @@ function LoginPage() {
   useEffect(() => {
     // getUser re-validates with the auth server, so an expired/revoked session shows as signed out.
     supabase.auth.getUser().then(({ data, error: err }) => {
-      if (err && err.name !== "AuthSessionMissingError") setError("Sua sessão expirou. Entre novamente.");
+      if (err && err.name !== "AuthSessionMissingError")
+        setError("Sua sessão expirou. Entre novamente.");
       setUserEmail(data.user?.email ?? null);
       setReady(true);
     });
     const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === "SIGNED_IN" || event === "SIGNED_OUT" || event === "USER_UPDATED") setUserEmail(session?.user.email ?? null);
+      if (event === "SIGNED_IN" || event === "SIGNED_OUT" || event === "USER_UPDATED")
+        setUserEmail(session?.user.email ?? null);
     });
     return () => sub.subscription.unsubscribe();
   }, []);
@@ -48,7 +54,10 @@ function LoginPage() {
     setBusy(true);
     setError(null);
     if (mode === "signin") {
-      const { error: err } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+      const { error: err } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password,
+      });
       setBusy(false);
       if (err) setError("E-mail ou senha inválidos.");
       else setPassword("");
@@ -62,7 +71,8 @@ function LoginPage() {
       options: { emailRedirectTo: window.location.origin },
     });
     setBusy(false);
-    if (err) setError("Não foi possível criar a conta. Verifique o e-mail e tente uma senha mais forte.");
+    if (err)
+      setError("Não foi possível criar a conta. Verifique o e-mail e tente uma senha mais forte.");
     else setSignupSent(true);
   }
 
@@ -76,14 +86,18 @@ function LoginPage() {
     <main className="min-h-screen flex items-center justify-center bg-background p-6">
       <div className="w-full max-w-sm space-y-6 rounded-lg border border-border bg-card p-6 text-card-foreground">
         <div className="space-y-1">
-          <h1 className="text-2xl font-bold">Administração do Campeonato</h1>
-          <p className="text-sm text-muted-foreground">Acesso restrito a operadores autorizados.</p>
+          <h1 className="text-2xl font-bold">Administração</h1>
+          <p className="text-sm text-muted-foreground">
+            Acesso restrito aos operadores autorizados de cada estabelecimento.
+          </p>
         </div>
         {!ready ? (
           <p className="text-sm text-muted-foreground">Carregando…</p>
         ) : userEmail ? (
           <div className="space-y-4">
-            <p className="text-sm">Conectado como <strong>{userEmail}</strong>.</p>
+            <p className="text-sm">
+              Conectado como <strong>{userEmail}</strong>.
+            </p>
             <Button onClick={onLogout} disabled={busy} variant="outline" className="w-full">
               {busy ? "Saindo…" : "Sair"}
             </Button>
@@ -95,9 +109,18 @@ function LoginPage() {
               Confirme o e-mail e depois entre com sua senha.
             </p>
             <p className="text-sm text-muted-foreground">
-              O acesso administrativo a um estabelecimento é liberado separadamente, por um operador autorizado.
+              O acesso administrativo a um estabelecimento é liberado separadamente, por um operador
+              autorizado.
             </p>
-            <Button variant="outline" className="w-full" onClick={() => { setSignupSent(false); setMode("signin"); setPassword(""); }}>
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={() => {
+                setSignupSent(false);
+                setMode("signin");
+                setPassword("");
+              }}
+            >
               Voltar para entrar
             </Button>
           </div>
@@ -105,26 +128,56 @@ function LoginPage() {
           <form onSubmit={onSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">E-mail</Label>
-              <Input id="email" type="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
+              <Input
+                id="email"
+                type="email"
+                autoComplete="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Senha</Label>
-              <Input id="password" type="password" autoComplete={mode === "signin" ? "current-password" : "new-password"} required minLength={mode === "signup" ? 8 : undefined} value={password} onChange={(e) => setPassword(e.target.value)} />
+              <Input
+                id="password"
+                type="password"
+                autoComplete={mode === "signin" ? "current-password" : "new-password"}
+                required
+                minLength={mode === "signup" ? 8 : undefined}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
             </div>
-            {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
+            {error && (
+              <p role="alert" className="text-sm text-destructive">
+                {error}
+              </p>
+            )}
             <Button type="submit" disabled={busy} className="w-full">
-              {busy ? (mode === "signin" ? "Entrando…" : "Criando conta…") : (mode === "signin" ? "Entrar" : "Criar conta")}
+              {busy
+                ? mode === "signin"
+                  ? "Entrando…"
+                  : "Criando conta…"
+                : mode === "signin"
+                  ? "Entrar"
+                  : "Criar conta"}
             </Button>
             <button
               type="button"
               className="w-full text-center text-sm text-muted-foreground underline"
-              onClick={() => { setMode(mode === "signin" ? "signup" : "signin"); setError(null); }}
+              onClick={() => {
+                setMode(mode === "signin" ? "signup" : "signin");
+                setError(null);
+              }}
             >
               {mode === "signin" ? "Não tem conta? Cadastre-se" : "Já tem conta? Entrar"}
             </button>
           </form>
         )}
-        <Link to="/" className="block text-center text-sm text-muted-foreground underline">Voltar ao início</Link>
+        <Link to="/" className="block text-center text-sm text-muted-foreground underline">
+          Voltar ao início
+        </Link>
       </div>
     </main>
   );

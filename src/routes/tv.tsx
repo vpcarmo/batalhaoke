@@ -7,12 +7,25 @@ import { z } from "zod";
 import { Maximize2, Mic2, Minimize2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSessionLive } from "@/hooks/use-session-live";
-import { commandChannel, displayName, setPerformanceStatus, type Match, type Participant, type Performance, type VotingMode } from "@/lib/karaoke";
+import {
+  commandChannel,
+  displayName,
+  setPerformanceStatus,
+  type Match,
+  type Participant,
+  type Performance,
+  type VotingMode,
+} from "@/lib/karaoke";
+import { completePerformanceFromTv } from "@/lib/karaoke.functions";
 import { getTvState, listVenues, registerTvDevice } from "@/lib/venue.functions";
 import { PlaybackPlayer, type PlaybackPlayerRef } from "@/components/karaoke/PlaybackPlayer";
 import { SessionQr } from "@/components/karaoke/SessionQr";
 import { getX1CompetitionState } from "@/lib/x1-state";
-import { completeMatchPerformance, getX1MatchTally } from "@/lib/x1.functions";
+import {
+  completeMatchPerformance,
+  completeMatchPerformanceFromTv,
+  getX1MatchTally,
+} from "@/lib/x1.functions";
 import { useVoteCountdown } from "@/hooks/use-vote-countdown";
 
 type CompletedPerformance = Performance & {
@@ -25,23 +38,40 @@ function isCompletedPerformance(performance: Performance): performance is Comple
 }
 
 function performanceScore(performance: Performance, votingMode: VotingMode) {
-  return votingMode === "like_dislike" ? performance.like_count - performance.dislike_count : performance.like_count;
+  return votingMode === "like_dislike"
+    ? performance.like_count - performance.dislike_count
+    : performance.like_count;
 }
 
 function completionTime(performance: Performance) {
   return performance.ended_at ?? performance.started_at ?? performance.created_at;
 }
 
-function PerformanceScore({ performance, votingMode }: { performance: Performance; votingMode: VotingMode }) {
+function PerformanceScore({
+  performance,
+  votingMode,
+}: {
+  performance: Performance;
+  votingMode: VotingMode;
+}) {
   if (votingMode === "like_only") {
-    return <p className="font-display text-3xl text-primary lg:text-4xl">{performance.like_count} {performance.like_count === 1 ? "voto" : "votos"} 👍</p>;
+    return (
+      <p className="font-display text-3xl text-primary lg:text-4xl">
+        {performance.like_count} {performance.like_count === 1 ? "voto" : "votos"} 👍
+      </p>
+    );
   }
 
   const score = performanceScore(performance, votingMode);
   return (
     <div>
-      <p className="font-display text-3xl text-primary lg:text-4xl">Pontuação {score >= 0 ? "+" : ""}{score}</p>
-      <p className="mt-1 text-lg text-muted-foreground lg:text-xl">👍 {performance.like_count} · 👎 {performance.dislike_count}</p>
+      <p className="font-display text-3xl text-primary lg:text-4xl">
+        Pontuação {score >= 0 ? "+" : ""}
+        {score}
+      </p>
+      <p className="mt-1 text-lg text-muted-foreground lg:text-xl">
+        👍 {performance.like_count} · 👎 {performance.dislike_count}
+      </p>
     </div>
   );
 }
@@ -51,7 +81,10 @@ export const Route = createFileRoute("/tv")({
   head: () => ({
     meta: [
       { title: "BatalhaOkê — Tela pública" },
-      { name: "description", content: "Tela pública do BatalhaOkê: cantor atual, música e player." },
+      {
+        name: "description",
+        content: "Tela pública do BatalhaOkê: cantor atual, música e player.",
+      },
       { property: "og:title", content: "BatalhaOkê — TV" },
       { property: "og:description", content: "Acompanhe a apresentação ao vivo." },
       { property: "og:type", content: "website" },
@@ -77,7 +110,8 @@ function TvPage() {
       const bytes = new Uint8Array(32);
       window.crypto.getRandomValues(bytes);
       let token = "";
-      for (let index = 0; index < bytes.length; index += 1) token += bytes[index]!.toString(16).padStart(2, "0");
+      for (let index = 0; index < bytes.length; index += 1)
+        token += bytes[index]!.toString(16).padStart(2, "0");
       window.localStorage.setItem("ka-tv-device-token", token);
       setDeviceToken(token);
     }
@@ -92,21 +126,30 @@ function TvPage() {
   const pairing = useQuery({
     queryKey: ["tv-pairing", deviceToken],
     queryFn: () => registerDeviceFn({ data: { deviceToken: deviceToken! } }),
-    enabled: !!deviceToken && !tvState.isLoading && !tvState.data?.paired && !tvState.data?.disabled,
+    enabled:
+      !!deviceToken && !tvState.isLoading && !tvState.data?.paired && !tvState.data?.disabled,
     retry: 1,
     staleTime: Infinity,
   });
   const paired = !!tvState.data?.paired;
-  const sessionId = paired ? tvState.data?.activeSessionId ?? undefined : devSession || undefined;
-  const live = useSessionLive(sessionId);
+  const live = useSessionLive(
+    paired && deviceToken
+      ? { kind: "tv", deviceToken }
+      : devSession
+        ? { kind: "development", sessionId: devSession }
+        : undefined,
+  );
   const session = live.session.data;
+  const sessionId = session?.id ?? (!paired ? devSession || undefined : undefined);
   const venues = useQuery({
     queryKey: ["venues"],
     queryFn: () => listVenuesFn(),
     enabled: !!session?.venue_id,
     staleTime: 60_000,
   });
-  const venueSlug = session?.venue_id ? venues.data?.find((venue) => venue.id === session.venue_id)?.slug : null;
+  const venueSlug = session?.venue_id
+    ? venues.data?.find((venue) => venue.id === session.venue_id)?.slug
+    : null;
   const votingCode = session?.venue_id ? venueSlug : session?.public_code;
   const active = live.active;
   const next = live.queued[0];
@@ -117,25 +160,36 @@ function TvPage() {
   const x1State = showX1Arena
     ? getX1CompetitionState(x1Matches, live.participants.data ?? [])
     : null;
-  const x1AfterBoth = session?.session_type === "x1" && session.x1_voting_mode === "after_both_performances";
-  const directVoteMatch = showX1Arena && x1AfterBoth
-    ? x1Matches.find((match) => match.status === "in_progress" && match.voting_status !== "idle")
-    : undefined;
+  const x1AfterBoth =
+    session?.session_type === "x1" && session.x1_voting_mode === "after_both_performances";
+  const directVoteMatch =
+    showX1Arena && x1AfterBoth
+      ? x1Matches.find((match) => match.status === "in_progress" && match.voting_status !== "idle")
+      : undefined;
   const completedPerformances = (live.performances.data ?? []).filter(isCompletedPerformance);
-  const latestPerformance = [...completedPerformances].sort((a, b) =>
-    completionTime(b).localeCompare(completionTime(a)) || b.id.localeCompare(a.id),
+  const latestPerformance = [...completedPerformances].sort(
+    (a, b) => completionTime(b).localeCompare(completionTime(a)) || b.id.localeCompare(a.id),
   )[0];
-  const nightlyHighlight = completedPerformances.reduce<CompletedPerformance | undefined>((leader, performance) => {
-    if (!leader) return performance;
-    const scoreDifference = performanceScore(performance, session?.voting_mode ?? "like_only")
-      - performanceScore(leader, session?.voting_mode ?? "like_only");
-    return scoreDifference > 0 || (scoreDifference === 0 && performance.id.localeCompare(leader.id) < 0)
-      ? performance
-      : leader;
-  }, undefined);
-  const completedVotes = completedPerformances.reduce((total, performance) =>
-    total + performance.like_count + (session?.voting_mode === "like_dislike" ? performance.dislike_count : 0),
-  0);
+  const nightlyHighlight = completedPerformances.reduce<CompletedPerformance | undefined>(
+    (leader, performance) => {
+      if (!leader) return performance;
+      const scoreDifference =
+        performanceScore(performance, session?.voting_mode ?? "like_only") -
+        performanceScore(leader, session?.voting_mode ?? "like_only");
+      return scoreDifference > 0 ||
+        (scoreDifference === 0 && performance.id.localeCompare(leader.id) < 0)
+        ? performance
+        : leader;
+    },
+    undefined,
+  );
+  const completedVotes = completedPerformances.reduce(
+    (total, performance) =>
+      total +
+      performance.like_count +
+      (session?.voting_mode === "like_dislike" ? performance.dislike_count : 0),
+    0,
+  );
   const playerRef = useRef<PlaybackPlayerRef>(null);
   const [armed, setArmed] = useState(false);
 
@@ -185,37 +239,50 @@ function TvPage() {
   useEffect(() => {
     const venueId = tvState.data?.venueId;
     if (!paired || !venueId || !deviceToken) return;
-    const channel = supabase.channel(`tv-venue:${venueId}`)
-      .on("postgres_changes", { event: "*", schema: "public", table: "sessions", filter: `venue_id=eq.${venueId}` }, () => {
+    const channel = supabase
+      .channel(`venue-live:${venueId}`)
+      .on("broadcast", { event: "invalidate" }, () => {
         void queryClient.invalidateQueries({ queryKey: ["tv-state", deviceToken] });
       })
       .subscribe((status) => {
-        if (status === "SUBSCRIBED") {
+        if (status === "SUBSCRIBED")
           void queryClient.invalidateQueries({ queryKey: ["tv-state", deviceToken] });
-        }
       });
-    return () => { supabase.removeChannel(channel); };
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [paired, tvState.data?.venueId, deviceToken, queryClient]);
 
-  // Pairing and session changes have no public device subscription.
+  // Pending/disabled pairing has no venue channel to follow.
   useEffect(() => {
     if (!deviceToken || tvState.data?.disabled || tvState.data?.activeSessionId) return;
     const timer = window.setTimeout(() => {
       void queryClient.invalidateQueries({ queryKey: ["tv-state", deviceToken] });
     }, 10_000);
-    return () => { window.clearTimeout(timer); };
-  }, [deviceToken, tvState.data?.disabled, tvState.data?.activeSessionId, tvState.dataUpdatedAt, queryClient]);
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [
+    deviceToken,
+    tvState.data?.disabled,
+    tvState.data?.activeSessionId,
+    tvState.dataUpdatedAt,
+    queryClient,
+  ]);
 
   useEffect(() => {
     if (!sessionId) return;
-    const ch = supabase.channel(commandChannel(sessionId))
+    const ch = supabase
+      .channel(commandChannel(sessionId))
       .on("broadcast", { event: "command" }, ({ payload }) => {
         if (payload?.action === "play") playerRef.current?.play();
         if (payload?.action === "pause") playerRef.current?.pause();
         if (payload?.action === "restart") playerRef.current?.restart();
       })
       .subscribe();
-    return () => { supabase.removeChannel(ch); };
+    return () => {
+      supabase.removeChannel(ch);
+    };
   }, [sessionId]);
 
   const brand = (
@@ -229,13 +296,24 @@ function TvPage() {
         title={isFullscreen ? "Sair da tela cheia" : "Entrar em tela cheia"}
         className="absolute right-0 top-1/2 -translate-y-1/2 rounded-full border border-border/60 p-3 text-muted-foreground hover:bg-accent/10 hover:text-foreground lg:p-4 focus-visible:outline-2 focus-visible:outline-ring"
       >
-        {isFullscreen ? <Minimize2 className="size-6 lg:size-8" aria-hidden /> : <Maximize2 className="size-6 lg:size-8" aria-hidden />}
+        {isFullscreen ? (
+          <Minimize2 className="size-6 lg:size-8" aria-hidden />
+        ) : (
+          <Maximize2 className="size-6 lg:size-8" aria-hidden />
+        )}
       </button>
     </header>
   );
 
   if (!tokenReady || (deviceToken && tvState.isLoading)) {
-    return <main className="grid min-h-dvh place-items-center p-8 text-center"><div>{brand}<p className="mt-6 text-2xl text-muted-foreground lg:text-4xl">Conectando…</p></div></main>;
+    return (
+      <main className="grid min-h-dvh place-items-center p-8 text-center">
+        <div>
+          {brand}
+          <p className="mt-6 text-2xl text-muted-foreground lg:text-4xl">Conectando…</p>
+        </div>
+      </main>
+    );
   }
 
   if (tvState.data?.disabled || pairing.data?.disabled) {
@@ -243,7 +321,9 @@ function TvPage() {
       <main className="grid min-h-dvh place-items-center p-8 text-center">
         <div>
           {brand}
-          <p className="mt-6 text-2xl text-muted-foreground lg:text-4xl">Esta TV foi desabilitada. Peça ajuda ao operador.</p>
+          <p className="mt-6 text-2xl text-muted-foreground lg:text-4xl">
+            Esta TV foi desabilitada. Peça ajuda ao operador.
+          </p>
           <button
             type="button"
             className="mt-6 rounded-md border px-5 py-3 text-lg font-semibold hover:bg-accent focus-visible:outline-2 focus-visible:outline-ring"
@@ -262,8 +342,28 @@ function TvPage() {
   if (!devSession && !paired) {
     return (
       <main className="grid min-h-dvh place-items-center p-8 text-center">
-        <div>{brand}<p className="mt-6 text-2xl text-muted-foreground lg:text-4xl">Esta TV ainda não está configurada.</p>
-          {pairing.data?.pairingCode ? <><p className="mt-8 text-lg text-muted-foreground">Código de pareamento</p><p className="font-display text-6xl tracking-[0.2em] text-primary lg:text-8xl">{pairing.data.pairingCode}</p><p className="mt-6 text-base text-muted-foreground">Informe este código ao operador para vincular esta TV.</p></> : <p className="mt-6 text-xl text-muted-foreground">{pairing.isLoading ? "Gerando código…" : "Não foi possível preparar o pareamento. Recarregue a tela."}</p>}
+        <div>
+          {brand}
+          <p className="mt-6 text-2xl text-muted-foreground lg:text-4xl">
+            Esta TV ainda não está configurada.
+          </p>
+          {pairing.data?.pairingCode ? (
+            <>
+              <p className="mt-8 text-lg text-muted-foreground">Código de pareamento</p>
+              <p className="font-display text-6xl tracking-[0.2em] text-primary lg:text-8xl">
+                {pairing.data.pairingCode}
+              </p>
+              <p className="mt-6 text-base text-muted-foreground">
+                Informe este código ao operador para vincular esta TV.
+              </p>
+            </>
+          ) : (
+            <p className="mt-6 text-xl text-muted-foreground">
+              {pairing.isLoading
+                ? "Gerando código…"
+                : "Não foi possível preparar o pareamento. Recarregue a tela."}
+            </p>
+          )}
         </div>
       </main>
     );
@@ -272,7 +372,14 @@ function TvPage() {
   if (!sessionId) {
     return (
       <main className="grid min-h-dvh place-items-center p-8 text-center">
-        <div>{brand}<p className="mt-6 text-2xl text-muted-foreground lg:text-4xl">{paired ? "Aguardando início da sessão neste estabelecimento" : "Aguardando início da sessão"}</p></div>
+        <div>
+          {brand}
+          <p className="mt-6 text-2xl text-muted-foreground lg:text-4xl">
+            {paired
+              ? "Aguardando início da sessão neste estabelecimento"
+              : "Aguardando início da sessão"}
+          </p>
+        </div>
       </main>
     );
   }
@@ -280,7 +387,12 @@ function TvPage() {
   if (session && !session.tv_enabled) {
     return (
       <main className="grid min-h-dvh place-items-center p-8 text-center">
-        <div>{brand}<p className="mt-6 text-2xl text-muted-foreground lg:text-4xl">Tela da TV desativada para esta sessão.</p></div>
+        <div>
+          {brand}
+          <p className="mt-6 text-2xl text-muted-foreground lg:text-4xl">
+            Tela da TV desativada para esta sessão.
+          </p>
+        </div>
       </main>
     );
   }
@@ -289,69 +401,129 @@ function TvPage() {
   return (
     <main className="flex min-h-dvh flex-col gap-6 p-5 sm:p-8 lg:p-12">
       {brand}
-      {live.error && <p role="alert" className="text-center text-xl text-destructive">Conexão perdida com o servidor.</p>}
+      {live.error && (
+        <p role="alert" className="text-center text-xl text-destructive">
+          Conexão perdida com o servidor.
+        </p>
+      )}
       <div className={`grid flex-1 gap-8 ${showQr ? "lg:grid-cols-[minmax(0,1fr)_auto]" : ""}`}>
-      {active?.source && active.participant ? (
-        <div className="grid items-center gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
-          <section className="text-center lg:text-left animate-in fade-in slide-in-from-left-4 duration-700">
-            <p className="text-xl text-muted-foreground lg:text-3xl">Cantor {active.participant.participant_number}</p>
-            <h1 className="font-display text-6xl leading-none text-primary sm:text-7xl lg:text-8xl xl:text-9xl">🎤 {displayName(active.participant)}</h1>
-            <p className="mt-4 font-display text-3xl uppercase leading-tight sm:text-4xl lg:text-6xl">{active.source.title}</p>
-            <p className="mt-6 inline-flex items-center gap-3 rounded-full bg-accent/15 px-5 py-2 text-lg font-semibold uppercase tracking-widest text-accent lg:text-2xl">
-              <span className="size-3 animate-pulse rounded-full bg-accent" /> Apresentação em andamento
-            </p>
-            {!x1AfterBoth && <p className="mt-6 font-display text-5xl lg:text-7xl" aria-live="polite">👍 {active.like_count} {active.like_count === 1 ? "voto" : "votos"}{session?.voting_mode === "like_dislike" && <>   👎 {active.dislike_count}</>}</p>}
-          </section>
-          <section className="w-full">
-            <PlaybackPlayer key={active.id} ref={playerRef} provider={active.source.provider} externalId={active.source.external_id}
-              onState={(s) => {
-                if (s !== "ended") return;
-                const completion = active.match_id
-                  ? completeMatchPerformance({ data: { performanceId: active.id } })
-                  : setPerformanceStatus(active.id, "completed");
-                completion.catch((error: unknown) => console.error("Não foi possível concluir a apresentação.", error));
-              }} />
-          </section>
-        </div>
-      ) : (
-        isFreeWaiting ? (
+        {active?.source && active.participant ? (
+          <div className="grid items-center gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
+            <section className="text-center lg:text-left animate-in fade-in slide-in-from-left-4 duration-700">
+              <p className="text-xl text-muted-foreground lg:text-3xl">
+                Cantor {active.participant.participant_number}
+              </p>
+              <h1 className="font-display text-6xl leading-none text-primary sm:text-7xl lg:text-8xl xl:text-9xl">
+                🎤 {displayName(active.participant)}
+              </h1>
+              <p className="mt-4 font-display text-3xl uppercase leading-tight sm:text-4xl lg:text-6xl">
+                {active.source.title}
+              </p>
+              <p className="mt-6 inline-flex items-center gap-3 rounded-full bg-accent/15 px-5 py-2 text-lg font-semibold uppercase tracking-widest text-accent lg:text-2xl">
+                <span className="size-3 animate-pulse rounded-full bg-accent" /> Apresentação em
+                andamento
+              </p>
+              {!x1AfterBoth && (
+                <p className="mt-6 font-display text-5xl lg:text-7xl" aria-live="polite">
+                  👍 {active.like_count} {active.like_count === 1 ? "voto" : "votos"}
+                  {session?.voting_mode === "like_dislike" && <> 👎 {active.dislike_count}</>}
+                </p>
+              )}
+            </section>
+            <section className="w-full">
+              <PlaybackPlayer
+                key={active.id}
+                ref={playerRef}
+                provider={active.source.provider}
+                externalId={active.source.external_id}
+                onState={(s) => {
+                  if (s !== "ended") return;
+                  const completion = devSession
+                    ? active.match_id
+                      ? completeMatchPerformance({ data: { performanceId: active.id } })
+                      : setPerformanceStatus(active.id, "completed")
+                    : active.match_id
+                      ? completeMatchPerformanceFromTv({
+                          data: { performanceId: active.id, deviceToken: deviceToken! },
+                        })
+                      : completePerformanceFromTv({
+                          data: { performanceId: active.id, deviceToken: deviceToken! },
+                        });
+                  completion.catch((error: unknown) =>
+                    console.error("Não foi possível concluir a apresentação.", error),
+                  );
+                }}
+              />
+            </section>
+          </div>
+        ) : isFreeWaiting ? (
           <section className="flex flex-col justify-center gap-6 text-center lg:text-left">
             {completedPerformances.length === 0 ? (
               <div>
-                <h1 className="font-display text-5xl leading-none text-primary sm:text-6xl lg:text-8xl">A noite está começando!</h1>
-                <p className="mt-5 text-2xl text-muted-foreground lg:text-3xl">Escaneie o QR Code, participe e prepare-se para a próxima apresentação.</p>
+                <h1 className="font-display text-5xl leading-none text-primary sm:text-6xl lg:text-8xl">
+                  A noite está começando!
+                </h1>
+                <p className="mt-5 text-2xl text-muted-foreground lg:text-3xl">
+                  Escaneie o QR Code, participe e prepare-se para a próxima apresentação.
+                </p>
               </div>
             ) : (
-              <div className={`grid gap-5 ${completedPerformances.length > 1 ? "lg:grid-cols-2" : ""}`}>
+              <div
+                className={`grid gap-5 ${completedPerformances.length > 1 ? "lg:grid-cols-2" : ""}`}
+              >
                 {latestPerformance && (
                   <article className="rounded-2xl border border-border/60 bg-secondary/40 p-5 sm:p-7">
-                    <p className="text-lg font-semibold uppercase tracking-widest text-muted-foreground lg:text-xl">Última apresentação</p>
-                    <h1 className="mt-2 font-display text-5xl leading-none text-primary sm:text-6xl lg:text-7xl">{displayName(latestPerformance.participant)}</h1>
+                    <p className="text-lg font-semibold uppercase tracking-widest text-muted-foreground lg:text-xl">
+                      Última apresentação
+                    </p>
+                    <h1 className="mt-2 font-display text-5xl leading-none text-primary sm:text-6xl lg:text-7xl">
+                      {displayName(latestPerformance.participant)}
+                    </h1>
                     <p className="mt-3 text-xl lg:text-2xl">{latestPerformance.source.title}</p>
                     <div className="mt-4">
-                      <PerformanceScore performance={latestPerformance} votingMode={session?.voting_mode ?? "like_only"} />
+                      <PerformanceScore
+                        performance={latestPerformance}
+                        votingMode={session?.voting_mode ?? "like_only"}
+                      />
                     </div>
                     {completedPerformances.length === 1 && (
-                      <p className="mt-4 text-lg font-semibold text-accent lg:text-xl">Primeiro destaque da noite · líder até agora</p>
+                      <p className="mt-4 text-lg font-semibold text-accent lg:text-xl">
+                        Primeiro destaque da noite · líder até agora
+                      </p>
                     )}
                   </article>
                 )}
                 {completedPerformances.length > 1 && nightlyHighlight && (
                   <article className="rounded-2xl border border-primary/50 bg-primary/10 p-5 sm:p-7">
-                    <p className="text-lg font-semibold uppercase tracking-widest text-muted-foreground lg:text-xl">Destaque da noite</p>
-                    <h2 className="mt-2 font-display text-5xl leading-none text-primary sm:text-6xl lg:text-7xl">{displayName(nightlyHighlight.participant)}</h2>
+                    <p className="text-lg font-semibold uppercase tracking-widest text-muted-foreground lg:text-xl">
+                      Destaque da noite
+                    </p>
+                    <h2 className="mt-2 font-display text-5xl leading-none text-primary sm:text-6xl lg:text-7xl">
+                      {displayName(nightlyHighlight.participant)}
+                    </h2>
                     <div className="mt-4">
-                      <PerformanceScore performance={nightlyHighlight} votingMode={session?.voting_mode ?? "like_only"} />
+                      <PerformanceScore
+                        performance={nightlyHighlight}
+                        votingMode={session?.voting_mode ?? "like_only"}
+                      />
                     </div>
                   </article>
                 )}
               </div>
             )}
             {next?.participant && (
-              <p className="font-display text-3xl lg:text-5xl">Próximo cantor: <span className="text-primary">{displayName(next.participant)}</span></p>
+              <p className="font-display text-3xl lg:text-5xl">
+                Próximo cantor:{" "}
+                <span className="text-primary">{displayName(next.participant)}</span>
+              </p>
             )}
             <p className="text-base text-muted-foreground lg:text-lg">
-              {completedPerformances.length} {completedPerformances.length === 1 ? "apresentação realizada" : "apresentações realizadas"} · {completedVotes} {completedVotes === 1 ? "voto registrado" : "votos registrados"} pelo público
+              {completedPerformances.length}{" "}
+              {completedPerformances.length === 1
+                ? "apresentação realizada"
+                : "apresentações realizadas"}{" "}
+              · {completedVotes} {completedVotes === 1 ? "voto registrado" : "votos registrados"}{" "}
+              pelo público
             </p>
           </section>
         ) : directVoteMatch ? (
@@ -372,23 +544,35 @@ function TvPage() {
         ) : (
           <div className="grid place-items-center text-center">
             <div>
-              <p className="text-3xl text-muted-foreground lg:text-5xl">Aguardando o próximo cantor</p>
+              <p className="text-3xl text-muted-foreground lg:text-5xl">
+                Aguardando o próximo cantor
+              </p>
               {next?.participant && (
-                <p className="mt-6 font-display text-6xl lg:text-8xl">Próximo: <span className="text-primary">{displayName(next.participant)}</span></p>
+                <p className="mt-6 font-display text-6xl lg:text-8xl">
+                  Próximo: <span className="text-primary">{displayName(next.participant)}</span>
+                </p>
               )}
             </div>
           </div>
-        )
-      )}
-      {showQr && session && (
-        <aside className="flex flex-col items-center justify-center gap-3 text-center">
-          {votingCode ? <SessionQr code={votingCode} size={isFreeWaiting || isX1Waiting ? 260 : 200} /> : <p className="text-muted-foreground">Carregando QR Code permanente…</p>}
-          <p className="font-display text-2xl lg:text-3xl">{isX1Waiting ? "Escaneie para votar no próximo duelo" : "Escaneie para votar"}</p>
-        </aside>
-      )}
+        )}
+        {showQr && session && (
+          <aside className="flex flex-col items-center justify-center gap-3 text-center">
+            {votingCode ? (
+              <SessionQr code={votingCode} size={isFreeWaiting || isX1Waiting ? 260 : 200} />
+            ) : (
+              <p className="text-muted-foreground">Carregando QR Code permanente…</p>
+            )}
+            <p className="font-display text-2xl lg:text-3xl">
+              {isX1Waiting ? "Escaneie para votar no próximo duelo" : "Escaneie para votar"}
+            </p>
+          </aside>
+        )}
       </div>
       {!armed && (
-        <button onClick={() => setArmed(true)} className="mx-auto rounded-full border px-6 py-3 text-lg text-muted-foreground focus-visible:outline-2 focus-visible:outline-ring">
+        <button
+          onClick={() => setArmed(true)}
+          className="mx-auto rounded-full border px-6 py-3 text-lg text-muted-foreground focus-visible:outline-2 focus-visible:outline-ring"
+        >
           Toque aqui uma vez para permitir que o celular do operador inicie o playback nesta TV
         </button>
       )}
@@ -396,7 +580,12 @@ function TvPage() {
   );
 }
 
-function X1Arena({ state, participants, performances, directVote = false }: {
+function X1Arena({
+  state,
+  participants,
+  performances,
+  directVote = false,
+}: {
   state: ReturnType<typeof getX1CompetitionState>;
   participants: Participant[];
   performances: Performance[];
@@ -406,9 +595,13 @@ function X1Arena({ state, participants, performances, directVote = false }: {
   const last = state.latestCompleted;
   const lastA = last ? participantById(last.participant_a_id) : undefined;
   const lastB = last ? participantById(last.participant_b_id) : undefined;
-  const winner = last?.winner_participant_id ? participantById(last.winner_participant_id) : undefined;
+  const winner = last?.winner_participant_id
+    ? participantById(last.winner_participant_id)
+    : undefined;
   const scoreForSlot = (match: Match, slot: "a" | "b") =>
-    performances.find((performance) => performance.match_id === match.id && performance.match_slot === slot);
+    performances.find(
+      (performance) => performance.match_id === match.id && performance.match_slot === slot,
+    );
   const performanceA = last ? scoreForSlot(last, "a") : undefined;
   const performanceB = last ? scoreForSlot(last, "b") : undefined;
   // after_both_performances: last duel score = direct A/B votes (server-side count, never like/dislike).
@@ -430,48 +623,83 @@ function X1Arena({ state, participants, performances, directVote = false }: {
   };
   const votes = (n: number) => `${n} ${n === 1 ? "voto" : "votos"}`;
   const lastScoreA = directVote
-    ? (lastTally.data ? votes(lastTally.data.a) : null)
-    : (performanceA ? score(performanceA) : null);
+    ? lastTally.data
+      ? votes(lastTally.data.a)
+      : null
+    : performanceA
+      ? score(performanceA)
+      : null;
   const lastScoreB = directVote
-    ? (lastTally.data ? votes(lastTally.data.b) : null)
-    : (performanceB ? score(performanceB) : null);
+    ? lastTally.data
+      ? votes(lastTally.data.b)
+      : null
+    : performanceB
+      ? score(performanceB)
+      : null;
 
   return (
     <section className="flex flex-col justify-center gap-5 rounded-2xl border border-primary/40 bg-card/70 p-5 sm:p-7 lg:gap-6 lg:p-8">
       {state.currentChampion ? (
         <article className="rounded-2xl border border-accent/60 bg-accent/10 p-5 text-center sm:p-7">
-          <p className="text-lg font-bold uppercase tracking-[0.18em] text-accent lg:text-2xl">👑 Rei da mesa</p>
-          <h1 className="mt-2 break-words font-display text-6xl leading-none text-primary sm:text-7xl lg:text-8xl">{displayName(state.currentChampion)}</h1>
-          <p className="mt-3 text-xl font-semibold lg:text-2xl">{state.championWinStreak} {state.championWinStreak === 1 ? "vitória consecutiva" : "vitórias consecutivas"}</p>
+          <p className="text-lg font-bold uppercase tracking-[0.18em] text-accent lg:text-2xl">
+            👑 Rei da mesa
+          </p>
+          <h1 className="mt-2 break-words font-display text-6xl leading-none text-primary sm:text-7xl lg:text-8xl">
+            {displayName(state.currentChampion)}
+          </h1>
+          <p className="mt-3 text-xl font-semibold lg:text-2xl">
+            {state.championWinStreak}{" "}
+            {state.championWinStreak === 1 ? "vitória consecutiva" : "vitórias consecutivas"}
+          </p>
         </article>
       ) : (
         <article className="rounded-2xl border border-primary/40 bg-primary/10 p-5 text-center sm:p-7">
-          <p className="text-lg font-bold uppercase tracking-[0.18em] text-primary lg:text-2xl">⚔ Arena X1</p>
+          <p className="text-lg font-bold uppercase tracking-[0.18em] text-primary lg:text-2xl">
+            ⚔ Arena X1
+          </p>
           <h1 className="mt-2 font-display text-4xl leading-tight sm:text-5xl lg:text-6xl">
             {state.completed.length === 0 ? "A disputa vai começar" : "Arena em preparação"}
           </h1>
           <p className="mt-2 text-lg text-muted-foreground lg:text-xl">
-            {state.completed.length === 0 ? "Preparando o primeiro duelo" : "Aguardando a definição do próximo duelo"}
+            {state.completed.length === 0
+              ? "Preparando o primeiro duelo"
+              : "Aguardando a definição do próximo duelo"}
           </p>
         </article>
       )}
 
       {last && (
         <article className="rounded-2xl border border-border/70 bg-background/50 p-4 text-center sm:p-5">
-          <p className="text-base font-bold uppercase tracking-[0.18em] text-muted-foreground lg:text-xl">Último duelo</p>
-          {directVote && lastTally.data && <p className="mt-1 text-sm text-muted-foreground lg:text-base">Votação direta A/B</p>}
+          <p className="text-base font-bold uppercase tracking-[0.18em] text-muted-foreground lg:text-xl">
+            Último duelo
+          </p>
+          {directVote && lastTally.data && (
+            <p className="mt-1 text-sm text-muted-foreground lg:text-base">Votação direta A/B</p>
+          )}
           <div className="mt-3 grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2">
             <div className="min-w-0">
-              {lastA && <p className="truncate font-display text-3xl text-primary sm:text-4xl lg:text-5xl">{displayName(lastA)}</p>}
+              {lastA && (
+                <p className="truncate font-display text-3xl text-primary sm:text-4xl lg:text-5xl">
+                  {displayName(lastA)}
+                </p>
+              )}
               {lastScoreA && <p className="mt-1 text-2xl font-bold lg:text-3xl">{lastScoreA}</p>}
             </div>
             <span className="font-display text-2xl text-muted-foreground lg:text-3xl">×</span>
             <div className="min-w-0">
-              {lastB && <p className="truncate font-display text-3xl text-primary sm:text-4xl lg:text-5xl">{displayName(lastB)}</p>}
+              {lastB && (
+                <p className="truncate font-display text-3xl text-primary sm:text-4xl lg:text-5xl">
+                  {displayName(lastB)}
+                </p>
+              )}
               {lastScoreB && <p className="mt-1 text-2xl font-bold lg:text-3xl">{lastScoreB}</p>}
             </div>
           </div>
-          {winner && <p className="mt-3 text-xl font-bold text-accent lg:text-2xl">🏆 {displayName(winner)} avançou</p>}
+          {winner && (
+            <p className="mt-3 text-xl font-bold text-accent lg:text-2xl">
+              🏆 {displayName(winner)} avançou
+            </p>
+          )}
         </article>
       )}
 
@@ -483,36 +711,59 @@ function X1Arena({ state, participants, performances, directVote = false }: {
             </p>
             <div className="mt-3 grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2">
               <div className="min-w-0">
-                {nextA && <p className="truncate font-display text-3xl sm:text-4xl lg:text-5xl">{displayName(nextA)}</p>}
-                <p className="mt-1 text-sm text-muted-foreground lg:text-base">{nextPerfA ? "Música preparada" : "Aguardando música"}</p>
+                {nextA && (
+                  <p className="truncate font-display text-3xl sm:text-4xl lg:text-5xl">
+                    {displayName(nextA)}
+                  </p>
+                )}
+                <p className="mt-1 text-sm text-muted-foreground lg:text-base">
+                  {nextPerfA ? "Música preparada" : "Aguardando música"}
+                </p>
               </div>
               <span className="font-display text-2xl text-accent lg:text-3xl">VS</span>
               <div className="min-w-0">
-                {nextB && <p className="truncate font-display text-3xl sm:text-4xl lg:text-5xl">{displayName(nextB)}</p>}
-                <p className="mt-1 text-sm text-muted-foreground lg:text-base">{nextPerfB ? "Música preparada" : "Aguardando música"}</p>
+                {nextB && (
+                  <p className="truncate font-display text-3xl sm:text-4xl lg:text-5xl">
+                    {displayName(nextB)}
+                  </p>
+                )}
+                <p className="mt-1 text-sm text-muted-foreground lg:text-base">
+                  {nextPerfB ? "Música preparada" : "Aguardando música"}
+                </p>
               </div>
             </div>
           </>
         ) : state.currentChampion && state.nextChallenger ? (
           <>
-            <p className="text-base font-bold uppercase tracking-[0.18em] text-muted-foreground lg:text-xl">Próximo desafiante</p>
-            <p className="mt-2 font-display text-5xl text-primary sm:text-6xl lg:text-7xl">{displayName(state.nextChallenger)}</p>
+            <p className="text-base font-bold uppercase tracking-[0.18em] text-muted-foreground lg:text-xl">
+              Próximo desafiante
+            </p>
+            <p className="mt-2 font-display text-5xl text-primary sm:text-6xl lg:text-7xl">
+              {displayName(state.nextChallenger)}
+            </p>
           </>
         ) : !state.currentChampion && state.firstPair ? (
           <>
-            <p className="text-base font-bold uppercase tracking-[0.18em] text-muted-foreground lg:text-xl">Primeiro duelo</p>
+            <p className="text-base font-bold uppercase tracking-[0.18em] text-muted-foreground lg:text-xl">
+              Primeiro duelo
+            </p>
             <p className="mt-2 font-display text-4xl sm:text-5xl lg:text-6xl">
-              {displayName(state.firstPair.a)} <span className="text-accent">×</span> {displayName(state.firstPair.b)}
+              {displayName(state.firstPair.a)} <span className="text-accent">×</span>{" "}
+              {displayName(state.firstPair.b)}
             </p>
             <p className="mt-2 text-lg text-muted-foreground">Preparando o início da Arena</p>
           </>
         ) : state.currentChampion ? (
           <>
-            <p className="text-base font-bold uppercase tracking-[0.18em] text-muted-foreground lg:text-xl">Próximo duelo</p>
+            <p className="text-base font-bold uppercase tracking-[0.18em] text-muted-foreground lg:text-xl">
+              Próximo duelo
+            </p>
             <p className="mt-2 text-2xl font-semibold lg:text-3xl">Aguardando novo desafiante</p>
           </>
         ) : (
-          <p className="text-xl font-semibold text-muted-foreground lg:text-2xl">Aguardando participantes para iniciar a Arena</p>
+          <p className="text-xl font-semibold text-muted-foreground lg:text-2xl">
+            Aguardando participantes para iniciar a Arena
+          </p>
         )}
       </article>
     </section>
@@ -534,7 +785,9 @@ function X1DirectVoteTv({ match, participants }: { match: Match; participants: P
   const isOpen = open && remaining > 0;
   return (
     <section className="flex flex-col justify-center gap-6 rounded-2xl border border-primary/40 bg-card/70 p-6 text-center lg:p-10">
-      <h1 className="font-display text-6xl leading-none text-primary lg:text-8xl">QUEM VOCÊ PREFERE?</h1>
+      <h1 className="font-display text-6xl leading-none text-primary lg:text-8xl">
+        QUEM VOCÊ PREFERE?
+      </h1>
       <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-4">
         <p className="break-words font-display text-5xl lg:text-7xl">{a ? displayName(a) : "—"}</p>
         <span className="font-display text-5xl text-accent">×</span>
@@ -542,14 +795,24 @@ function X1DirectVoteTv({ match, participants }: { match: Match; participants: P
       </div>
       {isOpen ? (
         <>
-          <p className="font-display text-8xl text-primary" aria-live="polite">{remaining}</p>
-          <p className="text-2xl text-muted-foreground lg:text-3xl">Escaneie o QR Code e vote pelo celular!</p>
+          <p className="font-display text-8xl text-primary" aria-live="polite">
+            {remaining}
+          </p>
+          <p className="text-2xl text-muted-foreground lg:text-3xl">
+            Escaneie o QR Code e vote pelo celular!
+          </p>
         </>
       ) : (
         <>
           <p className="font-display text-5xl lg:text-6xl">Votação encerrada</p>
-          {tally.data && <p className="font-display text-4xl lg:text-5xl">{tally.data.a} × {tally.data.b}</p>}
-          <p className="text-2xl text-muted-foreground lg:text-3xl">Aguardando a decisão do operador…</p>
+          {tally.data && (
+            <p className="font-display text-4xl lg:text-5xl">
+              {tally.data.a} × {tally.data.b}
+            </p>
+          )}
+          <p className="text-2xl text-muted-foreground lg:text-3xl">
+            Aguardando a decisão do operador…
+          </p>
         </>
       )}
     </section>

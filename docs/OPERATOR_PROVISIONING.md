@@ -9,6 +9,8 @@ Não existe endpoint de cadastro nem de autoatribuição. Nunca coloque chaves p
 4. Por um canal administrativo confiável (editor SQL do backend), crie o vínculo:
    `INSERT INTO public.venue_operators (venue_id, user_id, role) VALUES ('<venue_id>', '<user_id>', 'owner');`
 5. Confirme: `SELECT venue_id, user_id, role FROM public.venue_operators WHERE user_id = '<user_id>';`
-6. Entre em `/login` com o usuário e teste uma operação do Campeonato do próprio estabelecimento.
+6. Entre em `/login` com o usuário e teste operações de sessão, pareamento de TV e administração do Campeonato no próprio estabelecimento.
 
 Revogação: `DELETE FROM public.venue_operators WHERE venue_id = '<venue_id>' AND user_id = '<user_id>';` — o acesso cai na próxima requisição.
+
+As gravações administrativas de sessões, cantores, apresentações e partidas exigem esse vínculo, verificado no servidor em cada chamada. Sessões antigas sem `venue_id` permanecem públicas para leitura quando ativas/encerradas, mas não podem ser alteradas pelo painel; associe-as manualmente a um estabelecimento autorizado antes de implantar a migration caso ainda precisem ser gerenciadas.
