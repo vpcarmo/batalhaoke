@@ -335,6 +335,96 @@ export async function drawChampionship(db: Db, championshipId: string) {
   return result.data;
 }
 
+export const GroupStageTieDecisionInput = z.object({
+  championshipId: z.string().uuid(),
+  groupLetter: z.string().trim().transform((value) => value || null).pipe(z.enum(["A", "B", "C", "D"]).nullable()),
+  tiedEntryIds: z.array(z.string().uuid()).min(2),
+  criteriaApplied: z.array(z.enum(["approval", "likes", "dislikes", "manual"])).min(1),
+  chosenOrder: z.array(z.string().uuid()).min(2),
+  rationale: z.string().trim().max(1000).nullable().optional(),
+}).strict().superRefine((value, ctx) => {
+  const setA = new Set(value.tiedEntryIds);
+  const setB = new Set(value.chosenOrder);
+  if (setA.size !== value.tiedEntryIds.length || setB.size !== value.chosenOrder.length) {
+    ctx.addIssue({ code: "custom", path: ["tiedEntryIds"], message: "Cada participante deve aparecer uma única vez." });
+  }
+  if (setA.size !== setB.size || [...setA].some((entryId) => !setB.has(entryId))) {
+    ctx.addIssue({ code: "custom", path: ["chosenOrder"], message: "A ordem escolhida deve conter exatamente os mesmos participantes." });
+  }
+
+  const approvalIndex = value.criteriaApplied.indexOf("approval");
+  const likesIndex = value.criteriaApplied.indexOf("likes");
+  const dislikesIndex = value.criteriaApplied.indexOf("dislikes");
+  if (
+    approvalIndex === -1 ||
+    likesIndex === -1 ||
+    dislikesIndex === -1 ||
+    approvalIndex > likesIndex ||
+    likesIndex > dislikesIndex
+  ) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["criteriaApplied"],
+      message: "A decisão manual deve respeitar aprovação, likes e dislikes na ordem correta antes da escolha final.",
+    });
+  }
+});
+
+const GroupStageAdvanceInput = z.object({ championshipId: z.string().uuid() }).strict();
+
+export async function recordGroupStageTieBreakDecision(db: Db, raw: unknown, userId: string) {
+  const input = GroupStageTieDecisionInput.parse(raw);
+  const championship = await loadChampionship(db, input.championshipId);
+  if (championship.format !== 12 && championship.format !== 16) {
+    fail("A fase de grupos só é válida para os formatos 12 e 16.");
+  }
+  if (!(["group_stage", "group_stage_completed"] as const).includes(championship.status as "group_stage" | "group_stage_completed")) {
+    fail("A decisão manual só pode ser registrada durante a fase de grupos.");
+  }
+  if (input.tiedEntryIds.length !== input.chosenOrder.length) {
+    fail("A ordem escolhida deve conter exatamente os mesmos participantes empatados.");
+  }
+
+  const { data, error } = await (db.rpc as any)("record_group_stage_tie_break", {
+    p_championship_id: input.championshipId,
+    p_group_letter: input.groupLetter ?? null,
+    p_tied_entry_ids: input.tiedEntryIds,
+    p_criteria_applied: input.criteriaApplied,
+    p_decision_order: input.chosenOrder,
+    p_rationale: input.rationale ?? null,
+    p_operator_user_id: userId,
+  });
+  if (error) {
+    console.error("[championship] group-stage tie decision failed", error);
+    fail(error?.message ?? "Não foi possível registrar a decisão manual.");
+  }
+  return data;
+}
+
+export async function finalizeGroupStageAndGenerateQuarterFinals(db: Db, raw: unknown, userId: string) {
+  const input = GroupStageAdvanceInput.parse(raw);
+  const championship = await loadChampionship(db, input.championshipId);
+  if (championship.status !== "group_stage") {
+    fail("A classificação por grupos só pode ser finalizada enquanto o Campeonato estiver em group_stage.");
+  }
+  if (championship.format === 8) {
+    fail("O formato 8 não possui fase de grupos.");
+  }
+  if (championship.format !== 12 && championship.format !== 16) {
+    fail("Formato de Campeonato inválido.");
+  }
+
+  const { data, error } = await (db.rpc as any)("finalize_group_stage_and_generate_quarters", {
+    p_championship_id: input.championshipId,
+    p_operator_user_id: userId,
+  });
+  if (error) {
+    console.error("[championship] group-stage finalization failed", error);
+    fail(error?.message ?? "Não foi possível finalizar a fase de grupos.");
+  }
+  return data;
+}
+
 const DrawEntryColumns = "id, name, stage_name, group_letter, seed_number";
 
 async function loadDrawEntries(db: Db, championshipId: string) {

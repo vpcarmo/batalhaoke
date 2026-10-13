@@ -108,6 +108,23 @@ export const drawChampionshipFn = createServerFn({ method: "POST" })
     return deps.domain.drawChampionship(deps.db, data.championshipId);
   }));
 
+export const recordGroupStageTieBreakDecisionFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => d)
+  .handler(({ data, context }) => run(async (deps) => {
+    const input = deps.domain.GroupStageTieDecisionInput.parse(data);
+    await deps.auth.assertChampionshipOperator(deps.db, context.userId, input.championshipId);
+    return deps.domain.recordGroupStageTieBreakDecision(deps.db, input, context.userId);
+  }));
+
+export const finalizeGroupStageAndGenerateQuarterFinalsFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ championshipId: Id }).strict().parse(d))
+  .handler(({ data, context }) => run(async (deps) => {
+    await deps.auth.assertChampionshipOperator(deps.db, context.userId, data.championshipId);
+    return deps.domain.finalizeGroupStageAndGenerateQuarterFinals(deps.db, data, context.userId);
+  }));
+
 export const getChampionshipDrawFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.object({ championshipId: Id }).strict().parse(d))
