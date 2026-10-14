@@ -199,6 +199,7 @@ function TvPage() {
   );
   const playerRef = useRef<PlaybackPlayerRef>(null);
   const [armed, setArmed] = useState(false);
+  const [manualCompletionId, setManualCompletionId] = useState<string | null>(null);
 
   // Fullscreen state (client-only; SSR renders the button without document access).
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -450,6 +451,11 @@ function TvPage() {
                   {session?.voting_mode === "like_dislike" && <> 👎 {active.dislike_count}</>}
                 </p>
               )}
+              {manualCompletionId === active.id && (
+                <p role="status" className="mt-6 text-xl font-semibold text-accent lg:text-2xl">
+                  Música finalizada. Conclua a apresentação pela tela administrativa do Campeonato.
+                </p>
+              )}
               {isChampionship && championship && (
                 <ChampionshipTvDetails
                   championship={championship}
@@ -466,6 +472,12 @@ function TvPage() {
                 externalId={active.source.external_id}
                 onState={(s) => {
                   if (s !== "ended") return;
+                  // Championship presentations outside the group stage (eliminations) are
+                  // concluded only by the authenticated Championship admin flow.
+                  if (isChampionship && championship?.status !== "group_stage") {
+                    setManualCompletionId(active.id);
+                    return;
+                  }
                   const completion = devSession
                     ? active.match_id
                       ? completeMatchPerformance({ data: { performanceId: active.id } })

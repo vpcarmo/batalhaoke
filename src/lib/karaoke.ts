@@ -42,7 +42,7 @@ export async function getActiveSession(): Promise<Session | null> {
 export async function createSession(
   name: string,
   options: {
-    sessionType?: SessionType;
+    sessionType?: Exclude<SessionType, "championship">;
     votingMode?: VotingMode;
     venueId: string;
     x1VotingMode?: X1VotingMode;

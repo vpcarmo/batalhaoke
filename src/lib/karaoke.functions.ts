@@ -15,7 +15,6 @@ const DeviceToken = z
   .min(48)
   .max(128)
   .regex(/^[a-f0-9]+$/i);
-const SessionType = z.enum(["free", "x1", "championship"]);
 const VotingMode = z.enum(["like_only", "like_dislike"]);
 const X1VotingMode = z.enum(["during_performance", "after_both_performances"]);
 const Playback = z.object({
