@@ -284,9 +284,9 @@ export async function registerChampionshipEntry(db: Db, raw: unknown) {
   const { data, error } = await db.rpc("register_championship_entry", {
     p_championship_id: input.championshipId,
     p_name: input.name,
-    p_stage_name: input.stageName ?? "",
-    p_contact_phone: input.contactPhone ?? "",
-    p_contact_email: input.contactEmail ?? "",
+    p_stage_name: input.stageName ?? null,
+    p_contact_phone: input.contactPhone ?? null,
+    p_contact_email: input.contactEmail ?? null,
     p_songs: input.songs.map((song) => ({
       song_type: song.type,
       song_order: song.order,

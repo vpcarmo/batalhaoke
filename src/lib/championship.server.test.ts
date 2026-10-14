@@ -541,6 +541,36 @@ describe("championship rules", () => {
     ]);
   });
 
+  it("passes absent optional registration fields to the database as null", async () => {
+    const phoneRegistration = makeRegistrationDb();
+    await registerChampionshipEntry(phoneRegistration.db, {
+      championshipId,
+      name: "Cantora",
+      contactPhone: "11 99999-1111",
+      songs: [song("main", 1)],
+    });
+    expect(phoneRegistration.rpcCalls[0]?.args).toMatchObject({
+      p_stage_name: null,
+      p_contact_phone: "11 99999-1111",
+      p_contact_email: null,
+    });
+
+    const emailRegistration = makeRegistrationDb();
+    await registerChampionshipEntry(emailRegistration.db, {
+      championshipId,
+      name: "Cantora",
+      stageName: " ",
+      contactPhone: " ",
+      contactEmail: "cantora@example.com",
+      songs: [song("main", 1)],
+    });
+    expect(emailRegistration.rpcCalls[0]?.args).toMatchObject({
+      p_stage_name: null,
+      p_contact_phone: null,
+      p_contact_email: "cantora@example.com",
+    });
+  });
+
   it("reuses playback source metadata for repeated provider identifiers", async () => {
     const registration = makeRegistrationDb();
     await registerChampionshipEntry(
