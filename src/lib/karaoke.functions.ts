@@ -410,7 +410,8 @@ export const createKaraokeSession = createServerFn({ method: "POST" })
       .object({
         name: z.string().trim().min(1).max(120),
         venueId: Id,
-        sessionType: SessionType.default("free"),
+        // Championship stage sessions are created only by prepareStageSessionFn.
+        sessionType: z.enum(["free", "x1"]).default("free"),
         votingMode: VotingMode.default("like_only"),
         x1VotingMode: X1VotingMode.default("during_performance"),
       })
@@ -604,6 +605,37 @@ export const createKaraokePerformance = createServerFn({ method: "POST" })
     return performance;
   });
 
+export const CHAMPIONSHIP_ADMIN_ONLY_MESSAGE =
+  "Esta apresentação pertence a um confronto do Campeonato e deve ser concluída pela tela administrativa do Campeonato.";
+
+/**
+ * Generic performance paths may never touch championship elimination presentations
+ * (linked via championship_matches.performance_a_id/performance_b_id — performances.match_id is X1-only).
+ * In a championship session they are allowed only during the group stage.
+ */
+async function assertGenericPerformanceAllowed(
+  db: Awaited<ReturnType<typeof loadOperatorDeps>>["db"],
+  performanceId: string,
+  session: { session_type: string; championship_id: string | null },
+) {
+  const { data: linked, error } = await db
+    .from("championship_matches")
+    .select("id")
+    .or(`performance_a_id.eq.${performanceId},performance_b_id.eq.${performanceId}`)
+    .limit(1);
+  if (error) throw new Error("Não foi possível verificar a apresentação.");
+  if (linked && linked.length > 0) throw new Error(CHAMPIONSHIP_ADMIN_ONLY_MESSAGE);
+  if (session.session_type !== "championship") return;
+  if (!session.championship_id) throw new Error(CHAMPIONSHIP_ADMIN_ONLY_MESSAGE);
+  const { data: championship, error: championshipError } = await db
+    .from("championships")
+    .select("status")
+    .eq("id", session.championship_id)
+    .maybeSingle();
+  if (championshipError) throw new Error("Não foi possível verificar a fase do Campeonato.");
+  if (championship?.status !== "group_stage") throw new Error(CHAMPIONSHIP_ADMIN_ONLY_MESSAGE);
+}
+
 export const setKaraokePerformanceStatus = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) =>
@@ -627,6 +659,8 @@ export const setKaraokePerformanceStatus = createServerFn({ method: "POST" })
     const session = await operatorSession(db, context.userId, performance.session_id);
     if (session.status !== "active" || session.session_type === "x1" || performance.match_id)
       throw new Error("Esta apresentação deve ser gerenciada pelo fluxo de disputa.");
+    await assertGenericPerformanceAllowed(db, performance.id, session);
+
 
     if (data.status === "active" && performance.status !== "queued")
       throw new Error("Só apresentações na fila podem ser iniciadas.");
@@ -663,12 +697,13 @@ export const completePerformanceFromTv = createServerFn({ method: "POST" })
       throw new Error("A apresentação ativa não está disponível para esta TV.");
     const { data: session, error: sessionError } = await db
       .from("sessions")
-      .select("venue_id, status")
+      .select("venue_id, status, session_type, championship_id")
       .eq("id", performance.session_id)
       .maybeSingle();
     if (sessionError) throw new Error("Não foi possível verificar a sessão.");
     if (!session?.venue_id || session.status !== "active")
       throw new Error("A sessão não está ativa.");
+    await assertGenericPerformanceAllowed(db, performance.id, session);
     await auth.assertPairedVenueDevice(
       db,
       data.deviceToken,
