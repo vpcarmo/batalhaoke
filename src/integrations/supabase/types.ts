@@ -119,6 +119,104 @@ export type Database = {
           },
         ]
       }
+      championship_group_stage_tie_decisions: {
+        Row: {
+          championship_id: string
+          chosen_order: string[]
+          created_at: string
+          criteria_applied: string[]
+          group_letter: string | null
+          id: string
+          operator_user_id: string
+          rationale: string | null
+          tied_entry_ids: string[]
+          updated_at: string
+        }
+        Insert: {
+          championship_id: string
+          chosen_order: string[]
+          created_at?: string
+          criteria_applied: string[]
+          group_letter?: string | null
+          id?: string
+          operator_user_id: string
+          rationale?: string | null
+          tied_entry_ids: string[]
+          updated_at?: string
+        }
+        Update: {
+          championship_id?: string
+          chosen_order?: string[]
+          created_at?: string
+          criteria_applied?: string[]
+          group_letter?: string | null
+          id?: string
+          operator_user_id?: string
+          rationale?: string | null
+          tied_entry_ids?: string[]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "championship_group_stage_tie_decisions_championship_id_fkey"
+            columns: ["championship_id"]
+            isOneToOne: false
+            referencedRelation: "championships"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      championship_match_resolution_audit: {
+        Row: {
+          created_at: string
+          id: string
+          match_id: string
+          operator_user_id: string
+          original_result: string
+          reason: string
+          votes_a: number
+          votes_b: number
+          winner_entry_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          match_id: string
+          operator_user_id: string
+          original_result: string
+          reason: string
+          votes_a: number
+          votes_b: number
+          winner_entry_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          match_id?: string
+          operator_user_id?: string
+          original_result?: string
+          reason?: string
+          votes_a?: number
+          votes_b?: number
+          winner_entry_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "championship_match_resolution_audit_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: true
+            referencedRelation: "championship_matches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "championship_match_resolution_audit_winner_entry_id_fkey"
+            columns: ["winner_entry_id"]
+            isOneToOne: false
+            referencedRelation: "championship_entries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       championship_match_votes: {
         Row: {
           chosen_entry_id: string
@@ -161,6 +259,58 @@ export type Database = {
             columns: ["voter_session_id"]
             isOneToOne: false
             referencedRelation: "voter_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      championship_match_wo_audit: {
+        Row: {
+          created_at: string
+          id: string
+          match_id: string
+          operator_user_id: string
+          reason: string
+          winner_entry_id: string
+          withdrawn_entry_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          match_id: string
+          operator_user_id: string
+          reason: string
+          winner_entry_id: string
+          withdrawn_entry_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          match_id?: string
+          operator_user_id?: string
+          reason?: string
+          winner_entry_id?: string
+          withdrawn_entry_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "championship_match_wo_audit_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: true
+            referencedRelation: "championship_matches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "championship_match_wo_audit_winner_entry_id_fkey"
+            columns: ["winner_entry_id"]
+            isOneToOne: false
+            referencedRelation: "championship_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "championship_match_wo_audit_withdrawn_entry_id_fkey"
+            columns: ["withdrawn_entry_id"]
+            isOneToOne: false
+            referencedRelation: "championship_entries"
             referencedColumns: ["id"]
           },
         ]
@@ -259,57 +409,6 @@ export type Database = {
           },
         ]
       }
-      championship_match_resolution_audit: {
-        Row: {
-          created_at: string
-          id: string
-          match_id: string
-          operator_user_id: string
-          original_result: string
-          reason: string
-          votes_a: number
-          votes_b: number
-          winner_entry_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          match_id: string
-          operator_user_id: string
-          original_result: string
-          reason: string
-          votes_a: number
-          votes_b: number
-          winner_entry_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          match_id?: string
-          operator_user_id?: string
-          original_result?: string
-          reason?: string
-          votes_a?: number
-          votes_b?: number
-          winner_entry_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "championship_match_resolution_audit_match_id_fkey"
-            columns: ["match_id"]
-            isOneToOne: true
-            referencedRelation: "championship_matches"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "championship_match_resolution_audit_winner_entry_id_fkey"
-            columns: ["winner_entry_id"]
-            isOneToOne: false
-            referencedRelation: "championship_entries"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       championships: {
         Row: {
           created_at: string
@@ -362,53 +461,6 @@ export type Database = {
             columns: ["venue_id"]
             isOneToOne: false
             referencedRelation: "venues"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      championship_group_stage_tie_decisions: {
-        Row: {
-          championship_id: string
-          chosen_order: string[]
-          created_at: string
-          criteria_applied: string[]
-          group_letter: string | null
-          id: string
-          operator_user_id: string
-          rationale: string | null
-          tied_entry_ids: string[]
-          updated_at: string
-        }
-        Insert: {
-          championship_id: string
-          chosen_order: string[]
-          created_at?: string
-          criteria_applied: string[]
-          group_letter?: string | null
-          id?: string
-          operator_user_id: string
-          rationale?: string | null
-          tied_entry_ids: string[]
-          updated_at?: string
-        }
-        Update: {
-          championship_id?: string
-          chosen_order?: string[]
-          created_at?: string
-          criteria_applied?: string[]
-          group_letter?: string | null
-          id?: string
-          operator_user_id?: string
-          rationale?: string | null
-          tied_entry_ids?: string[]
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "championship_group_stage_tie_decisions_championship_id_fkey"
-            columns: ["championship_id"]
-            isOneToOne: false
-            referencedRelation: "championships"
             referencedColumns: ["id"]
           },
         ]
@@ -999,11 +1051,12 @@ export type Database = {
     }
     Functions: {
       advance_championship_elimination: {
-        Args: {
-          p_championship_id: string
-          p_operator_user_id: string
-        }
+        Args: { p_championship_id: string; p_operator_user_id: string }
         Returns: Json
+      }
+      assert_championship_operator: {
+        Args: { p_championship_id: string; p_operator_user_id: string }
+        Returns: string
       }
       cast_championship_match_vote: {
         Args: {
@@ -1013,39 +1066,39 @@ export type Database = {
         }
         Returns: Json
       }
-      close_championship_match_voting: {
+      championship_elimination_bracket_is_valid: {
         Args: {
-          p_match_id: string
-          p_operator_user_id: string
+          p_championship_id: string
+          p_require_final_result?: boolean
+          p_through_stage: string
         }
+        Returns: boolean
+      }
+      championship_match_result_is_valid: {
+        Args: {
+          p_match: Database["public"]["Tables"]["championship_matches"]["Row"]
+        }
+        Returns: boolean
+      }
+      close_championship_match_voting: {
+        Args: { p_match_id: string; p_operator_user_id: string }
         Returns: Json
       }
       complete_championship: {
-        Args: {
-          p_championship_id: string
-          p_operator_user_id: string
-        }
+        Args: { p_championship_id: string; p_operator_user_id: string }
         Returns: Json
       }
       complete_championship_presentation: {
-        Args: {
-          p_match_id: string
-          p_operator_user_id: string
-          p_slot: string
-        }
+        Args: { p_match_id: string; p_operator_user_id: string; p_slot: string }
         Returns: Json
       }
-      draw_championship: {
-        Args: {
-          p_championship_id: string
-        }
+      draw_championship: { Args: { p_championship_id: string }; Returns: Json }
+      finalize_group_stage_and_generate_quarters: {
+        Args: { p_championship_id: string; p_operator_user_id: string }
         Returns: Json
       }
       get_championship_match_score: {
-        Args: {
-          p_match_id: string
-          p_operator_user_id: string
-        }
+        Args: { p_match_id: string; p_operator_user_id: string }
         Returns: Json
       }
       link_championship_entry_participant: {
@@ -1056,20 +1109,12 @@ export type Database = {
         }
         Returns: Json
       }
-      open_championship_match_voting: {
-        Args: {
-          p_match_id: string
-          p_operator_user_id: string
-        }
-        Returns: Json
+      normalize_championship_tie_entry_ids: {
+        Args: { p_entry_ids: string[] }
+        Returns: string[]
       }
-      resolve_championship_match_tie: {
-        Args: {
-          p_match_id: string
-          p_operator_user_id: string
-          p_reason: string
-          p_winner_entry_id: string
-        }
+      open_championship_match_voting: {
+        Args: { p_match_id: string; p_operator_user_id: string }
         Returns: Json
       }
       record_championship_match_wo: {
@@ -1081,14 +1126,35 @@ export type Database = {
         }
         Returns: Json
       }
+      record_group_stage_tie_break: {
+        Args: {
+          p_championship_id: string
+          p_criteria_applied: string[]
+          p_decision_order: string[]
+          p_group_letter: string
+          p_operator_user_id: string
+          p_rationale: string
+          p_tied_entry_ids: string[]
+        }
+        Returns: Json
+      }
       register_championship_entry: {
         Args: {
           p_championship_id: string
-          p_contact_email: string | null
-          p_contact_phone: string | null
+          p_contact_email: string
+          p_contact_phone: string
           p_name: string
           p_songs: Json
-          p_stage_name: string | null
+          p_stage_name: string
+        }
+        Returns: Json
+      }
+      resolve_championship_match_tie: {
+        Args: {
+          p_match_id: string
+          p_operator_user_id: string
+          p_reason: string
+          p_winner_entry_id: string
         }
         Returns: Json
       }
@@ -1102,18 +1168,11 @@ export type Database = {
         Returns: Json
       }
       start_championship_match: {
-        Args: {
-          p_match_id: string
-          p_operator_user_id: string
-        }
+        Args: { p_match_id: string; p_operator_user_id: string }
         Returns: Json
       }
       start_championship_presentation: {
-        Args: {
-          p_match_id: string
-          p_operator_user_id: string
-          p_slot: string
-        }
+        Args: { p_match_id: string; p_operator_user_id: string; p_slot: string }
         Returns: Json
       }
     }
