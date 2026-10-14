@@ -51,6 +51,8 @@ export async function createSession(
   const venueId = options.venueId.trim();
   if (!venueId) throw new Error("Selecione ou crie um estabelecimento antes de iniciar a sessão.");
   const sessionType = options.sessionType ?? "free";
+  if (sessionType === "championship")
+    throw new Error("A sessão de palco do Campeonato é preparada pela tela administrativa do Campeonato.");
   if (sessionType !== "free" && options.votingMode === "like_only") {
     throw new Error("Este formato exige votação com Gostei / Não gostei");
   }

@@ -22,7 +22,7 @@ export const STAGE_PREPARABLE_STATUSES: readonly ChampionshipStatus[] = CHAMPION
 export const STAGE_ACTIVATABLE_STATUSES: readonly ChampionshipStatus[] = ["drawn", "group_stage", "group_stage_completed", "quarter_finals", "semi_finals", "final"];
 
 export class ChampionshipError extends Error {}
-const fail = (message: string): never => { throw new ChampionshipError(message); };
+function fail(message: string): never { throw new ChampionshipError(message); }
 
 export function canEditChampionship(status: string) {
   return EDITABLE_STATUSES.includes(status as ChampionshipStatus);
@@ -284,9 +284,9 @@ export async function registerChampionshipEntry(db: Db, raw: unknown) {
   const { data, error } = await db.rpc("register_championship_entry", {
     p_championship_id: input.championshipId,
     p_name: input.name,
-    p_stage_name: input.stageName ?? null,
-    p_contact_phone: input.contactPhone ?? null,
-    p_contact_email: input.contactEmail ?? null,
+    p_stage_name: input.stageName ?? "",
+    p_contact_phone: input.contactPhone ?? "",
+    p_contact_email: input.contactEmail ?? "",
     p_songs: input.songs.map((song) => ({
       song_type: song.type,
       song_order: song.order,
