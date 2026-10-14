@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
@@ -46,6 +46,13 @@ function toIso(value: string) {
 }
 
 function ChampionshipsPage() {
+  const hasDetailChild = useRouterState({
+    select: (state) => state.matches.some((match) => match.routeId === "/campeonatos/$id"),
+  });
+  return hasDetailChild ? <Outlet /> : <ChampionshipsIndexPage />;
+}
+
+function ChampionshipsIndexPage() {
   const queryClient = useQueryClient();
   const venues = useQuery({ queryKey: ["operator-venues"], queryFn: listOperatorVenues, retry: 1 });
   const listFn = useServerFn(listChampionshipsFn);

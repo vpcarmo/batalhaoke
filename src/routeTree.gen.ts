@@ -11,9 +11,10 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as CampeonatosRouteImport } from './routes/campeonatos'
-import { Route as CampeonatosIdRouteImport } from './routes/campeonatos.$id'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as TvRouteImport } from './routes/tv'
+import { Route as CampeonatosIdRouteImport } from './routes/campeonatos.$id'
+import { Route as InscreverIdRouteImport } from './routes/inscrever.$id'
 import { Route as QrCodeRouteImport } from './routes/qr.$code'
 import { Route as SessaoIdRouteImport } from './routes/sessao.$id'
 import { Route as VotarCodeRouteImport } from './routes/votar.$code'
@@ -28,11 +29,6 @@ const CampeonatosRoute = CampeonatosRouteImport.update({
   path: '/campeonatos',
   getParentRoute: () => rootRouteImport,
 } as any)
-const CampeonatosIdRoute = CampeonatosIdRouteImport.update({
-  id: '/campeonatos/$id',
-  path: '/campeonatos/$id',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
@@ -41,6 +37,16 @@ const LoginRoute = LoginRouteImport.update({
 const TvRoute = TvRouteImport.update({
   id: '/tv',
   path: '/tv',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CampeonatosIdRoute = CampeonatosIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => CampeonatosRoute,
+} as any)
+const InscreverIdRoute = InscreverIdRouteImport.update({
+  id: '/inscrever/$id',
+  path: '/inscrever/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
 const QrCodeRoute = QrCodeRouteImport.update({
@@ -61,20 +67,22 @@ const VotarCodeRoute = VotarCodeRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/campeonatos': typeof CampeonatosRoute
-  '/campeonatos/$id': typeof CampeonatosIdRoute
+  '/campeonatos': typeof CampeonatosRouteWithChildren
   '/login': typeof LoginRoute
   '/tv': typeof TvRoute
+  '/campeonatos/$id': typeof CampeonatosIdRoute
+  '/inscrever/$id': typeof InscreverIdRoute
   '/qr/$code': typeof QrCodeRoute
   '/sessao/$id': typeof SessaoIdRoute
   '/votar/$code': typeof VotarCodeRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/campeonatos': typeof CampeonatosRoute
-  '/campeonatos/$id': typeof CampeonatosIdRoute
+  '/campeonatos': typeof CampeonatosRouteWithChildren
   '/login': typeof LoginRoute
   '/tv': typeof TvRoute
+  '/campeonatos/$id': typeof CampeonatosIdRoute
+  '/inscrever/$id': typeof InscreverIdRoute
   '/qr/$code': typeof QrCodeRoute
   '/sessao/$id': typeof SessaoIdRoute
   '/votar/$code': typeof VotarCodeRoute
@@ -82,10 +90,11 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/campeonatos': typeof CampeonatosRoute
-  '/campeonatos/$id': typeof CampeonatosIdRoute
+  '/campeonatos': typeof CampeonatosRouteWithChildren
   '/login': typeof LoginRoute
   '/tv': typeof TvRoute
+  '/campeonatos/$id': typeof CampeonatosIdRoute
+  '/inscrever/$id': typeof InscreverIdRoute
   '/qr/$code': typeof QrCodeRoute
   '/sessao/$id': typeof SessaoIdRoute
   '/votar/$code': typeof VotarCodeRoute
@@ -93,14 +102,23 @@ export interface FileRoutesById {
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    '/' | '/campeonatos' | '/campeonatos/$id' | '/login' | '/tv' | '/qr/$code' | '/sessao/$id' | '/votar/$code'
+    | '/'
+    | '/campeonatos'
+    | '/login'
+    | '/tv'
+    | '/campeonatos/$id'
+    | '/inscrever/$id'
+    | '/qr/$code'
+    | '/sessao/$id'
+    | '/votar/$code'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/campeonatos'
-    | '/campeonatos/$id'
     | '/login'
     | '/tv'
+    | '/campeonatos/$id'
+    | '/inscrever/$id'
     | '/qr/$code'
     | '/sessao/$id'
     | '/votar/$code'
@@ -108,9 +126,10 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/campeonatos'
-    | '/campeonatos/$id'
     | '/login'
     | '/tv'
+    | '/campeonatos/$id'
+    | '/inscrever/$id'
     | '/qr/$code'
     | '/sessao/$id'
     | '/votar/$code'
@@ -118,10 +137,10 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  CampeonatosRoute: typeof CampeonatosRoute
-  CampeonatosIdRoute: typeof CampeonatosIdRoute
+  CampeonatosRoute: typeof CampeonatosRouteWithChildren
   LoginRoute: typeof LoginRoute
   TvRoute: typeof TvRoute
+  InscreverIdRoute: typeof InscreverIdRoute
   QrCodeRoute: typeof QrCodeRoute
   SessaoIdRoute: typeof SessaoIdRoute
   VotarCodeRoute: typeof VotarCodeRoute
@@ -136,13 +155,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/login': {
-      id: '/login'
-      path: '/login'
-      fullPath: '/login'
-      preLoaderRoute: typeof LoginRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/campeonatos': {
       id: '/campeonatos'
       path: '/campeonatos'
@@ -150,11 +162,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CampeonatosRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/campeonatos/$id': {
-      id: '/campeonatos/$id'
-      path: '/campeonatos/$id'
-      fullPath: '/campeonatos/$id'
-      preLoaderRoute: typeof CampeonatosIdRouteImport
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/tv': {
@@ -162,6 +174,20 @@ declare module '@tanstack/react-router' {
       path: '/tv'
       fullPath: '/tv'
       preLoaderRoute: typeof TvRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/campeonatos/$id': {
+      id: '/campeonatos/$id'
+      path: '/$id'
+      fullPath: '/campeonatos/$id'
+      preLoaderRoute: typeof CampeonatosIdRouteImport
+      parentRoute: typeof CampeonatosRoute
+    }
+    '/inscrever/$id': {
+      id: '/inscrever/$id'
+      path: '/inscrever/$id'
+      fullPath: '/inscrever/$id'
+      preLoaderRoute: typeof InscreverIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/qr/$code': {
@@ -188,12 +214,24 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface CampeonatosRouteChildren {
+  CampeonatosIdRoute: typeof CampeonatosIdRoute
+}
+
+const CampeonatosRouteChildren: CampeonatosRouteChildren = {
+  CampeonatosIdRoute: CampeonatosIdRoute,
+}
+
+const CampeonatosRouteWithChildren = CampeonatosRoute._addFileChildren(
+  CampeonatosRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  CampeonatosRoute: CampeonatosRoute,
-  CampeonatosIdRoute: CampeonatosIdRoute,
+  CampeonatosRoute: CampeonatosRouteWithChildren,
   LoginRoute: LoginRoute,
   TvRoute: TvRoute,
+  InscreverIdRoute: InscreverIdRoute,
   QrCodeRoute: QrCodeRoute,
   SessaoIdRoute: SessaoIdRoute,
   VotarCodeRoute: VotarCodeRoute,

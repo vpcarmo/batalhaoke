@@ -133,6 +133,10 @@ function makeRegistrationDb(
             id: sourceId,
             provider: item["provider"],
             external_id: item["external_id"],
+            title: item["title"],
+            channel_name: item["channel_name"],
+            thumbnail_url: item["thumbnail_url"],
+            duration: item["duration"],
           });
         songs.push({
           entry_id: id,
@@ -272,7 +276,7 @@ const validEntry = (overrides: Record<string, unknown> = {}) => ({
   stageName: "Voz",
   contactPhone: "11 99999-1111",
   contactEmail: "cantora@example.com",
-  songs: [],
+  songs: [song("main", 1)],
   ...overrides,
 });
 
@@ -512,19 +516,27 @@ describe("championship rules", () => {
     expect(registration.songs).toHaveLength(2);
     expect(registration.sources).toHaveLength(2);
     expect(JSON.stringify(result)).not.toContain("cantora@example.com");
-    expect(registration.sources[0]).not.toHaveProperty("title");
+    expect(registration.sources[0]).toHaveProperty("title", "Track YT_m1abcdef");
     expect(registration.rpcCalls[0]?.args["p_songs"]).toEqual([
       {
         song_type: "main",
         song_order: 1,
         provider: DEFAULT_PROVIDER,
         external_id: "YT_m1abcdef",
+        title: "Track YT_m1abcdef",
+        channel_name: null,
+        thumbnail_url: null,
+        duration: null,
       },
       {
         song_type: "reserve",
         song_order: 1,
         provider: DEFAULT_PROVIDER,
         external_id: "YT_r1abcdef",
+        title: "Track YT_r1abcdef",
+        channel_name: null,
+        thumbnail_url: null,
+        duration: null,
       },
     ]);
   });
@@ -588,6 +600,12 @@ describe("championship rules", () => {
         validEntry({ contactEmail: "not-an-email", contactPhone: null }),
       ),
     ).rejects.toThrow("e-mail válido");
+  });
+
+  it("requires at least one main song", async () => {
+    await expect(
+      registerChampionshipEntry(makeRegistrationDb().db, validEntry({ songs: [] })),
+    ).rejects.toThrow("Escolha ao menos uma música principal");
   });
 
   it("enforces the four-main, two-reserve limit and unique valid slots", async () => {

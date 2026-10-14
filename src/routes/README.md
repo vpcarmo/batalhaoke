@@ -10,6 +10,7 @@ is `src/routes/__root.tsx`.
 | File | URL |
 | --- | --- |
 | `index.tsx` | `/` |
+| `inscrever.$id.tsx` | `/inscrever/:id` |
 | `about.tsx` | `/about` |
 | `users/index.tsx` | `/users` |
 | `users/$id.tsx` | `/users/:id` (dynamic — bare `$`, no curly braces) |

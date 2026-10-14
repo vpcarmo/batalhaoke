@@ -997,6 +997,14 @@ export type Database = {
         }
         Returns: Json
       }
+      link_championship_entry_participant: {
+        Args: {
+          p_entry_id: string
+          p_operator_user_id: string
+          p_participant_id: string
+        }
+        Returns: Json
+      }
       open_championship_match_voting: {
         Args: {
           p_match_id: string

@@ -53,7 +53,7 @@ const EntrySong = z
     externalId: z.string().trim().min(1).max(200),
     title: z.string().trim().min(1).max(500),
     channelName: z.string().trim().max(200).nullable().optional(),
-    thumbnailUrl: z.string().url().max(2048).nullable().optional(),
+    thumbnailUrl: z.string().url().max(2048).refine((value) => value.startsWith("https://")).nullable().optional(),
     duration: z.string().trim().max(32).nullable().optional(),
   })
   .strict()
@@ -89,6 +89,13 @@ const EntryInput = z
   })
   .strict()
   .superRefine((input, context) => {
+    if (!input.songs.some((song) => song.type === "main")) {
+      context.addIssue({
+        code: "custom",
+        path: ["songs"],
+        message: "Escolha ao menos uma música principal.",
+      });
+    }
     if (!input.contactPhone && !input.contactEmail) {
       context.addIssue({
         code: "custom",
@@ -285,6 +292,10 @@ export async function registerChampionshipEntry(db: Db, raw: unknown) {
       song_order: song.order,
       provider: song.provider,
       external_id: song.externalId,
+      title: song.title,
+      channel_name: song.channelName ?? null,
+      thumbnail_url: song.thumbnailUrl ?? null,
+      duration: song.duration ?? null,
     })),
   });
   if (error) registrationRpcError(error);
@@ -743,6 +754,16 @@ export async function getChampionshipEliminationBoard(db: Db, championshipId: st
     .order("match_number");
   if (error) fail("Não foi possível carregar os confrontos eliminatórios.");
   const stageSession = await findStageSession(db, id);
+  let participants: { id: string; name: string; stage_name: string | null; participant_number: number }[] = [];
+  if (stageSession) {
+    const { data, error: participantsError } = await db
+      .from("participants")
+      .select("id, name, stage_name, participant_number")
+      .eq("session_id", stageSession.id)
+      .order("participant_number", { ascending: true });
+    if (participantsError) fail("Não foi possível carregar os cantores da sessão de palco.");
+    participants = data ?? [];
+  }
   let performances: { id: string; participant_id: string; status: string }[] = [];
   if (stageSession) {
     const { data, error: performanceError } = await db
@@ -753,7 +774,7 @@ export async function getChampionshipEliminationBoard(db: Db, championshipId: st
     if (performanceError) fail("Não foi possível carregar as apresentações da sessão de palco.");
     performances = data ?? [];
   }
-  return { championship, stageSession, matches: matches ?? [], performances };
+  return { championship, stageSession, participants, matches: matches ?? [], performances };
 }
 
 async function countConfirmedEntries(db: Db, championshipId: string) {
@@ -868,7 +889,7 @@ export async function startChampionshipGroupStage(db: Db, raw: unknown) {
 
   const { data: entries, error: entriesError } = await db
     .from("championship_entries")
-    .select("id, group_letter, seed_number")
+    .select("id, group_letter, seed_number, participant_id")
     .eq("championship_id", championship.id)
     .eq("status", "confirmed");
   if (entriesError) fail("Não foi possível validar o sorteio do Campeonato.");
@@ -881,16 +902,31 @@ export async function startChampionshipGroupStage(db: Db, raw: unknown) {
       (entry) =>
         !!entry.group_letter &&
         validGroups.has(entry.group_letter) &&
+        !!entry.participant_id &&
         entry.seed_number !== null &&
         entry.seed_number >= 1 &&
         entry.seed_number <= championship.format,
     ) &&
     new Set(confirmedEntries.map((entry) => entry.seed_number)).size === championship.format &&
+    new Set(confirmedEntries.map((entry) => entry.participant_id)).size === championship.format &&
     [...validGroups].every(
       (group) => confirmedEntries.filter((entry) => entry.group_letter === group).length === 4,
     );
   if (!validDraw)
     fail("O sorteio está incompleto ou inválido. Verifique os grupos e as posições antes de continuar.");
+
+  const participantIds = confirmedEntries.flatMap((entry) =>
+    entry.participant_id ? [entry.participant_id] : [],
+  );
+  const { count: linkedParticipants, error: participantError } = await db
+    .from("participants")
+    .select("id", { count: "exact", head: true })
+    .eq("session_id", stageSession.id)
+    .in("id", participantIds);
+  if (participantError) fail("Não foi possível verificar os cantores da sessão de palco.");
+  if (linkedParticipants !== championship.format) {
+    fail("Associe cada inscrição confirmada a um cantor da sessão de palco antes de iniciar os grupos.");
+  }
 
   const { data, error } = await db
     .from("championships")
@@ -984,6 +1020,21 @@ const MatchVoteInput = z.object({
 
 function championshipRpcError(error: { message?: string } | null, fallback: string) {
   if (error) fail(error.message || fallback);
+}
+
+export async function linkChampionshipEntryParticipant(db: Db, raw: unknown, operatorUserId: string) {
+  const input = z.object({
+    championshipId: z.string().uuid(),
+    entryId: z.string().uuid(),
+    participantId: z.string().uuid(),
+  }).strict().parse(raw);
+  const { data, error } = await db.rpc("link_championship_entry_participant", {
+    p_entry_id: input.entryId,
+    p_participant_id: input.participantId,
+    p_operator_user_id: operatorUserId,
+  });
+  championshipRpcError(error, "Não foi possível associar o cantor à inscrição.");
+  return data;
 }
 
 export async function getChampionshipMatchChampionshipId(db: Db, rawMatchId: unknown) {

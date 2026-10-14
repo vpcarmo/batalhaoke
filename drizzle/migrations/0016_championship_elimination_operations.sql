@@ -44,6 +44,92 @@ BEGIN
 END;
 $function$;
 
+CREATE OR REPLACE FUNCTION public.link_championship_entry_participant(
+  p_entry_id uuid,
+  p_participant_id uuid,
+  p_operator_user_id uuid
+)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = pg_catalog, public
+AS $function$
+DECLARE
+  championship_id uuid;
+  championship_row public.championships%ROWTYPE;
+  entry_row public.championship_entries%ROWTYPE;
+  stage_session_id uuid;
+  participant_session_id uuid;
+BEGIN
+  SELECT e.championship_id
+    INTO championship_id
+    FROM public.championship_entries AS e
+   WHERE e.id = p_entry_id;
+  IF championship_id IS NULL THEN
+    RAISE EXCEPTION 'Inscrição não encontrada.' USING ERRCODE = 'P0002';
+  END IF;
+
+  SELECT c.*
+    INTO championship_row
+    FROM public.championships AS c
+   WHERE c.id = championship_id
+   FOR UPDATE;
+  PERFORM public.assert_championship_operator(championship_row.id, p_operator_user_id);
+  IF championship_row.status <> 'drawn' THEN
+    RAISE EXCEPTION 'Os cantores só podem ser associados antes do encerramento da fase de grupos.';
+  END IF;
+
+  SELECT e.*
+    INTO entry_row
+    FROM public.championship_entries AS e
+   WHERE e.id = p_entry_id
+     AND e.championship_id = championship_row.id
+   FOR UPDATE;
+  IF entry_row.status <> 'confirmed' THEN
+    RAISE EXCEPTION 'Somente inscrições confirmadas podem ser associadas a um cantor.';
+  END IF;
+  IF entry_row.participant_id IS NOT NULL THEN
+    IF entry_row.participant_id = p_participant_id THEN
+      RETURN pg_catalog.jsonb_build_object(
+        'entry_id', entry_row.id,
+        'participant_id', entry_row.participant_id
+      );
+    END IF;
+    RAISE EXCEPTION 'Esta inscrição já está associada a outro cantor.';
+  END IF;
+
+  SELECT s.id
+    INTO stage_session_id
+    FROM public.sessions AS s
+   WHERE s.championship_id = championship_row.id
+     AND s.session_type = 'championship'
+     AND s.status IN ('draft', 'active')
+   FOR SHARE;
+  IF stage_session_id IS NULL THEN
+    RAISE EXCEPTION 'Prepare uma sessão de palco disponível antes de associar cantores.';
+  END IF;
+
+  SELECT p.session_id
+    INTO participant_session_id
+    FROM public.participants AS p
+   WHERE p.id = p_participant_id
+   FOR SHARE;
+  IF participant_session_id IS DISTINCT FROM stage_session_id THEN
+    RAISE EXCEPTION 'O cantor precisa pertencer à sessão de palco deste Campeonato.';
+  END IF;
+
+  UPDATE public.championship_entries AS e
+     SET participant_id = p_participant_id
+   WHERE e.id = entry_row.id
+     AND e.participant_id IS NULL;
+
+  RETURN pg_catalog.jsonb_build_object(
+    'entry_id', entry_row.id,
+    'participant_id', p_participant_id
+  );
+END;
+$function$;
+
 CREATE OR REPLACE FUNCTION public.guard_championship_match_lifecycle()
 RETURNS trigger
 LANGUAGE plpgsql
@@ -318,6 +404,16 @@ BEGIN
        OR (match_row.stage = 'final' AND championship_row.status = 'final')
      ) THEN
     RAISE EXCEPTION 'O confronto não está agendado na fase atual do Campeonato.';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1
+      FROM public.championship_matches AS other_match
+     WHERE other_match.championship_id = championship_row.id
+       AND other_match.id <> match_row.id
+       AND other_match.status = 'in_progress'
+  ) THEN
+    RAISE EXCEPTION 'Conclua ou registre o WO do confronto em andamento antes de iniciar outro.';
   END IF;
 
   SELECT s.* INTO session_row
@@ -1024,6 +1120,8 @@ END;
 $function$;
 
 REVOKE ALL ON FUNCTION public.assert_championship_operator(uuid, uuid) FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.link_championship_entry_participant(uuid, uuid, uuid) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.link_championship_entry_participant(uuid, uuid, uuid) TO service_role;
 REVOKE ALL ON FUNCTION public.guard_championship_match_lifecycle() FROM PUBLIC, anon, authenticated;
 REVOKE ALL ON FUNCTION public.guard_championship_completion() FROM PUBLIC, anon, authenticated;
 REVOKE ALL ON FUNCTION public.set_championship_match_performances(uuid, uuid, uuid, uuid) FROM PUBLIC, anon, authenticated;

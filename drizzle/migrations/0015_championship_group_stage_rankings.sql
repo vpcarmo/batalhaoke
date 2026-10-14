@@ -23,9 +23,29 @@ CREATE POLICY championship_group_stage_tie_decisions_service_only
   WITH CHECK (true);
 CREATE INDEX championship_group_stage_tie_decisions_champ_idx
   ON public.championship_group_stage_tie_decisions(championship_id, group_letter);
+CREATE UNIQUE INDEX championship_group_stage_tie_decisions_unique
+  ON public.championship_group_stage_tie_decisions(
+    championship_id,
+    (COALESCE(group_letter, '')),
+    tied_entry_ids
+  );
 CREATE TRIGGER t_championship_group_stage_tie_decisions
   BEFORE UPDATE ON public.championship_group_stage_tie_decisions
   FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
+
+CREATE OR REPLACE FUNCTION public.prevent_championship_tie_decision_changes()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = pg_catalog, public
+AS $function$
+BEGIN
+  RAISE EXCEPTION 'Uma decisão de desempate registrada não pode ser alterada ou removida.';
+END;
+$function$;
+CREATE TRIGGER championship_group_stage_tie_decisions_immutable
+  BEFORE UPDATE OR DELETE ON public.championship_group_stage_tie_decisions
+  FOR EACH ROW EXECUTE FUNCTION public.prevent_championship_tie_decision_changes();
 
 CREATE OR REPLACE FUNCTION public.record_group_stage_tie_break(
   p_championship_id uuid,
@@ -46,6 +66,7 @@ DECLARE
   tied_set uuid[];
   chosen_set uuid[];
   entry_count integer;
+  existing_decision public.championship_group_stage_tie_decisions%ROWTYPE;
 BEGIN
   SELECT *
     INTO championship_row
@@ -100,6 +121,11 @@ BEGIN
     INTO chosen_set
     FROM unnest(p_decision_order) AS item;
 
+  IF cardinality(tied_set) <> cardinality(p_tied_entry_ids)
+     OR cardinality(chosen_set) <> cardinality(p_decision_order) THEN
+    RAISE EXCEPTION 'Cada participante deve aparecer uma única vez na decisão.' USING ERRCODE = 'P0001';
+  END IF;
+
   IF tied_set <> chosen_set THEN
     RAISE EXCEPTION 'A ordem escolhida deve conter exatamente os mesmos participantes empatados.' USING ERRCODE = 'P0001';
   END IF;
@@ -117,6 +143,28 @@ BEGIN
     RAISE EXCEPTION 'Os participantes informados não pertencem ao mesmo grupo ou ao conjunto elegível.' USING ERRCODE = 'P0001';
   END IF;
 
+  SELECT d.*
+    INTO existing_decision
+    FROM public.championship_group_stage_tie_decisions AS d
+   WHERE d.championship_id = p_championship_id
+     AND d.group_letter IS NOT DISTINCT FROM p_group_letter
+     AND d.tied_entry_ids = tied_set
+   FOR UPDATE;
+  IF FOUND THEN
+    IF existing_decision.chosen_order IS DISTINCT FROM p_decision_order THEN
+      RAISE EXCEPTION 'Este desempate já foi decidido e não pode ser alterado.' USING ERRCODE = 'P0001';
+    END IF;
+    RETURN pg_catalog.jsonb_build_object(
+      'championship_id', existing_decision.championship_id,
+      'group_letter', existing_decision.group_letter,
+      'tied_entry_ids', to_jsonb(existing_decision.tied_entry_ids),
+      'criteria_applied', to_jsonb(existing_decision.criteria_applied),
+      'chosen_order', to_jsonb(existing_decision.chosen_order),
+      'operator_user_id', existing_decision.operator_user_id,
+      'rationale', existing_decision.rationale
+    );
+  END IF;
+
   INSERT INTO public.championship_group_stage_tie_decisions (
     championship_id,
     group_letter,
@@ -129,7 +177,7 @@ BEGIN
   VALUES (
     p_championship_id,
     p_group_letter,
-    p_tied_entry_ids,
+    tied_set,
     p_criteria_applied,
     p_decision_order,
     p_operator_user_id,
@@ -139,7 +187,7 @@ BEGIN
   RETURN jsonb_build_object(
     'championship_id', p_championship_id,
     'group_letter', p_group_letter,
-    'tied_entry_ids', to_jsonb(p_tied_entry_ids),
+    'tied_entry_ids', to_jsonb(tied_set),
     'criteria_applied', to_jsonb(p_criteria_applied),
     'chosen_order', to_jsonb(p_decision_order),
     'operator_user_id', p_operator_user_id,
@@ -604,3 +652,4 @@ REVOKE ALL ON FUNCTION public.record_group_stage_tie_break(uuid, text, uuid[], t
 GRANT EXECUTE ON FUNCTION public.record_group_stage_tie_break(uuid, text, uuid[], text[], uuid[], text, uuid) TO service_role;
 REVOKE ALL ON FUNCTION public.finalize_group_stage_and_generate_quarters(uuid, uuid) FROM PUBLIC, anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.finalize_group_stage_and_generate_quarters(uuid, uuid) TO service_role;
+REVOKE ALL ON FUNCTION public.prevent_championship_tie_decision_changes() FROM PUBLIC, anon, authenticated;

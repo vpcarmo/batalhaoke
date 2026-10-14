@@ -25,6 +25,7 @@ import {
   getChampionshipScheduleFn,
   getChampionshipStandingsFn,
   listChampionshipEntriesFn,
+  linkChampionshipEntryParticipantFn,
   openChampionshipMatchVotingFn,
   openChampionshipRegistrationFn,
   prepareStageSessionFn,
@@ -96,6 +97,7 @@ function ChampionshipAdminPage() {
   const standingsFn = useServerFn(getChampionshipStandingsFn);
   const boardFn = useServerFn(getChampionshipEliminationBoardFn);
   const scoreFn = useServerFn(getChampionshipMatchScoreFn);
+  const linkParticipantFn = useServerFn(linkChampionshipEntryParticipantFn);
   const updateFn = useServerFn(updateChampionshipFn);
   const openRegistrationFn = useServerFn(openChampionshipRegistrationFn);
   const closeRegistrationFn = useServerFn(closeChampionshipRegistrationFn);
@@ -128,6 +130,7 @@ function ChampionshipAdminPage() {
   const [tieOrders, setTieOrders] = useState<Record<string, string[]>>({});
   const [tieRationales, setTieRationales] = useState<Record<string, string>>({});
   const [performanceChoices, setPerformanceChoices] = useState<Record<string, { a: string; b: string }>>({});
+  const [participantChoices, setParticipantChoices] = useState<Record<string, string>>({});
   const [woChoices, setWoChoices] = useState<Record<string, { withdrawnId: string; reason: string }>>({});
 
   const championship = useQuery({
@@ -215,6 +218,9 @@ function ChampionshipAdminPage() {
   const waitlisted = allEntries.filter((entry) => entry.status === "waitlist");
   const occupied = confirmed.length;
   const available = Math.max((event?.format ?? 0) - occupied, 0);
+  const linkedParticipants = new Set(confirmed.flatMap((entry) => entry.participant_id ? [entry.participant_id] : []));
+  const participantsReady = confirmed.length === event?.format && linkedParticipants.size === event?.format;
+  const canLinkParticipants = !!championship.data.stageSession && event?.status === "drawn";
 
   async function refreshData(message?: string) {
     await Promise.all([
@@ -324,14 +330,29 @@ function ChampionshipAdminPage() {
                 "Sorteio realizado pelo servidor.",
               )}>Executar sorteio</Button>
             )}
+            {event.status === "registration_open" && (
+              <a
+                href={`/inscrever/${id}`}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex h-10 items-center justify-center rounded-md border border-input bg-background px-4 text-sm font-medium transition-colors hover:bg-accent"
+              >
+                Abrir inscrição pública
+              </a>
+            )}
             {event.status === "drawn" && event.format !== 8 && (
-              <Button disabled={busy} onClick={() => void act(
+              <Button disabled={busy || !participantsReady} onClick={() => void act(
                 () => startGroupStageFn({ data: { championshipId: id } }),
                 "Fase de grupos iniciada.",
               )}>Iniciar fase de grupos</Button>
             )}
           </div>
         </div>
+        {event.status === "drawn" && event.format !== 8 && !participantsReady && (
+          <p className="mt-3 text-sm text-amber-700">
+            Prepare a sessão de palco e associe cada inscrição confirmada a um cantor antes de iniciar a fase de grupos.
+          </p>
+        )}
         {notice && <p role="status" className="mt-4 rounded-lg bg-success/10 p-3 text-sm text-success">{notice}</p>}
         {error && <p role="alert" className="mt-4 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">{error}</p>}
       </section>
@@ -358,7 +379,21 @@ function ChampionshipAdminPage() {
         {entries.isLoading && <p className="mt-4 text-sm text-muted-foreground">Carregando inscrições…</p>}
         {entries.isError && <p role="alert" className="mt-4 text-sm text-destructive">{(entries.error as Error).message}</p>}
         <div className="mt-4 flex flex-col gap-5">
-          <EntryGroup title="Inscritos confirmados" entries={confirmed} />
+          <EntryGroup
+            title="Inscritos confirmados"
+            entries={confirmed}
+            participants={board.data?.participants ?? []}
+            linkable={canLinkParticipants}
+            participantChoices={participantChoices}
+            busy={busy}
+            onParticipantChoice={(entryId, participantId) =>
+              setParticipantChoices((current) => ({ ...current, [entryId]: participantId }))
+            }
+            onLink={(entryId, participantId) => void act(
+              () => linkParticipantFn({ data: { championshipId: id, entryId, participantId } }),
+              "Cantor associado à inscrição.",
+            )}
+          />
           <EntryGroup title="Lista de espera" entries={waitlisted} />
           {allEntries.filter((entry) => !["confirmed", "waitlist"].includes(entry.status)).length > 0 && (
             <EntryGroup title="Outros estados" entries={allEntries.filter((entry) => !["confirmed", "waitlist"].includes(entry.status))} />
@@ -712,7 +747,32 @@ function Detail({ label, value, wide = false }: { label: string; value: string; 
   return <div className={wide ? "sm:col-span-2" : ""}><dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{label}</dt><dd className="mt-1 whitespace-pre-wrap text-sm">{value}</dd></div>;
 }
 
-function EntryGroup({ title, entries }: { title: string; entries: AdminEntry[] }) {
+type StageParticipant = {
+  id: string;
+  name: string;
+  stage_name: string | null;
+  participant_number: number;
+};
+
+function EntryGroup({
+  title,
+  entries,
+  participants = [],
+  linkable = false,
+  participantChoices = {},
+  busy = false,
+  onParticipantChoice,
+  onLink,
+}: {
+  title: string;
+  entries: AdminEntry[];
+  participants?: StageParticipant[];
+  linkable?: boolean;
+  participantChoices?: Record<string, string>;
+  busy?: boolean;
+  onParticipantChoice?: (entryId: string, participantId: string) => void;
+  onLink?: (entryId: string, participantId: string) => void;
+}) {
   return (
     <div>
       <h3 className="font-semibold">{title} <span className="text-sm font-normal text-muted-foreground">({entries.length})</span></h3>
@@ -741,6 +801,52 @@ function EntryGroup({ title, entries }: { title: string; entries: AdminEntry[] }
                   );
                 })}
               </div>
+              {entry.status === "confirmed" && (linkable || entry.participant_id) && (
+                <div className="mt-3 border-t pt-3">
+                  <p className="text-xs font-semibold">Cantor da sessão de palco</p>
+                  {linkable ? (
+                    <div className="mt-2 flex flex-col gap-2 sm:flex-row">
+                      <select
+                        aria-label={`Cantor da sessão para ${entry.stage_name || entry.name}`}
+                        className="h-10 min-w-0 flex-1 rounded-md border border-input bg-background px-2 text-sm"
+                        value={participantChoices[entry.id] ?? entry.participant_id ?? ""}
+                        onChange={(event) => onParticipantChoice?.(entry.id, event.target.value)}
+                      >
+                        <option value="">Selecionar cantor</option>
+                        {participants
+                          .filter((participant) =>
+                            participant.id === entry.participant_id ||
+                            !entries.some((candidate) =>
+                              candidate.id !== entry.id && candidate.participant_id === participant.id
+                            )
+                          )
+                          .map((participant) => (
+                            <option key={participant.id} value={participant.id}>
+                              {participant.participant_number}. {participant.stage_name || participant.name}
+                            </option>
+                          ))}
+                      </select>
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        disabled={busy || !participantChoices[entry.id] || !!entry.participant_id}
+                        onClick={() => {
+                          const participantId = participantChoices[entry.id];
+                          if (participantId) onLink?.(entry.id, participantId);
+                        }}
+                      >
+                        Associar cantor
+                      </Button>
+                    </div>
+                  ) : (
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      {participants.find((participant) => participant.id === entry.participant_id)?.stage_name ||
+                        participants.find((participant) => participant.id === entry.participant_id)?.name ||
+                        "Associação registrada"}
+                    </p>
+                  )}
+                </div>
+              )}
             </article>
           ))}
         </div>

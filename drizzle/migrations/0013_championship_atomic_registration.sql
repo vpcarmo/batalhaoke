@@ -21,6 +21,10 @@ DECLARE
   song_order numeric;
   song_provider text;
   song_external_id text;
+  song_title text;
+  song_channel_name text;
+  song_thumbnail_url text;
+  song_duration text;
   source_id uuid;
   main_count integer := 0;
   reserve_count integer := 0;
@@ -92,15 +96,23 @@ BEGIN
       RAISE EXCEPTION 'Dados de música inválidos.' USING ERRCODE = '22023';
     END IF;
 
-    IF pg_catalog.jsonb_object_length(song) <> 4
+    IF pg_catalog.jsonb_object_length(song) <> 8
        OR NOT (song ? 'song_type')
        OR NOT (song ? 'song_order')
        OR NOT (song ? 'provider')
        OR NOT (song ? 'external_id')
+       OR NOT (song ? 'title')
+       OR NOT (song ? 'channel_name')
+       OR NOT (song ? 'thumbnail_url')
+       OR NOT (song ? 'duration')
        OR pg_catalog.jsonb_typeof(song -> 'song_type') <> 'string'
        OR pg_catalog.jsonb_typeof(song -> 'song_order') <> 'number'
        OR pg_catalog.jsonb_typeof(song -> 'provider') <> 'string'
-       OR pg_catalog.jsonb_typeof(song -> 'external_id') <> 'string' THEN
+       OR pg_catalog.jsonb_typeof(song -> 'external_id') <> 'string'
+       OR pg_catalog.jsonb_typeof(song -> 'title') <> 'string'
+       OR pg_catalog.jsonb_typeof(song -> 'channel_name') NOT IN ('string', 'null')
+       OR pg_catalog.jsonb_typeof(song -> 'thumbnail_url') NOT IN ('string', 'null')
+       OR pg_catalog.jsonb_typeof(song -> 'duration') NOT IN ('string', 'null') THEN
       RAISE EXCEPTION 'Dados de música inválidos.' USING ERRCODE = '22023';
     END IF;
 
@@ -108,6 +120,10 @@ BEGIN
     song_order := (song ->> 'song_order')::numeric;
     song_provider := song ->> 'provider';
     song_external_id := song ->> 'external_id';
+    song_title := pg_catalog.btrim(song ->> 'title');
+    song_channel_name := NULLIF(pg_catalog.btrim(song ->> 'channel_name'), '');
+    song_thumbnail_url := song ->> 'thumbnail_url';
+    song_duration := NULLIF(pg_catalog.btrim(song ->> 'duration'), '');
 
     IF song_type NOT IN ('main', 'reserve')
        OR song_order <> pg_catalog.trunc(song_order)
@@ -117,7 +133,13 @@ BEGIN
     END IF;
 
     IF song_provider !~ '^[a-z][a-z0-9_-]{0,39}$'
-       OR song_external_id !~ '^[A-Za-z0-9_-]{1,200}$' THEN
+       OR song_external_id !~ '^[A-Za-z0-9_-]{1,200}$'
+       OR pg_catalog.length(song_title) NOT BETWEEN 1 AND 500
+       OR (song_channel_name IS NOT NULL AND pg_catalog.length(song_channel_name) > 200)
+       OR (song_thumbnail_url IS NOT NULL AND (
+         pg_catalog.length(song_thumbnail_url) > 2048 OR song_thumbnail_url !~ '^https://'
+       ))
+       OR (song_duration IS NOT NULL AND pg_catalog.length(song_duration) > 32) THEN
       RAISE EXCEPTION 'Fonte de música inválida.' USING ERRCODE = '22023';
     END IF;
 
@@ -136,6 +158,9 @@ BEGIN
 
   IF main_count > 4 OR reserve_count > 2 THEN
     RAISE EXCEPTION 'Informe até quatro músicas principais e duas reservas.' USING ERRCODE = '22023';
+  END IF;
+  IF main_count = 0 THEN
+    RAISE EXCEPTION 'Escolha ao menos uma música principal.' USING ERRCODE = '22023';
   END IF;
 
   SELECT pg_catalog.count(*)::integer
@@ -168,25 +193,32 @@ BEGIN
     song_order := (song ->> 'song_order')::numeric;
     song_provider := song ->> 'provider';
     song_external_id := song ->> 'external_id';
+    song_title := pg_catalog.btrim(song ->> 'title');
+    song_channel_name := NULLIF(pg_catalog.btrim(song ->> 'channel_name'), '');
+    song_thumbnail_url := song ->> 'thumbnail_url';
+    song_duration := NULLIF(pg_catalog.btrim(song ->> 'duration'), '');
 
     INSERT INTO public.playback_sources (
-      provider, external_id, title, metadata
+      provider, external_id, title, channel_name, thumbnail_url, duration, metadata
     ) VALUES (
       song_provider,
       song_external_id,
-      song_provider || ' ' || song_external_id,
+      song_title,
+      song_channel_name,
+      song_thumbnail_url,
+      song_duration,
       '{}'::jsonb
     )
-    ON CONFLICT (provider, external_id) DO NOTHING
+    ON CONFLICT (provider, external_id) DO UPDATE
+       SET title = CASE
+             WHEN public.playback_sources.title = (EXCLUDED.provider || ' ' || EXCLUDED.external_id)
+             THEN EXCLUDED.title
+             ELSE public.playback_sources.title
+           END,
+           channel_name = COALESCE(public.playback_sources.channel_name, EXCLUDED.channel_name),
+           thumbnail_url = COALESCE(public.playback_sources.thumbnail_url, EXCLUDED.thumbnail_url),
+           duration = COALESCE(public.playback_sources.duration, EXCLUDED.duration)
     RETURNING id INTO source_id;
-
-    IF source_id IS NULL THEN
-      SELECT s.id
-        INTO source_id
-        FROM public.playback_sources AS s
-       WHERE s.provider = song_provider
-         AND s.external_id = song_external_id;
-    END IF;
 
     IF source_id IS NULL THEN
       RAISE EXCEPTION 'Não foi possível resolver uma fonte de música.' USING ERRCODE = 'P0001';
