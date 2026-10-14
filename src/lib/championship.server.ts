@@ -22,7 +22,7 @@ export const STAGE_PREPARABLE_STATUSES: readonly ChampionshipStatus[] = CHAMPION
 export const STAGE_ACTIVATABLE_STATUSES: readonly ChampionshipStatus[] = ["drawn", "group_stage", "group_stage_completed", "quarter_finals", "semi_finals", "final"];
 
 export class ChampionshipError extends Error {}
-const fail = (message: string): never => { throw new ChampionshipError(message); };
+function fail(message: string): never { throw new ChampionshipError(message); }
 
 export function canEditChampionship(status: string) {
   return EDITABLE_STATUSES.includes(status as ChampionshipStatus);
