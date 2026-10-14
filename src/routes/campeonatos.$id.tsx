@@ -223,7 +223,7 @@ function ChampionshipAdminPage() {
   const available = Math.max((event?.format ?? 0) - occupied, 0);
   const linkedParticipants = new Set(confirmed.flatMap((entry) => entry.participant_id ? [entry.participant_id] : []));
   const participantsReady = confirmed.length === event?.format && linkedParticipants.size === event?.format;
-  const canLinkParticipants = !!championship.data.stageSession && event?.status === "drawn";
+  const canLinkParticipants = !!championship.data?.stageSession && event?.status === "drawn";
 
   async function refreshData(message?: string) {
     await Promise.all([
@@ -417,7 +417,7 @@ function ChampionshipAdminPage() {
               <select
                 id="edit-format"
                 className="mt-2 h-10 w-full rounded-md border border-input bg-background px-3"
-                disabled={championship.data.entryCount > 0}
+                disabled={(championship.data?.entryCount ?? 0) > 0}
                 value={format}
                 onChange={(e) => setFormat(Number(e.target.value) as 8 | 12 | 16)}
               >
@@ -425,7 +425,7 @@ function ChampionshipAdminPage() {
                 <option value={12}>12 participantes</option>
                 <option value={16}>16 participantes</option>
               </select>
-              {championship.data.entryCount > 0 && <p className="mt-1 text-xs text-muted-foreground">O formato fica bloqueado após a primeira inscrição.</p>}
+              {(championship.data?.entryCount ?? 0) > 0 && <p className="mt-1 text-xs text-muted-foreground">O formato fica bloqueado após a primeira inscrição.</p>}
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <div><Label htmlFor="edit-start">Data e horário</Label><Input id="edit-start" className="mt-2" type="datetime-local" value={startsAt} onChange={(e) => setStartsAt(e.target.value)} /></div>
@@ -523,9 +523,9 @@ function ChampionshipAdminPage() {
             <div className="mt-5 rounded-xl border p-3">
               <h3 className="font-semibold">Disputa pelas duas vagas de melhor terceiro</h3>
               <div className="mt-2 grid gap-2 sm:grid-cols-2">
-                {standings.data.thirdPlace.map((entry) => (
+                {standings.data.thirdPlace.map((entry, index) => (
                   <div key={entry.id} className="rounded-lg bg-secondary/50 p-2 text-sm">
-                    <div className="flex justify-between gap-2"><span><strong>{entry.position}º geral</strong> · Grupo {entry.groupLetter} · {entry.stageName || entry.name}{entry.tied ? " · Empate" : ""}</span><Eligibility value={entry.qualified} /></div>
+                    <div className="flex justify-between gap-2"><span><strong>{index + 1}º geral</strong> · Grupo {entry.groupLetter} · {entry.stageName || entry.name}{entry.tied ? " · Empate" : ""}</span><Eligibility value={entry.qualified} /></div>
                     <p className="mt-1 text-xs text-muted-foreground">{entry.noVotes ? "Sem votos" : `${entry.approval!.toFixed(1)}% de aprovação`} · {entry.likes} likes · {entry.dislikes} dislikes</p>
                   </div>
                 ))}
@@ -586,14 +586,14 @@ function ChampionshipAdminPage() {
 
       {event.status !== "draft" && event.status !== "registration_open" && event.status !== "registration_closed" && (
         <StageSessionPanel
-          stageSession={championship.data.stageSession}
+          stageSession={championship.data?.stageSession ?? null}
           busy={busy}
           onPrepare={() => void act(
             () => prepareStageFn({ data: { championshipId: id } }),
             "Sessão de palco preparada em rascunho.",
           )}
           onActivate={() => {
-            const session = championship.data.stageSession;
+            const session = championship.data?.stageSession;
             if (session) void act(
               () => activateStageFn({ data: { championshipId: id, sessionId: session.id } }),
               "Sessão de palco iniciada.",
