@@ -257,6 +257,18 @@ export const closeChampionshipMatchVotingFn = createServerFn({ method: "POST" })
     return deps.domain.closeChampionshipMatchVoting(deps.db, data, context.userId);
   }));
 
+export const resolveChampionshipMatchTieFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({
+    matchId: Id,
+    winnerEntryId: Id,
+    reason: z.string().trim().min(1).max(1000),
+  }).strict().parse(d))
+  .handler(({ data, context }) => run(async (deps) => {
+    await authorizeMatch(deps, context.userId, data.matchId);
+    return deps.domain.resolveChampionshipMatchTie(deps.db, data, context.userId);
+  }));
+
 export const getChampionshipMatchScoreFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.object({ matchId: Id }).strict().parse(d))

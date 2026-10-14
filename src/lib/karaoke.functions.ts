@@ -63,6 +63,7 @@ export type ChampionshipLiveSnapshot = {
     votingEndsAt: string | null;
     votesA: number;
     votesB: number;
+    resultSource: "votes" | "operator" | null;
     performanceA: { title: string; status: string } | null;
     performanceB: { title: string; status: string } | null;
   }[];
@@ -134,6 +135,18 @@ async function loadLiveSnapshot(
       throw new Error("Não foi possível carregar os participantes do Campeonato.");
     if (championshipMatchesResult.error)
       throw new Error("Não foi possível carregar os confrontos do Campeonato.");
+    const championshipMatches = championshipMatchesResult.data ?? [];
+    const matchIds = championshipMatches.map((match) => match.id);
+    let resolvedMatchIds = new Set<string>();
+    if (matchIds.length) {
+      const { data: resolutions, error: resolutionsError } = await db
+        .from("championship_match_resolution_audit")
+        .select("match_id")
+        .in("match_id", matchIds);
+      if (resolutionsError)
+        throw new Error("Não foi possível carregar as decisões dos confrontos do Campeonato.");
+      resolvedMatchIds = new Set((resolutions ?? []).map((resolution) => resolution.match_id));
+    }
 
     const countVotesForEntry = async (matchId: string, entryId: string | null) => {
       if (!entryId) return 0;
@@ -154,7 +167,7 @@ async function loadLiveSnapshot(
           : championshipStatus === "final" || championshipStatus === "completed"
             ? "final"
             : null;
-    const stageMatches = (championshipMatchesResult.data ?? []).filter(
+    const stageMatches = championshipMatches.filter(
       (match) => match.stage === currentStage,
     );
     const scoredMatch =
@@ -200,7 +213,7 @@ async function loadLiveSnapshot(
             participantId: entry.participant_id,
           };
         }),
-        matches: (championshipMatchesResult.data ?? []).map((match) => {
+        matches: championshipMatches.map((match) => {
           const tally = tallies.get(match.id) ?? { a: 0, b: 0 };
           const performanceA = match.performance_a_id
             ? performancesById.get(match.performance_a_id)
@@ -220,6 +233,11 @@ async function loadLiveSnapshot(
             votingEndsAt: match.voting_ends_at,
             votesA: tally.a,
             votesB: tally.b,
+            resultSource: resolvedMatchIds.has(match.id)
+              ? "operator"
+              : match.status === "completed" && match.winner_entry_id
+                ? "votes"
+                : null,
             performanceA: performanceA
               ? { title: performanceA.source?.title ?? "", status: performanceA.status }
               : null,

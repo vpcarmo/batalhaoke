@@ -259,6 +259,57 @@ export type Database = {
           },
         ]
       }
+      championship_match_resolution_audit: {
+        Row: {
+          created_at: string
+          id: string
+          match_id: string
+          operator_user_id: string
+          original_result: string
+          reason: string
+          votes_a: number
+          votes_b: number
+          winner_entry_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          match_id: string
+          operator_user_id: string
+          original_result: string
+          reason: string
+          votes_a: number
+          votes_b: number
+          winner_entry_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          match_id?: string
+          operator_user_id?: string
+          original_result?: string
+          reason?: string
+          votes_a?: number
+          votes_b?: number
+          winner_entry_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "championship_match_resolution_audit_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: true
+            referencedRelation: "championship_matches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "championship_match_resolution_audit_winner_entry_id_fkey"
+            columns: ["winner_entry_id"]
+            isOneToOne: false
+            referencedRelation: "championship_entries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       championships: {
         Row: {
           created_at: string
@@ -1009,6 +1060,15 @@ export type Database = {
         Args: {
           p_match_id: string
           p_operator_user_id: string
+        }
+        Returns: Json
+      }
+      resolve_championship_match_tie: {
+        Args: {
+          p_match_id: string
+          p_operator_user_id: string
+          p_reason: string
+          p_winner_entry_id: string
         }
         Returns: Json
       }

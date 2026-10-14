@@ -741,7 +741,11 @@ function ChampionshipTvDetails({
       </div>
       {winner ? (
         <p className="mt-5 font-display text-3xl text-accent lg:text-4xl">
-          Vencedor: {winner.displayName}
+          {match.resultSource === "operator"
+            ? `Vencedor homologado pelo operador: ${winner.displayName}`
+            : match.status === "wo"
+              ? `WO registrado: ${winner.displayName} avançou`
+              : `Vencedor pela votação: ${winner.displayName}`}
         </p>
       ) : ended ? (
         <p className="mt-5 text-xl font-semibold text-accent lg:text-2xl">

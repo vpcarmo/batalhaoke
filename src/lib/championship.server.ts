@@ -753,6 +753,21 @@ export async function getChampionshipEliminationBoard(db: Db, championshipId: st
     .order("stage")
     .order("match_number");
   if (error) fail("Não foi possível carregar os confrontos eliminatórios.");
+  type MatchResolution = Pick<
+    Database["public"]["Tables"]["championship_match_resolution_audit"]["Row"],
+    "match_id" | "original_result" | "votes_a" | "votes_b" | "winner_entry_id" |
+      "operator_user_id" | "reason" | "created_at"
+  >;
+  let resolutions: MatchResolution[] = [];
+  if (matches?.length) {
+    const { data, error: resolutionsError } = await db
+      .from("championship_match_resolution_audit")
+      .select("match_id, original_result, votes_a, votes_b, winner_entry_id, operator_user_id, reason, created_at")
+      .in("match_id", matches.map((match) => match.id));
+    if (resolutionsError) fail("Não foi possível carregar as decisões dos confrontos.");
+    resolutions = data ?? [];
+  }
+  const resolutionsByMatch = new Map((resolutions ?? []).map((resolution) => [resolution.match_id, resolution]));
   const stageSession = await findStageSession(db, id);
   let participants: { id: string; name: string; stage_name: string | null; participant_number: number }[] = [];
   if (stageSession) {
@@ -774,7 +789,16 @@ export async function getChampionshipEliminationBoard(db: Db, championshipId: st
     if (performanceError) fail("Não foi possível carregar as apresentações da sessão de palco.");
     performances = data ?? [];
   }
-  return { championship, stageSession, participants, matches: matches ?? [], performances };
+  return {
+    championship,
+    stageSession,
+    participants,
+    matches: (matches ?? []).map((match) => ({
+      ...match,
+      resolution: resolutionsByMatch.get(match.id) ?? null,
+    })),
+    performances,
+  };
 }
 
 async function countConfirmedEntries(db: Db, championshipId: string) {
@@ -1012,6 +1036,11 @@ const MatchWoInput = z.object({
   withdrawnEntryId: z.string().uuid(),
   reason: z.string().trim().min(1).max(1000),
 }).strict();
+const MatchResolutionInput = z.object({
+  matchId: z.string().uuid(),
+  winnerEntryId: z.string().uuid(),
+  reason: z.string().trim().min(1).max(1000),
+}).strict();
 const MatchVoteInput = z.object({
   code: z.string().trim().min(4).max(40).regex(/^[a-zA-Z0-9_-]+$/),
   chosenEntryId: z.string().uuid(),
@@ -1111,6 +1140,33 @@ export async function closeChampionshipMatchVoting(db: Db, raw: unknown, operato
   });
   championshipRpcError(error, "Não foi possível encerrar a votação do confronto.");
   return data;
+}
+
+export async function resolveChampionshipMatchTie(db: Db, raw: unknown, operatorUserId: string) {
+  const input = MatchResolutionInput.parse(raw);
+  const { data, error } = await db.rpc("resolve_championship_match_tie", {
+    p_match_id: input.matchId,
+    p_winner_entry_id: input.winnerEntryId,
+    p_reason: input.reason,
+    p_operator_user_id: operatorUserId,
+  });
+  championshipRpcError(error, "Não foi possível homologar a decisão do confronto.");
+  const result = z.object({
+    match_id: z.string().uuid(),
+    winner_entry_id: z.string().uuid(),
+    original_result: z.enum(["tie", "no_votes"]),
+    votes_a: z.number().int().nonnegative(),
+    votes_b: z.number().int().nonnegative(),
+    operator_user_id: z.string().uuid(),
+    reason: z.string(),
+    created_at: z.string().datetime({ offset: true }),
+    idempotent: z.boolean(),
+  }).strict().safeParse(data);
+  if (!result.success || result.data.match_id !== input.matchId || result.data.winner_entry_id !== input.winnerEntryId) {
+    console.error("[championship] match resolution returned an invalid result", result.success ? data : result.error);
+    return fail("Não foi possível confirmar a decisão do confronto.");
+  }
+  return result.data;
 }
 
 async function hashChampionshipVoterToken(sessionId: string, token: string) {

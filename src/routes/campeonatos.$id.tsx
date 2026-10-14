@@ -31,6 +31,7 @@ import {
   prepareStageSessionFn,
   recordChampionshipMatchWoFn,
   recordGroupStageTieBreakDecisionFn,
+  resolveChampionshipMatchTieFn,
   setChampionshipMatchPerformancesFn,
   startChampionshipGroupStageFn,
   startChampionshipMatchFn,
@@ -113,6 +114,7 @@ function ChampionshipAdminPage() {
   const completePresentationFn = useServerFn(completeChampionshipPresentationFn);
   const openVotingFn = useServerFn(openChampionshipMatchVotingFn);
   const closeVotingFn = useServerFn(closeChampionshipMatchVotingFn);
+  const resolveMatchTieFn = useServerFn(resolveChampionshipMatchTieFn);
   const advanceFn = useServerFn(advanceChampionshipEliminationFn);
   const woFn = useServerFn(recordChampionshipMatchWoFn);
   const completeFn = useServerFn(completeChampionshipFn);
@@ -132,6 +134,7 @@ function ChampionshipAdminPage() {
   const [performanceChoices, setPerformanceChoices] = useState<Record<string, { a: string; b: string }>>({});
   const [participantChoices, setParticipantChoices] = useState<Record<string, string>>({});
   const [woChoices, setWoChoices] = useState<Record<string, { withdrawnId: string; reason: string }>>({});
+  const [resolutionChoices, setResolutionChoices] = useState<Record<string, { winnerEntryId: string; reason: string }>>({});
 
   const championship = useQuery({
     queryKey: ["championship", id],
@@ -632,9 +635,21 @@ function ChampionshipAdminPage() {
                           </div>
                           <p className="mt-2 font-medium">{entryName(allEntries, match.entry_a_id)} <span className="text-muted-foreground">×</span> {entryName(allEntries, match.entry_b_id)}</p>
                           {match.winner_entry_id && <p className="mt-1 text-sm text-success">Vencedor: {entryName(allEntries, match.winner_entry_id)}</p>}
+                          {match.resolution && (
+                            <div className="mt-2 rounded-lg border border-accent/40 bg-accent/5 p-3 text-sm">
+                              <p className="font-semibold">Vencedor homologado pelo operador: {entryName(allEntries, match.resolution.winner_entry_id)}</p>
+                              <p className="mt-1 text-muted-foreground">
+                                Resultado original: {match.resolution.original_result === "tie" ? "empate" : "sem votos"} ({match.resolution.votes_a} × {match.resolution.votes_b}).
+                              </p>
+                              <p className="mt-1 text-muted-foreground">Justificativa: {match.resolution.reason}</p>
+                              <p className="mt-1 text-xs text-muted-foreground">
+                                Operador {match.resolution.operator_user_id} · {new Date(match.resolution.created_at).toLocaleString("pt-BR")}
+                              </p>
+                            </div>
+                          )}
                           {score && (
                             <p className="mt-2 rounded-lg bg-secondary/60 p-2 text-sm">
-                              Placar {score.result === "pending" ? "parcial" : "definitivo"}: {entryName(allEntries, match.entry_a_id)} {score.votesA} × {score.votesB} {entryName(allEntries, match.entry_b_id)} · votação {score.votingStatus === "open" ? `aberta até ${score.votingEndsAt ? new Date(score.votingEndsAt).toLocaleTimeString("pt-BR") : "—"}` : score.votingStatus === "closed" ? "encerrada" : "não aberta"}
+                              {score.result === "tie" ? "Empate" : score.result === "no_votes" ? "Sem votos" : `Placar ${score.result === "pending" ? "parcial" : "definitivo"}`}: {entryName(allEntries, match.entry_a_id)} {score.votesA} × {score.votesB} {entryName(allEntries, match.entry_b_id)} · votação {score.votingStatus === "open" ? `aberta até ${score.votingEndsAt ? new Date(score.votingEndsAt).toLocaleTimeString("pt-BR") : "—"}` : score.votingStatus === "closed" ? "encerrada" : "não aberta"}
                             </p>
                           )}
                           {scoreQuery?.isError && (
@@ -642,6 +657,59 @@ function ChampionshipAdminPage() {
                           )}
                           {!completed && (
                             <div className="mt-3 flex flex-col gap-3 border-t pt-3">
+                              {score?.votingStatus === "closed" && (score.result === "tie" || score.result === "no_votes") && (
+                                <div className="rounded-lg border border-accent/40 p-3">
+                                  <p className="text-sm font-semibold">
+                                    {score.result === "tie" ? "Empate aguardando decisão" : "Confronto sem votos aguardando decisão"}
+                                  </p>
+                                  <p className="mt-1 text-xs text-muted-foreground">Escolha explicitamente quem avança e informe a justificativa. A decisão será registrada no histórico do Campeonato.</p>
+                                  {(() => {
+                                    const resolutionChoice = resolutionChoices[match.id] ?? { winnerEntryId: "", reason: "" };
+                                    return (
+                                      <>
+                                        <select
+                                          aria-label={`Vencedor do confronto ${match.match_number}`}
+                                          className="mt-2 h-10 w-full rounded-md border border-input bg-background px-2 text-sm"
+                                          value={resolutionChoice.winnerEntryId}
+                                          onChange={(e) => setResolutionChoices((current) => ({
+                                            ...current,
+                                            [match.id]: { ...resolutionChoice, winnerEntryId: e.target.value },
+                                          }))}
+                                        >
+                                          <option value="">Selecione quem avança</option>
+                                          {[match.entry_a_id, match.entry_b_id]
+                                            .filter((entryId): entryId is string => !!entryId)
+                                            .map((entryId) => <option key={entryId} value={entryId}>{entryName(allEntries, entryId)}</option>)}
+                                        </select>
+                                        <Textarea
+                                          className="mt-2"
+                                          maxLength={1000}
+                                          placeholder="Justificativa obrigatória"
+                                          value={resolutionChoice.reason}
+                                          onChange={(e) => setResolutionChoices((current) => ({
+                                            ...current,
+                                            [match.id]: { ...resolutionChoice, reason: e.target.value },
+                                          }))}
+                                        />
+                                        <Button
+                                          className="mt-2"
+                                          disabled={busy || !resolutionChoice.winnerEntryId || !resolutionChoice.reason.trim()}
+                                          onClick={() => void act(
+                                            () => resolveMatchTieFn({
+                                              data: {
+                                                matchId: match.id,
+                                                winnerEntryId: resolutionChoice.winnerEntryId,
+                                                reason: resolutionChoice.reason.trim(),
+                                              },
+                                            }),
+                                            "Decisão homologada e registrada. A fase avançou quando todos os confrontos foram resolvidos.",
+                                          )}
+                                        >Homologar vencedor</Button>
+                                      </>
+                                    );
+                                  })()}
+                                </div>
+                              )}
                               {match.status === "scheduled" && (
                                 <div className="grid gap-2 sm:grid-cols-2">
                                   <select aria-label={`Apresentação A do confronto ${match.match_number}`} className="h-10 rounded-md border border-input bg-background px-2 text-sm" value={choice.a} onChange={(e) => setPerformanceChoices((current) => ({ ...current, [match.id]: { ...choice, a: e.target.value } }))}>

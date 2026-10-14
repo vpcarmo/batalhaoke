@@ -134,6 +134,27 @@
       "when": 1792300000000,
       "tag": "0018_championship_post_audit_fixes",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1792400000000,
+      "tag": "0019_championship_elimination_manual_resolution",
+      "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1792500000000,
+      "tag": "0020_championship_resolution_hardening",
+      "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1792600000000,
+      "tag": "0021_championship_result_integrity",
+      "breakpoints": true
     }
   ]
 }
