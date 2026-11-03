@@ -104,3 +104,33 @@ export async function assertPairedVenueDevice(
   if (sessionError) throw new AuthorizationError("Não foi possível verificar a sessão da TV.");
   if (!session) throw new AuthorizationError(DENIED);
 }
+
+export const PLATFORM_DENIED = "Acesso restrito à administração da plataforma.";
+
+type AuthAdminLike = {
+  auth: {
+    admin: {
+      getUserById: (id: string) => Promise<{
+        data: { user: { app_metadata?: Record<string, unknown> | null } | null };
+        error: unknown;
+      }>;
+    };
+  };
+};
+
+/**
+ * Global platform authorization. Reads the user's CURRENT app_metadata from the Auth server
+ * on every call (never JWT claims, never user_metadata) so revocation applies on the next request.
+ */
+export async function assertPlatformAdmin(admin: AuthAdminLike, userId: unknown): Promise<void> {
+  const id = z.string().uuid().safeParse(userId);
+  if (!id.success) throw new AuthorizationError(PLATFORM_DENIED);
+  let result;
+  try {
+    result = await admin.auth.admin.getUserById(id.data);
+  } catch {
+    throw new AuthorizationError(PLATFORM_DENIED);
+  }
+  const role = result?.data?.user?.app_metadata?.["platform_role"];
+  if (result?.error || role !== "superadmin") throw new AuthorizationError(PLATFORM_DENIED);
+}
