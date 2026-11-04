@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as CampeonatosRouteImport } from './routes/campeonatos'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as SuperadminRouteImport } from './routes/superadmin'
 import { Route as TvRouteImport } from './routes/tv'
 import { Route as CampeonatosIdRouteImport } from './routes/campeonatos.$id'
 import { Route as InscreverIdRouteImport } from './routes/inscrever.$id'
@@ -32,6 +33,11 @@ const CampeonatosRoute = CampeonatosRouteImport.update({
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SuperadminRoute = SuperadminRouteImport.update({
+  id: '/superadmin',
+  path: '/superadmin',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TvRoute = TvRouteImport.update({
@@ -69,6 +75,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/campeonatos': typeof CampeonatosRouteWithChildren
   '/login': typeof LoginRoute
+  '/superadmin': typeof SuperadminRoute
   '/tv': typeof TvRoute
   '/campeonatos/$id': typeof CampeonatosIdRoute
   '/inscrever/$id': typeof InscreverIdRoute
@@ -80,6 +87,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/campeonatos': typeof CampeonatosRouteWithChildren
   '/login': typeof LoginRoute
+  '/superadmin': typeof SuperadminRoute
   '/tv': typeof TvRoute
   '/campeonatos/$id': typeof CampeonatosIdRoute
   '/inscrever/$id': typeof InscreverIdRoute
@@ -92,6 +100,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/campeonatos': typeof CampeonatosRouteWithChildren
   '/login': typeof LoginRoute
+  '/superadmin': typeof SuperadminRoute
   '/tv': typeof TvRoute
   '/campeonatos/$id': typeof CampeonatosIdRoute
   '/inscrever/$id': typeof InscreverIdRoute
@@ -105,6 +114,7 @@ export interface FileRouteTypes {
     | '/'
     | '/campeonatos'
     | '/login'
+    | '/superadmin'
     | '/tv'
     | '/campeonatos/$id'
     | '/inscrever/$id'
@@ -116,6 +126,7 @@ export interface FileRouteTypes {
     | '/'
     | '/campeonatos'
     | '/login'
+    | '/superadmin'
     | '/tv'
     | '/campeonatos/$id'
     | '/inscrever/$id'
@@ -127,6 +138,7 @@ export interface FileRouteTypes {
     | '/'
     | '/campeonatos'
     | '/login'
+    | '/superadmin'
     | '/tv'
     | '/campeonatos/$id'
     | '/inscrever/$id'
@@ -139,6 +151,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CampeonatosRoute: typeof CampeonatosRouteWithChildren
   LoginRoute: typeof LoginRoute
+  SuperadminRoute: typeof SuperadminRoute
   TvRoute: typeof TvRoute
   InscreverIdRoute: typeof InscreverIdRoute
   QrCodeRoute: typeof QrCodeRoute
@@ -167,6 +180,13 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/superadmin': {
+      id: '/superadmin'
+      path: '/superadmin'
+      fullPath: '/superadmin'
+      preLoaderRoute: typeof SuperadminRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/tv': {
@@ -230,6 +250,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CampeonatosRoute: CampeonatosRouteWithChildren,
   LoginRoute: LoginRoute,
+  SuperadminRoute: SuperadminRoute,
   TvRoute: TvRoute,
   InscreverIdRoute: InscreverIdRoute,
   QrCodeRoute: QrCodeRoute,

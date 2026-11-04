@@ -69,7 +69,8 @@ export async function assertChampionshipOperator(
     .select("venue_id")
     .eq("id", id.data)
     .maybeSingle();
-  if (error) throw new AuthorizationError("Não foi possível verificar o estabelecimento do Campeonato.");
+  if (error)
+    throw new AuthorizationError("Não foi possível verificar o estabelecimento do Campeonato.");
   if (!data?.venue_id) throw new AuthorizationError(DENIED);
   await assertVenueOperator(db, userId, data.venue_id);
   return data.venue_id;
@@ -110,10 +111,8 @@ export const PLATFORM_DENIED = "Acesso restrito à administração da plataforma
 type AuthAdminLike = {
   auth: {
     admin: {
-      getUserById: (id: string) => Promise<{
-        data: { user: { app_metadata?: Record<string, unknown> | null } | null };
-        error: unknown;
-      }>;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      getUserById: (id: string) => Promise<any>;
     };
   };
 };

@@ -26,6 +26,6 @@
 - `x1_voting_mode` is locked by a DB trigger once a session has any match — the lock holds even though `sessions` RLS is open.
 - Championship domain logic lives in server-only `src/lib/championship.server.ts` (privileged client injected); it is exposed only through `championship.functions.ts` wrappers that require `requireSupabaseAuth` and `assertVenueOperator` on the venue resolved server-side — never trust a client venue id.
 - The Championship stage session is created in draft by `prepareStageSession` (idempotent via `sessions_championship_unique`) and started only by `activateStageSession`, which never ends another session and never changes the event status.
-- Admin permissions come only from `venue_operators` (per-venue owner/operator, no global role, no client grants); there is no self-signup or bootstrap endpoint — operators are provisioned manually (docs/OPERATOR_PROVISIONING.md).
+- Venue admin permissions come only from `venue_operators` (per-venue owner/operator, no client grants). The only global role is `app_metadata.platform_role = "superadmin"`, checked live via `assertPlatformAdmin` (Auth Admin `getUserById`, never JWT claims or user_metadata) on every `superadmin.functions.ts` call; it is granted manually only (docs/PLATFORM_ADMIN_PROVISIONING.md) — no promotion endpoint.
 - `championships.format` is guarded by the `t_championship_format_guard` DB trigger (draft only, no entries) so the rule holds outside the admin UI.
 - Login (`/login`) is only for Championship admin; Livre, X1, TV and public voting stay login-free.

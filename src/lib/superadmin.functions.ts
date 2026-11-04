@@ -3,7 +3,10 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 // Every handler: auth middleware -> assertPlatformAdmin (live Auth lookup) -> work. Admin client loaded inside handlers only.
-async function guarded<T>(userId: string, work: (admin: unknown, m: typeof import("./superadmin.server")) => Promise<T>) {
+async function guarded<T>(
+  userId: string,
+  work: (admin: unknown, m: typeof import("./superadmin.server")) => Promise<T>,
+) {
   const [{ supabaseAdmin }, m] = await Promise.all([
     import("@/integrations/supabase/client.server"),
     import("./superadmin.server"),
@@ -38,7 +41,9 @@ export const listSuperadminVenuesFn = createServerFn({ method: "GET" })
 export const listVenueOperatorsFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) => z.object({ venueId: z.string().uuid() }).parse(d))
-  .handler(({ data, context }) => guarded(context.userId, (a, m) => m.listOperators(a, data.venueId)));
+  .handler(({ data, context }) =>
+    guarded(context.userId, (a, m) => m.listOperators(a, data.venueId)),
+  );
 
 export const findConfirmedUserFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -49,7 +54,9 @@ export const findConfirmedUserFn = createServerFn({ method: "POST" })
 
 export const createVenueWithOwnerFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ name: z.string().max(200), ownerEmail: z.string().max(254) }).parse(d))
+  .inputValidator((d) =>
+    z.object({ name: z.string().max(200), ownerEmail: z.string().max(254) }).parse(d),
+  )
   .handler(({ data, context }) =>
     guarded(context.userId, (a, m) => m.createVenueWithOwner(a, data.name, data.ownerEmail)),
   );
@@ -57,7 +64,13 @@ export const createVenueWithOwnerFn = createServerFn({ method: "POST" })
 export const linkVenueOperatorFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) =>
-    z.object({ venueId: z.string().uuid(), email: z.string().max(254), role: z.enum(["owner", "operator"]) }).parse(d),
+    z
+      .object({
+        venueId: z.string().uuid(),
+        email: z.string().max(254),
+        role: z.enum(["owner", "operator"]),
+      })
+      .parse(d),
   )
   .handler(({ data, context }) =>
     guarded(context.userId, (a, m) => m.linkOperator(a, data.venueId, data.email, data.role)),

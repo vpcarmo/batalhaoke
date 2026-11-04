@@ -28,13 +28,20 @@ export async function requirePlatformAdmin(admin: AdminClient, userId: unknown) 
 export type FoundUser = { id: string; email: string; emailConfirmed: boolean };
 
 /** Exact-email lookup across all Auth pages; never returns lists to the browser. */
-export async function findUserByEmail(admin: AdminClient, rawEmail: string): Promise<FoundUser | null> {
+export async function findUserByEmail(
+  admin: AdminClient,
+  rawEmail: string,
+): Promise<FoundUser | null> {
   const parsed = emailSchema.safeParse(rawEmail);
   if (!parsed.success) throw new SuperadminError("E-mail inválido.", "validation");
   const email = parsed.data;
   for (let page = 1; page <= MAX_PAGES; page++) {
     const { data, error } = await admin.auth.admin.listUsers({ page, perPage: PER_PAGE });
-    if (error) throw new SuperadminError("Não foi possível consultar as contas. Tente novamente.", "uncertain");
+    if (error)
+      throw new SuperadminError(
+        "Não foi possível consultar as contas. Tente novamente.",
+        "uncertain",
+      );
     const users: { id: string; email?: string | null; email_confirmed_at?: string | null }[] =
       data?.users ?? [];
     const hit = users.find((u) => (u.email ?? "").toLowerCase() === email);
@@ -83,9 +90,15 @@ export async function listVenues(admin: AdminClient) {
   const counts = new Map<string, number>();
   for (const l of (links ?? []) as { venue_id: string }[])
     counts.set(l.venue_id, (counts.get(l.venue_id) ?? 0) + 1);
-  return ((venues ?? []) as { id: string; name: string; slug: string | null; created_at: string }[]).map(
-    (v) => ({ id: v.id, name: v.name, slug: v.slug, created_at: v.created_at, operatorCount: counts.get(v.id) ?? 0 }),
-  );
+  return (
+    (venues ?? []) as { id: string; name: string; slug: string | null; created_at: string }[]
+  ).map((v) => ({
+    id: v.id,
+    name: v.name,
+    slug: v.slug,
+    created_at: v.created_at,
+    operatorCount: counts.get(v.id) ?? 0,
+  }));
 }
 
 export async function listOperators(admin: AdminClient, venueId: string) {
@@ -95,7 +108,12 @@ export async function listOperators(admin: AdminClient, venueId: string) {
     .eq("venue_id", venueId)
     .order("created_at");
   if (error) throw new SuperadminError("Não foi possível listar os operadores.", "failed");
-  const rows = (data ?? []) as { venue_id: string; user_id: string; role: string; created_at: string }[];
+  const rows = (data ?? []) as {
+    venue_id: string;
+    user_id: string;
+    role: string;
+    created_at: string;
+  }[];
   return Promise.all(
     rows.map(async (r) => {
       let email: string | null = null;
@@ -105,15 +123,30 @@ export async function listOperators(admin: AdminClient, venueId: string) {
       } catch {
         email = null;
       }
-      return { venue_id: r.venue_id, user_id: r.user_id, email, role: r.role, created_at: r.created_at };
+      return {
+        venue_id: r.venue_id,
+        user_id: r.user_id,
+        email,
+        role: r.role,
+        created_at: r.created_at,
+      };
     }),
   );
 }
 
-export async function linkOperator(admin: AdminClient, venueId: string, email: string, role: string) {
+export async function linkOperator(
+  admin: AdminClient,
+  venueId: string,
+  email: string,
+  role: string,
+) {
   const parsedRole = roleSchema.safeParse(role);
   if (!parsedRole.success) throw new SuperadminError("Papel inválido.", "validation");
-  const { data: venue, error } = await admin.from("venues").select("id").eq("id", venueId).maybeSingle();
+  const { data: venue, error } = await admin
+    .from("venues")
+    .select("id")
+    .eq("id", venueId)
+    .maybeSingle();
   if (error) throw new SuperadminError("Não foi possível verificar o estabelecimento.", "failed");
   if (!venue) throw new SuperadminError("Estabelecimento não encontrado.", "not_found");
   const user = await requireConfirmedUser(admin, email);
@@ -124,7 +157,8 @@ export async function linkOperator(admin: AdminClient, venueId: string, email: s
     .eq("user_id", user.id)
     .maybeSingle();
   if (exError) throw new SuperadminError("Não foi possível verificar vínculos.", "failed");
-  if (existing) throw new SuperadminError("Esta conta já está vinculada a este estabelecimento.", "conflict");
+  if (existing)
+    throw new SuperadminError("Esta conta já está vinculada a este estabelecimento.", "conflict");
   const { data: link, error: insError } = await admin
     .from("venue_operators")
     .insert({ venue_id: venueId, user_id: user.id, role: parsedRole.data })
@@ -147,7 +181,8 @@ export async function createVenueWithOwner(
   ownerEmail: string,
 ): Promise<CreateVenueResult> {
   const name = venueNameSchema.safeParse(rawName);
-  if (!name.success) throw new SuperadminError("Informe um nome entre 2 e 120 caracteres.", "validation");
+  if (!name.success)
+    throw new SuperadminError("Informe um nome entre 2 e 120 caracteres.", "validation");
   const owner = await requireConfirmedUser(admin, ownerEmail);
   const base = slugBase(name.data);
   let venue: { id: string; slug: string } | null = null;
@@ -169,7 +204,13 @@ export async function createVenueWithOwner(
   if (!venue) throw new SuperadminError("Não foi possível gerar um identificador único.", "failed");
   try {
     const link = await linkOperator(admin, venue.id, owner.email, "owner");
-    return { status: "linked", venueId: venue.id, slug: venue.slug, linkId: link.linkId, ownerUserId: owner.id };
+    return {
+      status: "linked",
+      venueId: venue.id,
+      slug: venue.slug,
+      linkId: link.linkId,
+      ownerUserId: owner.id,
+    };
   } catch (e) {
     return {
       status: "link_pending",
