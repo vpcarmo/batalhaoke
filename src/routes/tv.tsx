@@ -199,7 +199,15 @@ function TvPage() {
   );
   const playerRef = useRef<PlaybackPlayerRef>(null);
   const [armed, setArmed] = useState(false);
+  const [audioEnabled, setAudioEnabled] = useState(false);
   const [manualCompletionId, setManualCompletionId] = useState<string | null>(null);
+  const autoPlayedId = useRef<string | null>(null);
+  const activePerformanceId = active?.id;
+  useEffect(() => {
+    if (!armed || !activePerformanceId || autoPlayedId.current === activePerformanceId) return;
+    autoPlayedId.current = activePerformanceId;
+    playerRef.current?.play();
+  }, [armed, activePerformanceId]);
 
   // Fullscreen state (client-only; SSR renders the button without document access).
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -421,38 +429,40 @@ function TvPage() {
     isChampionshipVoting;
 
   return (
-    <main className="flex min-h-dvh flex-col gap-6 p-5 sm:p-8 lg:p-12">
+    <main className="flex min-h-dvh flex-col gap-3 p-3 sm:gap-4 sm:p-5 lg:p-6">
       {brand}
       {live.error && (
         <p role="alert" className="text-center text-xl text-destructive">
           Conexão perdida com o servidor.
         </p>
       )}
-      <div className={`grid flex-1 gap-8 ${showQr ? "lg:grid-cols-[minmax(0,1fr)_auto]" : ""}`}>
+      <div
+        className={`grid min-h-0 flex-1 content-center gap-4 ${showQr ? "lg:grid-cols-[minmax(0,1fr)_auto]" : ""}`}
+      >
         {active?.source && active.participant ? (
-          <div className="grid items-center gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
-            <section className="text-center lg:text-left animate-in fade-in slide-in-from-left-4 duration-700">
-              <p className="text-xl text-muted-foreground lg:text-3xl">
+          <div className="grid min-h-0 grid-rows-[minmax(0,1fr)_auto] items-center gap-2">
+            <section className="order-2 text-center animate-in fade-in duration-500 lg:text-left">
+              <p className="text-sm text-muted-foreground lg:text-base">
                 Cantor {active.participant.participant_number}
               </p>
-              <h1 className="font-display text-6xl leading-none text-primary sm:text-7xl lg:text-8xl xl:text-9xl">
-                🎤 {displayName(active.participant)}
+              <h1 className="mt-1 truncate font-display text-3xl leading-tight text-primary sm:text-4xl lg:text-5xl">
+                {displayName(active.participant)}
               </h1>
-              <p className="mt-4 font-display text-3xl uppercase leading-tight sm:text-4xl lg:text-6xl">
+              <p className="mt-1 line-clamp-2 font-display text-lg uppercase leading-tight sm:text-xl lg:text-2xl">
                 {active.source.title}
               </p>
-              <p className="mt-6 inline-flex items-center gap-3 rounded-full bg-accent/15 px-5 py-2 text-lg font-semibold uppercase tracking-widest text-accent lg:text-2xl">
-                <span className="size-3 animate-pulse rounded-full bg-accent" /> Apresentação em
+              <p className="mt-2 inline-flex items-center gap-2 rounded-full bg-accent/15 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-accent lg:text-sm">
+                <span className="size-2 animate-pulse rounded-full bg-accent" /> Apresentação em
                 andamento
               </p>
               {!x1AfterBoth && !isChampionshipElimination && (
-                <p className="mt-6 font-display text-5xl lg:text-7xl" aria-live="polite">
+                <p className="mt-2 font-display text-xl lg:text-2xl" aria-live="polite">
                   👍 {active.like_count} {active.like_count === 1 ? "voto" : "votos"}
                   {session?.voting_mode === "like_dislike" && <> 👎 {active.dislike_count}</>}
                 </p>
               )}
               {manualCompletionId === active.id && (
-                <p role="status" className="mt-6 text-xl font-semibold text-accent lg:text-2xl">
+                <p role="status" className="mt-2 text-sm font-semibold text-accent lg:text-base">
                   Música finalizada. Conclua a apresentação pela tela administrativa do Campeonato.
                 </p>
               )}
@@ -464,13 +474,14 @@ function TvPage() {
                 />
               )}
             </section>
-            <section className="w-full">
+            <section className="order-1 mx-auto w-full min-w-0 max-w-[min(100%,115dvh)]">
               <PlaybackPlayer
                 key={active.id}
                 ref={playerRef}
                 provider={active.source.provider}
                 externalId={active.source.external_id}
                 onState={(s) => {
+                  if (s === "playing") setAudioEnabled(true);
                   if (s !== "ended") return;
                   // Championship presentations outside the group stage (eliminations) are
                   // concluded only by the authenticated Championship admin flow.
@@ -604,7 +615,7 @@ function TvPage() {
         {showQr && session && (
           <aside className="flex flex-col items-center justify-center gap-3 text-center">
             {votingCode ? (
-              <SessionQr code={votingCode} size={isFreeWaiting || isX1Waiting ? 260 : 200} />
+              <SessionQr code={votingCode} size={isFreeWaiting || isX1Waiting ? 300 : 240} />
             ) : (
               <p className="text-muted-foreground">Carregando QR Code permanente…</p>
             )}
@@ -618,12 +629,20 @@ function TvPage() {
           </aside>
         )}
       </div>
-      {!armed && (
+      {!audioEnabled && (
         <button
-          onClick={() => setArmed(true)}
-          className="mx-auto rounded-full border px-6 py-3 text-lg text-muted-foreground focus-visible:outline-2 focus-visible:outline-ring"
+          onClick={() => {
+            setArmed(true);
+            if (active) {
+              autoPlayedId.current = active.id;
+              playerRef.current?.play();
+            }
+          }}
+          className="mx-auto rounded-xl border-2 border-primary bg-primary/10 px-6 py-4 text-center text-lg font-semibold text-primary focus-visible:outline-2 focus-visible:outline-ring"
         >
-          Toque aqui uma vez para permitir que o celular do operador inicie o playback nesta TV
+          {armed
+            ? "Interação recebida. Se o áudio não iniciar, toque novamente na tela com o controle remoto."
+            : "Toque uma vez na tela com o controle remoto para ativar o áudio da TV."}
         </button>
       )}
     </main>
@@ -652,12 +671,12 @@ function ChampionshipTvDetails({
   const stageMatches = championship?.matches.filter((item) => item.stage === currentStage) ?? [];
   const match =
     stageMatches.find((item) => item.status === "in_progress") ??
-    [...stageMatches].reverse().find((item) => item.status === "completed" || item.status === "wo") ??
+    [...stageMatches]
+      .reverse()
+      .find((item) => item.status === "completed" || item.status === "wo") ??
     stageMatches.find((item) => item.status === "scheduled") ??
     null;
-  const remaining = useVoteCountdown(
-    match?.votingStatus === "open" ? match.votingEndsAt : null,
-  );
+  const remaining = useVoteCountdown(match?.votingStatus === "open" ? match.votingEndsAt : null);
 
   if (!championship) {
     return (

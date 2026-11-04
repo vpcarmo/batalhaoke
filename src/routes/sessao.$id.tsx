@@ -92,9 +92,9 @@ function SessionPage() {
   const live = useSessionLive(
     operatorAccess.data?.authorized ? { kind: "operator", sessionId: id } : undefined,
   );
-  const [addOpen, setAddOpen] = useState(false);
-  const [picking, setPicking] = useState<Participant | null>(null);
-  const [confirm, setConfirm] = useState<PlaybackSearchResult | null>(null);
+  const [singerFlowOpen, setSingerFlowOpen] = useState(false);
+  const [singerFlowParticipant, setSingerFlowParticipant] = useState<Participant | null>(null);
+  const singerPerformanceInFlight = useRef(false);
   const [busy, setBusy] = useState(false);
   const [localPlayerChoice, setLocalPlayer] = useState(false);
   const [qrOpen, setQrOpen] = useState(false);
@@ -183,10 +183,48 @@ function SessionPage() {
     p.match_id
       ? completeMatchPerformance({ data: { performanceId: p.id } })
       : setPerformanceStatus(p.id, "completed");
-  const closePicker = () => {
-    setPicking(null);
-    setConfirm(null);
+  const closeSingerFlow = () => {
+    setSingerFlowOpen(false);
+    setSingerFlowParticipant(null);
   };
+
+  async function createSingerPerformance(
+    participant: Participant,
+    playback: PlaybackSearchResult,
+    startNow: boolean,
+  ) {
+    if (singerPerformanceInFlight.current) return;
+    singerPerformanceInFlight.current = true;
+    setBusy(true);
+    try {
+      const performance = await createPerformance(id, participant.id, playback);
+      if (startNow && active) {
+        toast.info(
+          "Já existe uma apresentação no palco. A música selecionada foi adicionada à fila.",
+        );
+      } else if (startNow) {
+        try {
+          if (performance.match_id) {
+            await startMatchPerformance({ data: { performanceId: performance.id } });
+          } else {
+            await setPerformanceStatus(performance.id, "active");
+          }
+          toast.success("Apresentação iniciada");
+        } catch {
+          toast.error("Não foi possível iniciar agora. A música criada continua na fila.");
+        }
+      } else {
+        toast.success("Música adicionada à fila");
+      }
+      refresh();
+      closeSingerFlow();
+    } catch (error) {
+      toast.error((error as Error).message);
+    } finally {
+      singerPerformanceInFlight.current = false;
+      setBusy(false);
+    }
+  }
 
   if (operatorAccess.isLoading) return <Centered>Verificando acesso do operador…</Centered>;
   if (operatorAccess.isError)
@@ -223,8 +261,8 @@ function SessionPage() {
     );
 
   return (
-    <main className="mx-auto flex w-full max-w-2xl flex-col gap-5 px-4 pb-28 pt-4 sm:px-6">
-      <header className="flex items-center justify-between gap-3">
+    <main className="mx-auto flex w-full max-w-2xl flex-col gap-3 px-4 pb-28 pt-4 sm:gap-5 sm:px-6">
+      <header className="order-0 flex items-center justify-between gap-3">
         <Link
           to="/"
           aria-label="Voltar"
@@ -253,7 +291,7 @@ function SessionPage() {
       </header>
 
       {session.session_type !== "x1" && (
-        <section aria-labelledby="now" className="rounded-2xl border bg-card p-4 sm:p-5">
+        <section aria-labelledby="now" className="order-1 rounded-2xl border bg-card p-4 sm:p-5">
           <h2
             id="now"
             className="text-xs font-semibold uppercase tracking-widest text-muted-foreground"
@@ -306,7 +344,7 @@ function SessionPage() {
       )}
 
       {session.session_type === "x1" && active && (
-        <section aria-labelledby="now" className="rounded-2xl border bg-card p-4 sm:p-5">
+        <section aria-labelledby="now" className="order-1 rounded-2xl border bg-card p-4 sm:p-5">
           <h2
             id="now"
             className="text-xs font-semibold uppercase tracking-widest text-muted-foreground"
@@ -330,7 +368,7 @@ function SessionPage() {
         </section>
       )}
 
-      <div className={`grid gap-3 ${session.tv_enabled ? "grid-cols-2" : "grid-cols-1"}`}>
+      <div className={`order-4 grid gap-3 ${session.tv_enabled ? "grid-cols-2" : "grid-cols-1"}`}>
         {session.tv_enabled && (
           <Button variant="secondary" asChild className="h-12">
             <a href={`/tv?session=${id}`} target="_blank" rel="noreferrer">
@@ -343,13 +381,13 @@ function SessionPage() {
         </Button>
       </div>
 
-      <section aria-labelledby="display" className="rounded-2xl border bg-card p-4">
-        <h2
+      <details className="order-5 rounded-2xl border bg-card p-4">
+        <summary
           id="display"
-          className="text-xs font-semibold uppercase tracking-widest text-muted-foreground"
+          className="cursor-pointer text-xs font-semibold uppercase tracking-widest text-muted-foreground"
         >
-          Exibição pública
-        </h2>
+          Exibição pública e configurações
+        </summary>
         <div className="mt-3 flex flex-col gap-3">
           <label className="flex min-h-11 items-center justify-between gap-3">
             <span>Tela da TV ativa</span>
@@ -423,10 +461,11 @@ function SessionPage() {
             )}
           </div>
         </div>
-      </section>
+      </details>
 
       {session.session_type === "x1" && (
         <X1Matches
+          className="order-2"
           sessionId={id}
           sessionStatus={session.status}
           x1VotingMode={session.x1_voting_mode}
@@ -440,7 +479,7 @@ function SessionPage() {
       )}
 
       {session.session_type !== "x1" && (
-        <section aria-labelledby="order">
+        <section aria-labelledby="order" className="order-2">
           <div className="mb-3 flex items-center justify-between">
             <h2 id="order" className="font-display text-3xl">
               Ordem
@@ -473,7 +512,10 @@ function SessionPage() {
                   {session.session_type === "x1" ? null : (
                     <StatusOrAction
                       pf={pf}
-                      onPick={() => setPicking(p)}
+                      onPick={() => {
+                        setSingerFlowParticipant(p);
+                        setSingerFlowOpen(true);
+                      }}
                       disabled={session.status !== "active"}
                     />
                   )}
@@ -493,7 +535,7 @@ function SessionPage() {
       {session.status === "active" && (
         <Button
           variant="ghost"
-          className="text-muted-foreground"
+          className="order-6 text-muted-foreground"
           disabled={busy || !!active}
           onClick={() => setFinishOpen(true)}
         >
@@ -502,7 +544,7 @@ function SessionPage() {
       )}
 
       {import.meta.env.DEV && (
-        <aside className="rounded-xl border border-dashed p-3 text-xs text-muted-foreground">
+        <aside className="order-6 rounded-xl border border-dashed p-3 text-xs text-muted-foreground">
           <p className="font-semibold">YouTube API (dev)</p>
           <p>
             Chamadas search.list hoje (sem cache): {stats.data?.todayCalls ?? "…"} · Cota estimada:{" "}
@@ -522,21 +564,26 @@ function SessionPage() {
           <Button
             size="lg"
             className="mx-auto flex h-14 w-full max-w-2xl text-base font-semibold"
-            onClick={() => setAddOpen(true)}
+            onClick={() => {
+              setSingerFlowParticipant(null);
+              setSingerFlowOpen(true);
+            }}
           >
             <Plus className="size-5" /> Novo cantor
           </Button>
         </div>
       )}
 
-      <AddSingerDialog
-        open={addOpen}
-        onOpenChange={setAddOpen}
+      <SingerMusicSheet
+        open={singerFlowOpen}
+        onOpenChange={(open) => (open ? setSingerFlowOpen(true) : closeSingerFlow())}
         sessionId={id}
-        onAdded={(p) => {
-          refresh();
-          if (session.session_type !== "x1") setPicking(p);
-        }}
+        initialParticipant={singerFlowParticipant}
+        allowMusic={session.session_type !== "x1"}
+        busy={busy}
+        onParticipantAdded={() => refresh()}
+        onSearched={() => stats.refetch()}
+        onCreatePerformance={createSingerPerformance}
       />
 
       <Dialog open={finishOpen} onOpenChange={setFinishOpen}>
@@ -576,49 +623,6 @@ function SessionPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      <Sheet open={!!picking} onOpenChange={(o) => !o && closePicker()}>
-        <SheetContent side="bottom" className="max-h-[92dvh] overflow-y-auto rounded-t-2xl">
-          <SheetHeader>
-            <SheetTitle>Música para {picking && displayName(picking)}</SheetTitle>
-          </SheetHeader>
-          <div className="px-4 pb-6">
-            {confirm ? (
-              <div className="flex flex-col gap-3">
-                {confirm.thumbnailUrl && (
-                  <img
-                    src={confirm.thumbnailUrl}
-                    alt=""
-                    className="aspect-video w-full rounded-xl object-cover"
-                  />
-                )}
-                <p className="font-semibold">{confirm.title}</p>
-                <p className="text-sm text-muted-foreground">Canal: {confirm.channelName}</p>
-                <div className="grid grid-cols-2 gap-3">
-                  <Button variant="secondary" className="h-12" onClick={() => setConfirm(null)}>
-                    Voltar
-                  </Button>
-                  <Button
-                    className="h-12"
-                    disabled={busy}
-                    onClick={() =>
-                      act(async () => {
-                        await createPerformance(id, picking!.id, confirm);
-                        setPicking(null);
-                        setConfirm(null);
-                      }, "Apresentação criada")
-                    }
-                  >
-                    <Check className="size-4" /> Confirmar
-                  </Button>
-                </div>
-              </div>
-            ) : (
-              <MusicSearch onPick={setConfirm} onSearched={() => stats.refetch()} />
-            )}
-          </div>
-        </SheetContent>
-      </Sheet>
 
       <Sheet open={qrOpen} onOpenChange={setQrOpen}>
         <SheetContent side="bottom" className="max-h-[92dvh] overflow-y-auto rounded-t-2xl">
@@ -827,90 +831,202 @@ function ActivePanel(props: {
   );
 }
 
-function AddSingerDialog({
+function SingerMusicSheet({
   open,
   onOpenChange,
   sessionId,
-  onAdded,
+  initialParticipant,
+  allowMusic,
+  busy,
+  onParticipantAdded,
+  onCreatePerformance,
+  onSearched,
 }: {
   open: boolean;
   onOpenChange: (o: boolean) => void;
   sessionId: string;
-  onAdded: (p: Participant) => void;
+  initialParticipant: Participant | null;
+  allowMusic: boolean;
+  busy: boolean;
+  onParticipantAdded: () => void;
+  onSearched: () => void;
+  onCreatePerformance: (
+    participant: Participant,
+    playback: PlaybackSearchResult,
+    startNow: boolean,
+  ) => Promise<void>;
 }) {
   const [name, setName] = useState("");
   const [stage, setStage] = useState("");
-  const [busy, setBusy] = useState(false);
+  const [participant, setParticipant] = useState<Participant | null>(initialParticipant);
+  const [selected, setSelected] = useState<PlaybackSearchResult | null>(null);
+  const [saving, setSaving] = useState(false);
+  const registering = useRef(false);
   const [err, setErr] = useState<string | null>(null);
-  async function submit(e: React.FormEvent) {
-    e.preventDefault();
+  useEffect(() => {
+    if (!open) return;
+    setParticipant(initialParticipant);
+    setSelected(null);
+    setName("");
+    setStage("");
+    setErr(null);
+  }, [open, initialParticipant]);
+
+  async function register(continueToMusic: boolean) {
+    if (registering.current || saving) return;
     if (!name.trim()) {
       setErr("Informe o nome do cantor.");
       return;
     }
-    setBusy(true);
+    registering.current = true;
+    setSaving(true);
     setErr(null);
     try {
       const p = await addParticipant(sessionId, name, stage);
-      toast.success(`✓ Cantor cadastrado — Cantor ${p.participant_number}: ${displayName(p)}`);
-      onAdded(p);
-      setName("");
-      setStage("");
-      onOpenChange(false);
+      setParticipant(p);
+      onParticipantAdded();
+      toast.success(`Cantor cadastrado — Cantor ${p.participant_number}: ${displayName(p)}`);
+      if (!continueToMusic || !allowMusic) onOpenChange(false);
     } catch (e) {
       setErr((e as Error).message);
     } finally {
-      setBusy(false);
+      registering.current = false;
+      setSaving(false);
     }
   }
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[92dvh] max-w-[calc(100vw-2rem)] overflow-y-auto rounded-2xl sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle className="font-display text-3xl">Novo cantor</DialogTitle>
-        </DialogHeader>
-        <form onSubmit={submit} className="flex flex-col gap-4">
-          <div>
-            <Label htmlFor="pn">Nome *</Label>
-            <Input
-              id="pn"
-              className="mt-2 h-12 text-base"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              autoFocus
-              aria-invalid={!!err}
-            />
-          </div>
-          <div>
-            <Label htmlFor="ps">Nome artístico</Label>
-            <Input
-              id="ps"
-              className="mt-2 h-12 text-base"
-              value={stage}
-              onChange={(e) => setStage(e.target.value)}
-            />
-          </div>
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent side="bottom" className="max-h-[92dvh] overflow-y-auto rounded-t-2xl">
+        <SheetHeader>
+          <SheetTitle className="font-display text-2xl">
+            {participant ? `Música para ${displayName(participant)}` : "Novo cantor"}
+          </SheetTitle>
+        </SheetHeader>
+        <div className="space-y-4 px-4 pb-6">
+          {!participant ? (
+            <form
+              className="space-y-3"
+              onSubmit={(event) => {
+                event.preventDefault();
+                void register(true);
+              }}
+            >
+              <div>
+                <Label htmlFor="singer-name">Nome *</Label>
+                <Input
+                  id="singer-name"
+                  className="mt-2 h-12 text-base"
+                  value={name}
+                  onChange={(event) => setName(event.target.value)}
+                  autoFocus
+                  aria-invalid={!!err}
+                />
+              </div>
+              <div>
+                <Label htmlFor="singer-stage">Nome artístico</Label>
+                <Input
+                  id="singer-stage"
+                  className="mt-2 h-12 text-base"
+                  value={stage}
+                  onChange={(event) => setStage(event.target.value)}
+                />
+              </div>
+              {allowMusic ? (
+                <div className="grid grid-cols-2 gap-2">
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    className="h-12"
+                    disabled={saving}
+                    onClick={() => void register(false)}
+                  >
+                    Cadastrar sem música
+                  </Button>
+                  <Button type="submit" className="h-12" disabled={saving}>
+                    {saving ? "Salvando…" : "Cadastrar e buscar"}
+                  </Button>
+                </div>
+              ) : (
+                <Button
+                  type="button"
+                  className="h-12 w-full"
+                  disabled={saving}
+                  onClick={() => void register(false)}
+                >
+                  {saving ? "Salvando…" : "Cadastrar cantor"}
+                </Button>
+              )}
+            </form>
+          ) : selected ? (
+            <div className="space-y-3">
+              <div className="flex items-center gap-3 rounded-xl border p-3">
+                {selected.thumbnailUrl && (
+                  <img
+                    src={selected.thumbnailUrl}
+                    alt=""
+                    className="aspect-video w-28 rounded-md object-cover"
+                  />
+                )}
+                <div className="min-w-0">
+                  <p className="line-clamp-2 font-semibold">{selected.title}</p>
+                  <p className="text-sm text-muted-foreground">
+                    Canal: {selected.channelName ?? "—"}
+                  </p>
+                  {selected.duration && (
+                    <p className="text-xs text-muted-foreground">{selected.duration}</p>
+                  )}
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  className="h-12"
+                  disabled={saving || busy}
+                  onClick={() => void onCreatePerformance(participant, selected, false)}
+                >
+                  Adicionar à fila
+                </Button>
+                <Button
+                  type="button"
+                  className="h-12"
+                  disabled={saving || busy}
+                  onClick={() => void onCreatePerformance(participant, selected, true)}
+                >
+                  Iniciar no palco agora
+                </Button>
+              </div>
+              <Button
+                type="button"
+                variant="ghost"
+                className="w-full"
+                onClick={() => setSelected(null)}
+              >
+                Escolher outra música
+              </Button>
+            </div>
+          ) : (
+            <>
+              <MusicSearch onPick={setSelected} onSearched={onSearched} />
+              <Button
+                type="button"
+                variant="secondary"
+                className="w-full"
+                onClick={() => onOpenChange(false)}
+              >
+                Continuar sem música
+              </Button>
+            </>
+          )}
           {err && (
             <p role="alert" className="text-sm text-destructive">
               {err}
             </p>
           )}
-          <DialogFooter className="grid grid-cols-2 gap-3 sm:grid-cols-2">
-            <Button
-              type="button"
-              variant="secondary"
-              className="h-12"
-              onClick={() => onOpenChange(false)}
-            >
-              Cancelar
-            </Button>
-            <Button type="submit" className="h-12" disabled={busy}>
-              {busy ? "Salvando…" : "Cadastrar cantor"}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+        </div>
+      </SheetContent>
+    </Sheet>
   );
 }
 

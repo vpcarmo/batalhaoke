@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { Mic2, Tv, Play, Trophy } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -59,6 +59,16 @@ function Home() {
   const [pairingCode, setPairingCode] = useState("");
   const [deviceName, setDeviceName] = useState("");
   const venues = useQuery({ queryKey: ["operator-venues"], queryFn: listOperatorVenues, retry: 1 });
+  useEffect(() => {
+    const authorizedVenues = venues.data ?? [];
+    if (authorizedVenues.length === 1) {
+      setVenueId((current) =>
+        current && authorizedVenues.some((venue) => venue.id === current)
+          ? current
+          : authorizedVenues[0]!.id,
+      );
+    }
+  }, [venues.data]);
   const devicesFn = useServerFn(listVenueDevices);
   const pairDeviceFn = useServerFn(pairVenueDevice);
   const disableDeviceFn = useServerFn(disableVenueDevice);
@@ -194,122 +204,11 @@ function Home() {
               value={name}
               onChange={(e) => setName(e.target.value)}
             />
-            <div className="mt-4">
-              <Label htmlFor="venue">Estabelecimento</Label>
-              <select
-                id="venue"
-                className="mt-2 h-12 w-full rounded-md border border-input bg-background px-3 text-base"
-                value={venueId}
-                onChange={(e) => setVenueId(e.target.value)}
-              >
-                <option value="">Selecione um estabelecimento</option>
-                {(venues.data ?? []).map((venue) => (
-                  <option key={venue.id} value={venue.id}>
-                    {venue.name}
-                  </option>
-                ))}
-              </select>
-              {venues.isError && (
-                <p role="alert" className="mt-2 text-sm text-destructive">
-                  Entre como operador para administrar um estabelecimento.{" "}
-                  <Link to="/login" className="underline">
-                    Entrar
-                  </Link>
-                </p>
-              )}
-            </div>
-            {venueId && (
-              <div className="mt-5 border-t pt-4">
-                <p className="font-medium">Parear TV</p>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  Digite o código exibido na TV e dê um nome para ela.
-                </p>
-                <Input
-                  className="mt-3 h-11"
-                  placeholder="Código da TV (ex.: ABC123)"
-                  value={pairingCode}
-                  onChange={(e) => setPairingCode(e.target.value.toUpperCase())}
-                  maxLength={6}
-                />
-                <Input
-                  className="mt-2 h-11"
-                  placeholder="Nome da TV (ex.: TV Palco Principal)"
-                  value={deviceName}
-                  onChange={(e) => setDeviceName(e.target.value)}
-                />
-                <Button
-                  type="button"
-                  variant="secondary"
-                  className="mt-2 h-11 w-full"
-                  disabled={busy || pairingCode.length !== 6 || !deviceName.trim()}
-                  onClick={() => {
-                    void pairTv();
-                  }}
-                >
-                  Concluir pareamento
-                </Button>
-                {venueId && (
-                  <div className="mt-3 text-sm text-muted-foreground">
-                    {devices.isLoading
-                      ? "Carregando TVs…"
-                      : (devices.data ?? []).length
-                        ? (devices.data ?? []).map((device) => (
-                            <div
-                              key={device.id}
-                              className="mt-2 flex items-center justify-between gap-2"
-                            >
-                              <span>
-                                {device.name || "TV sem nome"} ·{" "}
-                                {device.status === "paired" ? "pareada" : device.status}
-                              </span>
-                              <div className="flex shrink-0 gap-1">
-                                {device.status === "paired" && (
-                                  <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="sm"
-                                    disabled={busy}
-                                    onClick={() => {
-                                      void updateDevice(device.id, "disable");
-                                    }}
-                                  >
-                                    Desabilitar
-                                  </Button>
-                                )}
-                                {device.status === "disabled" && (
-                                  <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="sm"
-                                    disabled={busy}
-                                    onClick={() => {
-                                      void updateDevice(device.id, "enable");
-                                    }}
-                                  >
-                                    Reativar
-                                  </Button>
-                                )}
-                                {(device.status === "paired" || device.status === "disabled") && (
-                                  <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="sm"
-                                    disabled={busy}
-                                    onClick={() => {
-                                      void updateDevice(device.id, "delete");
-                                    }}
-                                  >
-                                    Excluir
-                                  </Button>
-                                )}
-                              </div>
-                            </div>
-                          ))
-                        : "Nenhuma TV pareada ainda."}
-                  </div>
-                )}
-              </div>
-            )}
+            <p className="mt-3 text-sm text-muted-foreground">
+              Estabelecimento:{" "}
+              {(venues.data ?? []).find((venue) => venue.id === venueId)?.name ??
+                "Selecione na seção Gestão de TVs"}
+            </p>
             <div className="mt-5 border-t pt-4">
               <p className="mb-2 text-sm font-medium">Formato</p>
               <div className="grid gap-2" role="radiogroup" aria-label="Formato da sessão">
@@ -413,6 +312,116 @@ function Home() {
           <p role="status" className="text-sm text-success">
             {notice}
           </p>
+        )}
+      </section>
+
+      <section className="rounded-2xl border bg-card p-4">
+        <h2 className="font-display text-2xl">Gestão de TVs</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Pareie e administre as TVs de um estabelecimento sem abrir uma sessão.
+        </p>
+        <Label htmlFor="tv-venue" className="mt-4 block">
+          Estabelecimento
+        </Label>
+        <select
+          id="tv-venue"
+          className="mt-2 h-12 w-full rounded-md border border-input bg-background px-3 text-base"
+          value={venueId}
+          onChange={(e) => setVenueId(e.target.value)}
+        >
+          <option value="">Selecione um estabelecimento</option>
+          {(venues.data ?? []).map((venue) => (
+            <option key={venue.id} value={venue.id}>
+              {venue.name}
+            </option>
+          ))}
+        </select>
+        {venues.isError && (
+          <p role="alert" className="mt-2 text-sm text-destructive">
+            Entre como operador para administrar um estabelecimento.{" "}
+            <Link to="/login" className="underline">
+              Entrar
+            </Link>
+          </p>
+        )}
+        {venueId && (
+          <div className="mt-5 border-t pt-4">
+            <p className="font-medium">Parear TV</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Digite o código exibido na TV e dê um nome para ela.
+            </p>
+            <Input
+              className="mt-3 h-11"
+              placeholder="Código da TV (ex.: ABC123)"
+              value={pairingCode}
+              onChange={(e) => setPairingCode(e.target.value.toUpperCase())}
+              maxLength={6}
+            />
+            <Input
+              className="mt-2 h-11"
+              placeholder="Nome da TV (ex.: TV Palco Principal)"
+              value={deviceName}
+              onChange={(e) => setDeviceName(e.target.value)}
+            />
+            <Button
+              type="button"
+              variant="secondary"
+              className="mt-2 h-11 w-full"
+              disabled={busy || pairingCode.length !== 6 || !deviceName.trim()}
+              onClick={() => void pairTv()}
+            >
+              Concluir pareamento
+            </Button>
+            <div className="mt-3 text-sm text-muted-foreground">
+              {devices.isLoading
+                ? "Carregando TVs…"
+                : (devices.data ?? []).length
+                  ? (devices.data ?? []).map((device) => (
+                      <div key={device.id} className="mt-2 flex items-center justify-between gap-2">
+                        <span>
+                          {device.name || "TV sem nome"} ·{" "}
+                          {device.status === "paired" ? "pareada" : device.status}
+                        </span>
+                        <div className="flex shrink-0 gap-1">
+                          {device.status === "paired" && (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              disabled={busy}
+                              onClick={() => void updateDevice(device.id, "disable")}
+                            >
+                              Desabilitar
+                            </Button>
+                          )}
+                          {device.status === "disabled" && (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              disabled={busy}
+                              onClick={() => void updateDevice(device.id, "enable")}
+                            >
+                              Reativar
+                            </Button>
+                          )}
+                          {(device.status === "paired" || device.status === "disabled") && (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              disabled={busy}
+                              onClick={() => void updateDevice(device.id, "delete")}
+                            >
+                              Excluir
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    ))
+                  : "Nenhuma TV pareada ainda."}
+            </div>
+          </div>
         )}
       </section>
 
