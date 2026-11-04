@@ -302,7 +302,7 @@ function TvPage() {
   }, [sessionId]);
 
   const brand = (
-    <header className="relative flex items-center justify-center gap-3 lg:justify-start">
+    <header className="tv-brand relative flex items-center justify-center gap-3 lg:justify-start">
       <Mic2 className="size-8 text-primary lg:size-10" aria-hidden />
       <p className="font-display text-4xl lg:text-5xl">BatalhaOkê</p>
       <button
@@ -310,7 +310,7 @@ function TvPage() {
         onClick={toggleFullscreen}
         aria-label={isFullscreen ? "Sair da tela cheia" : "Entrar em tela cheia"}
         title={isFullscreen ? "Sair da tela cheia" : "Entrar em tela cheia"}
-        className="absolute right-0 top-1/2 -translate-y-1/2 rounded-full border border-border/60 p-3 text-muted-foreground hover:bg-accent/10 hover:text-foreground lg:p-4 focus-visible:outline-2 focus-visible:outline-ring"
+        className="tv-fullscreen absolute right-0 top-1/2 -translate-y-1/2 rounded-full border border-border/60 p-3 text-muted-foreground hover:bg-accent/10 hover:text-foreground lg:p-4 focus-visible:outline-2 focus-visible:outline-ring"
       >
         {isFullscreen ? (
           <Minimize2 className="size-6 lg:size-8" aria-hidden />
@@ -429,7 +429,7 @@ function TvPage() {
     isChampionshipVoting;
 
   return (
-    <main className="flex min-h-dvh flex-col gap-3 p-3 sm:gap-4 sm:p-5 lg:p-6">
+    <main className="tv-screen flex min-h-dvh flex-col gap-3 p-3 sm:gap-4 sm:p-5 lg:p-6">
       {brand}
       {live.error && (
         <p role="alert" className="text-center text-xl text-destructive">
@@ -437,11 +437,11 @@ function TvPage() {
         </p>
       )}
       <div
-        className={`grid min-h-0 flex-1 content-center gap-4 ${showQr ? "lg:grid-cols-[minmax(0,1fr)_auto]" : ""}`}
+        className={`tv-content grid min-h-0 flex-1 content-center gap-4 ${showQr && !active?.source ? "lg:grid-cols-[minmax(0,1fr)_auto]" : ""}`}
       >
         {active?.source && active.participant ? (
-          <div className="grid min-h-0 grid-rows-[minmax(0,1fr)_auto] items-center gap-2">
-            <section className="order-2 text-center animate-in fade-in duration-500 lg:text-left">
+          <div className="tv-playing-inner grid min-h-0 min-w-0 grid-cols-1 items-center gap-2 lg:grid-cols-[minmax(0,3fr)_minmax(250px,1fr)]">
+            <section className="tv-performance-panel order-2 text-center animate-in fade-in duration-500 lg:text-left">
               <p className="text-sm text-muted-foreground lg:text-base">
                 Cantor {active.participant.participant_number}
               </p>
@@ -473,8 +473,18 @@ function TvPage() {
                   performances={live.performances.data ?? []}
                 />
               )}
+              {showQr && session && (
+                <div className="tv-playback-qr mt-4 flex flex-col items-center gap-3 text-center">
+                  {votingCode ? (
+                    <SessionQr code={votingCode} size={220} />
+                  ) : (
+                    <p className="text-muted-foreground">Carregando QR Code permanente…</p>
+                  )}
+                  <p className="font-display text-xl">Escaneie para votar</p>
+                </div>
+              )}
             </section>
-            <section className="order-1 mx-auto w-full min-w-0 max-w-[min(100%,115dvh)]">
+            <section className="tv-video order-1 mx-auto w-full min-w-0 max-w-[min(100%,115dvh)] lg:col-start-1 lg:row-start-1">
               <PlaybackPlayer
                 key={active.id}
                 ref={playerRef}
@@ -612,7 +622,7 @@ function TvPage() {
             </div>
           </div>
         )}
-        {showQr && session && (
+        {showQr && session && !active?.source && (
           <aside className="flex flex-col items-center justify-center gap-3 text-center">
             {votingCode ? (
               <SessionQr code={votingCode} size={isFreeWaiting || isX1Waiting ? 300 : 240} />
@@ -638,7 +648,7 @@ function TvPage() {
               playerRef.current?.play();
             }
           }}
-          className="mx-auto rounded-xl border-2 border-primary bg-primary/10 px-6 py-4 text-center text-lg font-semibold text-primary focus-visible:outline-2 focus-visible:outline-ring"
+          className="tv-audio-prompt mx-auto rounded-xl border-2 border-primary bg-primary/10 px-6 py-4 text-center text-lg font-semibold text-primary focus-visible:outline-2 focus-visible:outline-ring"
         >
           {armed
             ? "Interação recebida. Se o áudio não iniciar, toque novamente na tela com o controle remoto."
