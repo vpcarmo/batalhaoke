@@ -65,7 +65,9 @@ function SuperadminPage() {
       <main className="flex min-h-screen items-center justify-center p-6 text-center">
         <div>
           <h1 className="text-2xl font-bold">Acesso negado</h1>
-          <p className="mt-2 text-muted-foreground">Esta área é restrita à administração da plataforma.</p>
+          <p className="mt-2 text-muted-foreground">
+            Esta área é restrita à administração da plataforma.
+          </p>
         </div>
       </main>
     );
@@ -90,23 +92,40 @@ function Dashboard() {
         </Button>
       </header>
       <section className="grid grid-cols-2 gap-3">
-        <Stat icon={<Building2 className="h-5 w-5" />} label="Estabelecimentos" value={list.length} />
-        <Stat icon={<Users className="h-5 w-5" />} label="Vínculos de operadores" value={totalLinks} />
+        <Stat
+          icon={<Building2 className="h-5 w-5" />}
+          label="Estabelecimentos"
+          value={list.length}
+        />
+        <Stat
+          icon={<Users className="h-5 w-5" />}
+          label="Vínculos de operadores"
+          value={totalLinks}
+        />
       </section>
       {venues.isLoading && <Loader2 className="h-5 w-5 animate-spin" />}
       {venues.error && <p className="text-destructive">{errMsg(venues.error)}</p>}
       <ul className="space-y-2">
         {list.map((v) => (
-          <li key={v.id} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border bg-card p-4">
+          <li
+            key={v.id}
+            className="flex flex-wrap items-center justify-between gap-2 rounded-lg border bg-card p-4"
+          >
             <div className="min-w-0">
               <p className="font-semibold">{v.name}</p>
               <p className="truncate text-xs text-muted-foreground">
                 {v.slug ?? "sem slug"} · {new Date(v.created_at).toLocaleDateString("pt-BR")} ·{" "}
                 {v.operatorCount} operador(es)
-                {v.operatorCount === 0 && <span className="ml-1 font-medium text-destructive">· sem proprietário</span>}
+                {v.operatorCount === 0 && (
+                  <span className="ml-1 font-medium text-destructive">· sem proprietário</span>
+                )}
               </p>
             </div>
-            <Button variant="outline" size="sm" onClick={() => setManage({ id: v.id, name: v.name })}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setManage({ id: v.id, name: v.name })}
+            >
               Gerenciar operadores
             </Button>
           </li>
@@ -121,7 +140,10 @@ function Dashboard() {
 function Stat({ icon, label, value }: { icon: React.ReactNode; label: string; value: number }) {
   return (
     <div className="rounded-lg border bg-card p-4">
-      <div className="flex items-center gap-2 text-sm text-muted-foreground">{icon}{label}</div>
+      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+        {icon}
+        {label}
+      </div>
       <p className="mt-1 text-3xl font-bold">{value}</p>
     </div>
   );
@@ -129,13 +151,27 @@ function Stat({ icon, label, value }: { icon: React.ReactNode; label: string; va
 
 function useUserCheck() {
   const findFn = useServerFn(findConfirmedUserFn);
-  const [check, setCheck] = useState<{ busy: boolean; msg: string | null; ok: boolean }>({ busy: false, msg: null, ok: false });
+  const [check, setCheck] = useState<{ busy: boolean; msg: string | null; ok: boolean }>({
+    busy: false,
+    msg: null,
+    ok: false,
+  });
   async function run(email: string) {
     setCheck({ busy: true, msg: null, ok: false });
     try {
       const { user } = await findFn({ data: { email } });
-      if (!user) setCheck({ busy: false, ok: false, msg: "Conta não encontrada. A pessoa deve se cadastrar em /login." });
-      else if (!user.emailConfirmed) setCheck({ busy: false, ok: false, msg: "Conta encontrada, mas o e-mail não foi confirmado." });
+      if (!user)
+        setCheck({
+          busy: false,
+          ok: false,
+          msg: "Conta não encontrada. A pessoa deve se cadastrar em /login.",
+        });
+      else if (!user.emailConfirmed)
+        setCheck({
+          busy: false,
+          ok: false,
+          msg: "Conta encontrada, mas o e-mail não foi confirmado.",
+        });
       else setCheck({ busy: false, ok: true, msg: `Conta confirmada: ${user.email}` });
     } catch (e) {
       setCheck({ busy: false, ok: false, msg: errMsg(e) });
@@ -146,7 +182,11 @@ function useUserCheck() {
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-function CreateVenueDialog({ open, onOpenChange, onManage }: {
+function CreateVenueDialog({
+  open,
+  onOpenChange,
+  onManage,
+}: {
   open: boolean;
   onOpenChange: (o: boolean) => void;
   onManage: (v: { id: string; name: string }) => void;
@@ -156,7 +196,11 @@ function CreateVenueDialog({ open, onOpenChange, onManage }: {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [busy, setBusy] = useState(false);
-  const [result, setResult] = useState<{ kind: "ok" | "pending" | "error"; text: string; venueId?: string } | null>(null);
+  const [result, setResult] = useState<{
+    kind: "ok" | "pending" | "error";
+    text: string;
+    venueId?: string;
+  } | null>(null);
   const { check, run, reset } = useUserCheck();
   const valid = name.trim().length >= 2 && EMAIL_RE.test(email.trim());
 
@@ -170,7 +214,11 @@ function CreateVenueDialog({ open, onOpenChange, onManage }: {
       setResult(
         r.status === "linked"
           ? { kind: "ok", text: "Estabelecimento e proprietário vinculados com sucesso." }
-          : { kind: "pending", text: `Estabelecimento criado, mas vínculo do proprietário pendente: ${r.message}`, venueId: r.venueId },
+          : {
+              kind: "pending",
+              text: `Estabelecimento criado, mas vínculo do proprietário pendente: ${r.message}`,
+              venueId: r.venueId,
+            },
       );
     } catch (err) {
       setResult({ kind: "error", text: `Operação não concluída: ${errMsg(err)}` });
@@ -181,38 +229,77 @@ function CreateVenueDialog({ open, onOpenChange, onManage }: {
   }
   function close(o: boolean) {
     if (busy) return;
-    if (!o) { setName(""); setEmail(""); setResult(null); reset(); }
+    if (!o) {
+      setName("");
+      setEmail("");
+      setResult(null);
+      reset();
+    }
     onOpenChange(o);
   }
   return (
     <Dialog open={open} onOpenChange={close}>
       <DialogContent>
-        <DialogHeader><DialogTitle>Cadastrar estabelecimento</DialogTitle></DialogHeader>
+        <DialogHeader>
+          <DialogTitle>Cadastrar estabelecimento</DialogTitle>
+        </DialogHeader>
         {result && result.kind !== "error" ? (
           <div className="space-y-3">
-            <p className={result.kind === "ok" ? "text-success" : "text-destructive"}>{result.text}</p>
+            <p className={result.kind === "ok" ? "text-success" : "text-destructive"}>
+              {result.text}
+            </p>
             {result.kind === "pending" && result.venueId && (
-              <Button onClick={() => { const v = { id: result.venueId!, name }; close(false); onManage(v); }}>
+              <Button
+                onClick={() => {
+                  const v = { id: result.venueId!, name };
+                  close(false);
+                  onManage(v);
+                }}
+              >
                 Concluir vínculo do proprietário
               </Button>
             )}
-            <Button variant="outline" onClick={() => close(false)}>Fechar</Button>
+            <Button variant="outline" onClick={() => close(false)}>
+              Fechar
+            </Button>
           </div>
         ) : (
           <form onSubmit={submit} className="space-y-4">
             <div className="space-y-1">
               <Label htmlFor="sa-name">Nome do estabelecimento</Label>
-              <Input id="sa-name" value={name} maxLength={120} onChange={(e) => setName(e.target.value)} />
+              <Input
+                id="sa-name"
+                value={name}
+                maxLength={120}
+                onChange={(e) => setName(e.target.value)}
+              />
             </div>
             <div className="space-y-1">
               <Label htmlFor="sa-email">E-mail do proprietário</Label>
               <div className="flex gap-2">
-                <Input id="sa-email" type="email" value={email} onChange={(e) => { setEmail(e.target.value); reset(); }} />
-                <Button type="button" variant="outline" disabled={!EMAIL_RE.test(email.trim()) || check.busy} onClick={() => run(email)}>
+                <Input
+                  id="sa-email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    reset();
+                  }}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={!EMAIL_RE.test(email.trim()) || check.busy}
+                  onClick={() => run(email)}
+                >
                   {check.busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Verificar"}
                 </Button>
               </div>
-              {check.msg && <p className={`text-sm ${check.ok ? "text-success" : "text-destructive"}`}>{check.msg}</p>}
+              {check.msg && (
+                <p className={`text-sm ${check.ok ? "text-success" : "text-destructive"}`}>
+                  {check.msg}
+                </p>
+              )}
             </div>
             {result?.kind === "error" && <p className="text-sm text-destructive">{result.text}</p>}
             <Button type="submit" disabled={!valid || busy || !check.ok} className="w-full">
@@ -225,11 +312,20 @@ function CreateVenueDialog({ open, onOpenChange, onManage }: {
   );
 }
 
-function OperatorsDialog({ venue, onClose }: { venue: { id: string; name: string }; onClose: () => void }) {
+function OperatorsDialog({
+  venue,
+  onClose,
+}: {
+  venue: { id: string; name: string };
+  onClose: () => void;
+}) {
   const qc = useQueryClient();
   const listFn = useServerFn(listVenueOperatorsFn);
   const linkFn = useServerFn(linkVenueOperatorFn);
-  const ops = useQuery({ queryKey: ["sa-ops", venue.id], queryFn: () => listFn({ data: { venueId: venue.id } }) });
+  const ops = useQuery({
+    queryKey: ["sa-ops", venue.id],
+    queryFn: () => listFn({ data: { venueId: venue.id } }),
+  });
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<"owner" | "operator">("operator");
   const [busy, setBusy] = useState(false);
@@ -259,32 +355,71 @@ function OperatorsDialog({ venue, onClose }: { venue: { id: string; name: string
   return (
     <Dialog open onOpenChange={(o) => !o && !busy && onClose()}>
       <DialogContent>
-        <DialogHeader><DialogTitle>Operadores — {venue.name}</DialogTitle></DialogHeader>
+        <DialogHeader>
+          <DialogTitle>Operadores — {venue.name}</DialogTitle>
+        </DialogHeader>
         {ops.isLoading && <Loader2 className="h-5 w-5 animate-spin" />}
         {ops.error && <p className="text-sm text-destructive">{errMsg(ops.error)}</p>}
         <ul className="space-y-1 text-sm">
-          {ops.data?.length === 0 && <li className="text-muted-foreground">Nenhum operador vinculado.</li>}
+          {ops.data?.length === 0 && (
+            <li className="text-muted-foreground">Nenhum operador vinculado.</li>
+          )}
           {ops.data?.map((o) => (
             <li key={o.user_id} className="flex justify-between gap-2 rounded border p-2">
               <span className="truncate">{o.email ?? o.user_id}</span>
-              <span className="font-medium">{o.role === "owner" ? "Proprietário" : "Operador"}</span>
+              <span className="font-medium">
+                {o.role === "owner" ? "Proprietário" : "Operador"}
+              </span>
             </li>
           ))}
         </ul>
         <form onSubmit={submit} className="space-y-3 border-t pt-3">
           <Label htmlFor="op-email">Adicionar por e-mail</Label>
           <div className="flex gap-2">
-            <Input id="op-email" type="email" value={email} onChange={(e) => { setEmail(e.target.value); reset(); }} />
-            <Button type="button" variant="outline" disabled={!EMAIL_RE.test(email.trim()) || check.busy} onClick={() => run(email)}>
+            <Input
+              id="op-email"
+              type="email"
+              value={email}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                reset();
+              }}
+            />
+            <Button
+              type="button"
+              variant="outline"
+              disabled={!EMAIL_RE.test(email.trim()) || check.busy}
+              onClick={() => run(email)}
+            >
               {check.busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Verificar"}
             </Button>
           </div>
-          {check.msg && <p className={`text-sm ${check.ok ? "text-success" : "text-destructive"}`}>{check.msg}</p>}
+          {check.msg && (
+            <p className={`text-sm ${check.ok ? "text-success" : "text-destructive"}`}>
+              {check.msg}
+            </p>
+          )}
           <div className="flex gap-2">
-            <Button type="button" size="sm" variant={role === "operator" ? "default" : "outline"} onClick={() => setRole("operator")}>Operador</Button>
-            <Button type="button" size="sm" variant={role === "owner" ? "default" : "outline"} onClick={() => setRole("owner")}>Proprietário</Button>
+            <Button
+              type="button"
+              size="sm"
+              variant={role === "operator" ? "default" : "outline"}
+              onClick={() => setRole("operator")}
+            >
+              Operador
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant={role === "owner" ? "default" : "outline"}
+              onClick={() => setRole("owner")}
+            >
+              Proprietário
+            </Button>
           </div>
-          {msg && <p className={`text-sm ${msg.ok ? "text-success" : "text-destructive"}`}>{msg.text}</p>}
+          {msg && (
+            <p className={`text-sm ${msg.ok ? "text-success" : "text-destructive"}`}>{msg.text}</p>
+          )}
           <Button type="submit" className="w-full" disabled={busy || !EMAIL_RE.test(email.trim())}>
             {busy && <Loader2 className="h-4 w-4 animate-spin" />} Vincular
           </Button>
