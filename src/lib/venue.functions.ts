@@ -151,7 +151,7 @@ export const listOperatorVenues = createServerFn({ method: "GET" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: links, error: linksError } = await supabaseAdmin
       .from("venue_operators")
-      .select("venue_id")
+      .select("venue_id, role")
       .eq("user_id", context.userId);
     if (linksError) throw new Error("Não foi possível carregar seus estabelecimentos.");
     const venueIds = links.map((link) => link.venue_id);
@@ -162,7 +162,10 @@ export const listOperatorVenues = createServerFn({ method: "GET" })
       .in("id", venueIds)
       .order("name");
     if (error) throw new Error("Não foi possível carregar seus estabelecimentos.");
-    return data ?? [];
+    return (data ?? []).map((venue) => ({
+      ...venue,
+      role: links.find((link) => link.venue_id === venue.id)?.role ?? "operator",
+    }));
   });
 
 export const listVenueDevices = createServerFn({ method: "POST" })

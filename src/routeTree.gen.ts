@@ -19,6 +19,7 @@ import { Route as InscreverIdRouteImport } from './routes/inscrever.$id'
 import { Route as QrCodeRouteImport } from './routes/qr.$code'
 import { Route as SessaoIdRouteImport } from './routes/sessao.$id'
 import { Route as VotarCodeRouteImport } from './routes/votar.$code'
+import { Route as EstabelecimentoVenueIdOperadoresRouteImport } from './routes/estabelecimento.$venueId.operadores'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -70,6 +71,12 @@ const VotarCodeRoute = VotarCodeRouteImport.update({
   path: '/votar/$code',
   getParentRoute: () => rootRouteImport,
 } as any)
+const EstabelecimentoVenueIdOperadoresRoute =
+  EstabelecimentoVenueIdOperadoresRouteImport.update({
+    id: '/estabelecimento/$venueId/operadores',
+    path: '/estabelecimento/$venueId/operadores',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -82,6 +89,7 @@ export interface FileRoutesByFullPath {
   '/qr/$code': typeof QrCodeRoute
   '/sessao/$id': typeof SessaoIdRoute
   '/votar/$code': typeof VotarCodeRoute
+  '/estabelecimento/$venueId/operadores': typeof EstabelecimentoVenueIdOperadoresRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -94,6 +102,7 @@ export interface FileRoutesByTo {
   '/qr/$code': typeof QrCodeRoute
   '/sessao/$id': typeof SessaoIdRoute
   '/votar/$code': typeof VotarCodeRoute
+  '/estabelecimento/$venueId/operadores': typeof EstabelecimentoVenueIdOperadoresRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -107,6 +116,7 @@ export interface FileRoutesById {
   '/qr/$code': typeof QrCodeRoute
   '/sessao/$id': typeof SessaoIdRoute
   '/votar/$code': typeof VotarCodeRoute
+  '/estabelecimento/$venueId/operadores': typeof EstabelecimentoVenueIdOperadoresRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -121,6 +131,7 @@ export interface FileRouteTypes {
     | '/qr/$code'
     | '/sessao/$id'
     | '/votar/$code'
+    | '/estabelecimento/$venueId/operadores'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -133,6 +144,7 @@ export interface FileRouteTypes {
     | '/qr/$code'
     | '/sessao/$id'
     | '/votar/$code'
+    | '/estabelecimento/$venueId/operadores'
   id:
     | '__root__'
     | '/'
@@ -145,6 +157,7 @@ export interface FileRouteTypes {
     | '/qr/$code'
     | '/sessao/$id'
     | '/votar/$code'
+    | '/estabelecimento/$venueId/operadores'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -157,6 +170,7 @@ export interface RootRouteChildren {
   QrCodeRoute: typeof QrCodeRoute
   SessaoIdRoute: typeof SessaoIdRoute
   VotarCodeRoute: typeof VotarCodeRoute
+  EstabelecimentoVenueIdOperadoresRoute: typeof EstabelecimentoVenueIdOperadoresRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -231,6 +245,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof VotarCodeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/estabelecimento/$venueId/operadores': {
+      id: '/estabelecimento/$venueId/operadores'
+      path: '/estabelecimento/$venueId/operadores'
+      fullPath: '/estabelecimento/$venueId/operadores'
+      preLoaderRoute: typeof EstabelecimentoVenueIdOperadoresRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -256,6 +277,7 @@ const rootRouteChildren: RootRouteChildren = {
   QrCodeRoute: QrCodeRoute,
   SessaoIdRoute: SessaoIdRoute,
   VotarCodeRoute: VotarCodeRoute,
+  EstabelecimentoVenueIdOperadoresRoute: EstabelecimentoVenueIdOperadoresRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

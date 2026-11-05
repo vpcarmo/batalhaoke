@@ -346,6 +346,13 @@ function Home() {
         )}
         {venueId && (
           <div className="mt-5 border-t pt-4">
+            {(venues.data ?? []).find((venue) => venue.id === venueId)?.role === "owner" && (
+              <Button asChild type="button" variant="outline" className="mb-4 h-11 w-full">
+                <Link to="/estabelecimento/$venueId/operadores" params={{ venueId }}>
+                  Gerenciar operadores
+                </Link>
+              </Button>
+            )}
             <p className="font-medium">Parear TV</p>
             <p className="mt-1 text-sm text-muted-foreground">
               Digite o código exibido na TV e dê um nome para ela.
