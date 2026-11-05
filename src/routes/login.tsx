@@ -25,7 +25,7 @@ export const Route = createFileRoute("/login")({
 });
 
 function LoginPage() {
-  const [mode, setMode] = useState<"signin" | "signup">("signin");
+  const [mode, setMode] = useState<"signin" | "signup" | "set-password">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
@@ -35,6 +35,11 @@ function LoginPage() {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
+    if (
+      window.location.hash.includes("type=recovery") ||
+      window.location.hash.includes("type=invite")
+    )
+      setMode("set-password");
     // getUser re-validates with the auth server, so an expired/revoked session shows as signed out.
     supabase.auth.getUser().then(({ data, error: err }) => {
       if (err && err.name !== "AuthSessionMissingError")
@@ -43,6 +48,7 @@ function LoginPage() {
       setReady(true);
     });
     const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "PASSWORD_RECOVERY") setMode("set-password");
       if (event === "SIGNED_IN" || event === "SIGNED_OUT" || event === "USER_UPDATED")
         setUserEmail(session?.user.email ?? null);
     });
@@ -61,6 +67,17 @@ function LoginPage() {
       setBusy(false);
       if (err) setError("E-mail ou senha inválidos.");
       else setPassword("");
+      return;
+    }
+    if (mode === "set-password") {
+      const { error: err } = await supabase.auth.updateUser({ password });
+      setBusy(false);
+      if (err) setError("Não foi possível definir a senha. Solicite um novo link.");
+      else {
+        setPassword("");
+        setMode("signin");
+        window.history.replaceState(null, "", window.location.pathname);
+      }
       return;
     }
     // Signup: email confirmation is enabled, so data.session is null until the user
@@ -93,7 +110,7 @@ function LoginPage() {
         </div>
         {!ready ? (
           <p className="text-sm text-muted-foreground">Carregando…</p>
-        ) : userEmail ? (
+        ) : userEmail && mode !== "set-password" ? (
           <div className="space-y-4">
             <p className="text-sm">
               Conectado como <strong>{userEmail}</strong>.
@@ -144,7 +161,7 @@ function LoginPage() {
                 type="password"
                 autoComplete={mode === "signin" ? "current-password" : "new-password"}
                 required
-                minLength={mode === "signup" ? 8 : undefined}
+                minLength={mode === "signin" ? undefined : 8}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
@@ -161,17 +178,23 @@ function LoginPage() {
                   : "Criando conta…"
                 : mode === "signin"
                   ? "Entrar"
-                  : "Criar conta"}
+                  : mode === "signup"
+                    ? "Criar conta"
+                    : "Definir senha"}
             </Button>
             <button
               type="button"
               className="w-full text-center text-sm text-muted-foreground underline"
               onClick={() => {
-                setMode(mode === "signin" ? "signup" : "signin");
+                if (mode !== "set-password") setMode(mode === "signin" ? "signup" : "signin");
                 setError(null);
               }}
             >
-              {mode === "signin" ? "Não tem conta? Cadastre-se" : "Já tem conta? Entrar"}
+              {mode === "signin"
+                ? "Não tem conta? Cadastre-se"
+                : mode === "signup"
+                  ? "Já tem conta? Entrar"
+                  : "Voltar para entrar"}
             </button>
           </form>
         )}

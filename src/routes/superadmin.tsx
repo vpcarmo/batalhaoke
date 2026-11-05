@@ -15,6 +15,13 @@ import {
   linkVenueOperatorFn,
   listSuperadminVenuesFn,
   listVenueOperatorsFn,
+  listSuperadminUsersFn,
+  getSuperadminUserFn,
+  createSuperadminUserFn,
+  updateSuperadminUserFn,
+  banSuperadminUserFn,
+  recoverSuperadminUserFn,
+  deleteSuperadminUserFn,
 } from "@/lib/superadmin.functions";
 
 export const Route = createFileRoute("/superadmin")({
@@ -103,6 +110,7 @@ function Dashboard() {
           value={totalLinks}
         />
       </section>
+      <UsersPanel />
       {venues.isLoading && <Loader2 className="h-5 w-5 animate-spin" />}
       {venues.error && <p className="text-destructive">{errMsg(venues.error)}</p>}
       <ul className="space-y-2">
@@ -134,6 +142,310 @@ function Dashboard() {
       <CreateVenueDialog open={createOpen} onOpenChange={setCreateOpen} onManage={setManage} />
       {manage && <OperatorsDialog venue={manage} onClose={() => setManage(null)} />}
     </main>
+  );
+}
+
+function UsersPanel() {
+  const qc = useQueryClient();
+  const listFn = useServerFn(listSuperadminUsersFn);
+  const detailFn = useServerFn(getSuperadminUserFn);
+  const createFn = useServerFn(createSuperadminUserFn);
+  const updateFn = useServerFn(updateSuperadminUserFn);
+  const banFn = useServerFn(banSuperadminUserFn);
+  const recoverFn = useServerFn(recoverSuperadminUserFn);
+  const deleteFn = useServerFn(deleteSuperadminUserFn);
+  const [page, setPage] = useState(1);
+  const [email, setEmail] = useState("");
+  const [search, setSearch] = useState("");
+  const [selected, setSelected] = useState<string | null>(null);
+  const [createOpen, setCreateOpen] = useState(false);
+  const [name, setName] = useState("");
+  const [newEmail, setNewEmail] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState("");
+  const users = useQuery({
+    queryKey: ["sa-users", page, search],
+    queryFn: () => listFn({ data: { page, perPage: 20, ...(search ? { email: search } : {}) } }),
+  });
+  const detail = useQuery({
+    queryKey: ["sa-user", selected],
+    queryFn: () => detailFn({ data: { userId: selected! } }),
+    enabled: !!selected,
+  });
+  const refresh = async () => {
+    await Promise.all([
+      qc.invalidateQueries({ queryKey: ["sa-users"] }),
+      qc.invalidateQueries({ queryKey: ["sa-user", selected] }),
+    ]);
+  };
+  async function act(fn: () => Promise<unknown>) {
+    setBusy(true);
+    setMessage("");
+    try {
+      await fn();
+      setMessage("Operação concluída.");
+      await refresh();
+    } catch (e) {
+      setMessage(errMsg(e));
+    } finally {
+      setBusy(false);
+    }
+  }
+  return (
+    <section className="space-y-3 rounded-lg border p-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h2 className="text-xl font-semibold">Usuários</h2>
+        <Button
+          onClick={() => {
+            setCreateOpen(true);
+            setMessage("");
+          }}
+        >
+          Criar usuário
+        </Button>
+      </div>
+      <form
+        className="flex gap-2"
+        onSubmit={(e) => {
+          e.preventDefault();
+          setPage(1);
+          setSearch(email.trim());
+        }}
+      >
+        <Input
+          aria-label="Pesquisar por e-mail"
+          placeholder="Pesquisar por e-mail"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
+        <Button variant="outline">Pesquisar</Button>
+      </form>
+      {users.isLoading && <Loader2 className="h-5 w-5 animate-spin" />}
+      {users.error && <p className="text-sm text-destructive">{errMsg(users.error)}</p>}
+      {!users.isLoading && users.data?.users.length === 0 && (
+        <p className="text-sm text-muted-foreground">Nenhum usuário encontrado.</p>
+      )}
+      <ul className="divide-y">
+        {users.data?.users.map(
+          (u: {
+            id: string;
+            name: string;
+            isSuperadmin: boolean;
+            email: string;
+            emailConfirmed: boolean;
+            banned: boolean;
+            createdAt: string;
+          }) => (
+            <li key={u.id} className="flex flex-wrap items-center justify-between gap-2 py-3">
+              <div>
+                <p className="font-medium">
+                  {u.name || "Sem nome"}{" "}
+                  {u.isSuperadmin && <span className="text-xs text-primary">SuperAdmin</span>}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  {u.email} · {u.emailConfirmed ? "E-mail confirmado" : "Pendente"} ·{" "}
+                  {u.banned ? "Bloqueado" : "Ativo"} ·{" "}
+                  {u.createdAt ? new Date(u.createdAt).toLocaleDateString("pt-BR") : ""}
+                </p>
+              </div>
+              <Button size="sm" variant="outline" onClick={() => setSelected(u.id)}>
+                Detalhes
+              </Button>
+            </li>
+          ),
+        )}
+      </ul>
+      <div className="flex items-center justify-between">
+        <Button
+          variant="outline"
+          disabled={page <= 1 || users.isLoading}
+          onClick={() => setPage((p) => p - 1)}
+        >
+          Anterior
+        </Button>
+        <span className="text-sm">Página {page}</span>
+        <Button
+          variant="outline"
+          disabled={!users.data?.hasMore || users.isLoading}
+          onClick={() => setPage((p) => p + 1)}
+        >
+          Próxima
+        </Button>
+      </div>
+      {message && (
+        <p role="status" className="text-sm text-muted-foreground">
+          {message}
+        </p>
+      )}
+      <Dialog open={createOpen} onOpenChange={(o) => !busy && setCreateOpen(o)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Criar usuário</DialogTitle>
+          </DialogHeader>
+          <form
+            className="space-y-3"
+            onSubmit={(e) => {
+              e.preventDefault();
+              void act(async () => {
+                await createFn({ data: { name, email: newEmail } });
+                setCreateOpen(false);
+                setName("");
+                setNewEmail("");
+              });
+            }}
+          >
+            <Label>Nome</Label>
+            <Input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              maxLength={120}
+              required
+            />
+            <Label>E-mail</Label>
+            <Input
+              type="email"
+              value={newEmail}
+              onChange={(e) => setNewEmail(e.target.value)}
+              required
+            />
+            <p className="text-xs text-muted-foreground">
+              A pessoa receberá convite para definir a própria senha.
+            </p>
+            <Button disabled={busy} className="w-full">
+              {busy && <Loader2 className="h-4 w-4 animate-spin" />}Enviar convite
+            </Button>
+          </form>
+        </DialogContent>
+      </Dialog>
+      {selected && (
+        <Dialog open onOpenChange={(o) => !o && !busy && setSelected(null)}>
+          <DialogContent className="max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Detalhes do usuário</DialogTitle>
+            </DialogHeader>
+            {detail.isLoading && <Loader2 className="h-5 w-5 animate-spin" />}
+            {detail.error && <p className="text-destructive">{errMsg(detail.error)}</p>}
+            {detail.data && (
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Nome</Label>
+                  <Input
+                    value={name || detail.data.name}
+                    onChange={(e) => setName(e.target.value)}
+                  />
+                  <Label>E-mail</Label>
+                  <Input
+                    type="email"
+                    value={newEmail || detail.data.email}
+                    onChange={(e) => setNewEmail(e.target.value)}
+                  />
+                  <Button
+                    disabled={busy}
+                    variant="outline"
+                    onClick={() =>
+                      void act(async () => {
+                        await updateFn({
+                          data: {
+                            userId: selected,
+                            name: name || detail.data!.name,
+                            email: newEmail || detail.data!.email,
+                          },
+                        });
+                        setName("");
+                        setNewEmail("");
+                      })
+                    }
+                  >
+                    Salvar dados
+                  </Button>
+                </div>
+                <div>
+                  <h3 className="font-semibold">Contas · papéis administrativos</h3>
+                  {detail.data.accounts.length ? (
+                    detail.data.accounts.map(
+                      (a: {
+                        account_id: string;
+                        role: string;
+                        accounts?: { name?: string } | null;
+                      }) => (
+                        <p key={a.account_id} className="text-sm">
+                          {a.accounts?.name ?? a.account_id}: {a.role}
+                        </p>
+                      ),
+                    )
+                  ) : (
+                    <p className="text-sm text-muted-foreground">Sem contas vinculadas.</p>
+                  )}
+                </div>
+                <div>
+                  <h3 className="font-semibold">Estabelecimentos · papéis operacionais</h3>
+                  {detail.data.venues.length ? (
+                    detail.data.venues.map(
+                      (v: {
+                        venue_id: string;
+                        role: string;
+                        venues?: { name?: string } | null;
+                      }) => (
+                        <p key={v.venue_id} className="text-sm">
+                          {v.venues?.name ?? v.venue_id}:{" "}
+                          {v.role === "owner" ? "Proprietário" : "Operador"}
+                        </p>
+                      ),
+                    )
+                  ) : (
+                    <p className="text-sm text-muted-foreground">
+                      Sem estabelecimentos vinculados.
+                    </p>
+                  )}
+                </div>
+                <div className="flex flex-wrap gap-2 border-t pt-3">
+                  <Button
+                    variant="outline"
+                    disabled={busy}
+                    onClick={() =>
+                      void act(() => recoverFn({ data: { email: detail.data!.email } }))
+                    }
+                  >
+                    Recuperar senha
+                  </Button>
+                  <Button
+                    variant="outline"
+                    disabled={busy || detail.data.isSuperadmin}
+                    onClick={() => {
+                      if (
+                        window.confirm(
+                          `${detail.data!.banned ? "Desbloquear" : "Bloquear"} ${detail.data!.email}?`,
+                        )
+                      )
+                        void act(() =>
+                          banFn({ data: { userId: selected, banned: !detail.data!.banned } }),
+                        );
+                    }}
+                  >
+                    {detail.data.banned ? "Desbloquear" : "Bloquear"}
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    disabled={busy || detail.data.isSuperadmin}
+                    onClick={() => {
+                      const emailConfirm = window.prompt(
+                        `Para excluir ${detail.data!.name || "este usuário"}, digite ${detail.data!.email}`,
+                      );
+                      if (emailConfirm !== null)
+                        void act(() =>
+                          deleteFn({ data: { userId: selected, emailConfirmation: emailConfirm } }),
+                        );
+                    }}
+                  >
+                    Excluir usuário
+                  </Button>
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
+      )}
+    </section>
   );
 }
 
@@ -211,7 +523,11 @@ function CreateVenueDialog({
     setResult(null);
     try {
       const r = await createFn({ data: { name, ownerEmail: email } });
-      setResult({ kind: "ok", text: "Estabelecimento e proprietário vinculados com sucesso.", venueId: r.venueId });
+      setResult({
+        kind: "ok",
+        text: "Estabelecimento e proprietário vinculados com sucesso.",
+        venueId: r.venueId,
+      });
     } catch (err) {
       setResult({ kind: "error", text: `Operação não concluída: ${errMsg(err)}` });
     } finally {
