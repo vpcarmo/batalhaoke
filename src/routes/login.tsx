@@ -4,6 +4,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  authRedirectUrl,
+  isPasswordSetupEvent,
+  isPasswordSetupLink,
+  updatePassword,
+} from "@/lib/authRedirect";
 
 export const Route = createFileRoute("/login")({
   head: () => ({
@@ -25,21 +31,18 @@ export const Route = createFileRoute("/login")({
 });
 
 function LoginPage() {
-  const [mode, setMode] = useState<"signin" | "signup" | "set-password">("signin");
+  const [mode, setMode] = useState<"signin" | "signup" | "recover" | "set-password">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [signupSent, setSignupSent] = useState(false);
+  const [recoverySent, setRecoverySent] = useState(false);
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    if (
-      window.location.hash.includes("type=recovery") ||
-      window.location.hash.includes("type=invite")
-    )
-      setMode("set-password");
+    if (isPasswordSetupLink(window.location.hash)) setMode("set-password");
     // getUser re-validates with the auth server, so an expired/revoked session shows as signed out.
     supabase.auth.getUser().then(({ data, error: err }) => {
       if (err && err.name !== "AuthSessionMissingError")
@@ -48,7 +51,11 @@ function LoginPage() {
       setReady(true);
     });
     const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === "PASSWORD_RECOVERY") setMode("set-password");
+      if (
+        isPasswordSetupEvent(event) ||
+        (event === "SIGNED_IN" && isPasswordSetupLink(window.location.hash))
+      )
+        setMode("set-password");
       if (event === "SIGNED_IN" || event === "SIGNED_OUT" || event === "USER_UPDATED")
         setUserEmail(session?.user.email ?? null);
     });
@@ -70,7 +77,7 @@ function LoginPage() {
       return;
     }
     if (mode === "set-password") {
-      const { error: err } = await supabase.auth.updateUser({ password });
+      const { error: err } = await updatePassword(supabase.auth, password);
       setBusy(false);
       if (err) setError("Não foi possível definir a senha. Solicite um novo link.");
       else {
@@ -80,12 +87,29 @@ function LoginPage() {
       }
       return;
     }
+    if (mode === "recover") {
+      const { error: err } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+        redirectTo: authRedirectUrl({
+          development: import.meta.env.DEV,
+          localOrigin: window.location.origin,
+        }),
+      });
+      setBusy(false);
+      if (err) setError("NÃ£o foi possÃ­vel enviar o link. Verifique o e-mail e tente novamente.");
+      else setRecoverySent(true);
+      return;
+    }
     // Signup: email confirmation is enabled, so data.session is null until the user
     // clicks the confirmation link. Never treat a successful signUp as signed in.
     const { error: err } = await supabase.auth.signUp({
       email: email.trim(),
       password,
-      options: { emailRedirectTo: window.location.origin },
+      options: {
+        emailRedirectTo: authRedirectUrl({
+          development: import.meta.env.DEV,
+          localOrigin: window.location.origin,
+        }),
+      },
     });
     setBusy(false);
     if (err)
@@ -110,13 +134,29 @@ function LoginPage() {
         </div>
         {!ready ? (
           <p className="text-sm text-muted-foreground">Carregando…</p>
-        ) : userEmail && mode !== "set-password" ? (
+        ) : userEmail && mode !== "set-password" && mode !== "recover" ? (
           <div className="space-y-4">
             <p className="text-sm">
               Conectado como <strong>{userEmail}</strong>.
             </p>
             <Button onClick={onLogout} disabled={busy} variant="outline" className="w-full">
               {busy ? "Saindo…" : "Sair"}
+            </Button>
+          </div>
+        ) : recoverySent ? (
+          <div className="space-y-4">
+            <p className="text-sm">
+              Se este e-mail estiver cadastrado, enviaremos um link para definir uma nova senha.
+            </p>
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={() => {
+                setRecoverySent(false);
+                setMode("signin");
+              }}
+            >
+              Voltar para entrar
             </Button>
           </div>
         ) : signupSent ? (
@@ -154,18 +194,20 @@ function LoginPage() {
                 onChange={(e) => setEmail(e.target.value)}
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Senha</Label>
-              <Input
-                id="password"
-                type="password"
-                autoComplete={mode === "signin" ? "current-password" : "new-password"}
-                required
-                minLength={mode === "signin" ? undefined : 8}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-            </div>
+            {mode !== "recover" && (
+              <div className="space-y-2">
+                <Label htmlFor="password">Senha</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  autoComplete={mode === "signin" ? "current-password" : "new-password"}
+                  required
+                  minLength={mode === "signin" ? undefined : 8}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+              </div>
+            )}
             {error && (
               <p role="alert" className="text-sm text-destructive">
                 {error}
@@ -178,9 +220,11 @@ function LoginPage() {
                   : "Criando conta…"
                 : mode === "signin"
                   ? "Entrar"
-                  : mode === "signup"
-                    ? "Criar conta"
-                    : "Definir senha"}
+                  : mode === "recover"
+                    ? "Enviar link de recuperação"
+                    : mode === "signup"
+                      ? "Criar conta"
+                      : "Definir senha"}
             </Button>
             <button
               type="button"
@@ -196,6 +240,18 @@ function LoginPage() {
                   ? "Já tem conta? Entrar"
                   : "Voltar para entrar"}
             </button>
+            {mode === "signin" && (
+              <button
+                type="button"
+                className="w-full text-center text-sm text-muted-foreground underline"
+                onClick={() => {
+                  setMode("recover");
+                  setError(null);
+                }}
+              >
+                Esqueci minha senha
+              </button>
+            )}
           </form>
         )}
         <Link to="/" className="block text-center text-sm text-muted-foreground underline">

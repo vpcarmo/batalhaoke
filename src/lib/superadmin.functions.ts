@@ -1,12 +1,16 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { authRedirectUrl as buildAuthRedirectUrl } from "./authRedirect";
 
 async function authRedirectUrl() {
   const { getRequest } = await import("@tanstack/react-start/server");
   const request = getRequest();
-  if (!request?.url) throw new Error("NÃ£o foi possÃ­vel determinar a URL de retorno.");
-  return new URL("/login", request.url).toString();
+  return buildAuthRedirectUrl({
+    pathname: "/login",
+    development: process.env["NODE_ENV"] === "development",
+    ...(request?.url ? { localOrigin: new URL(request.url).origin } : {}),
+  });
 }
 
 // Every handler: auth middleware -> assertPlatformAdmin (live Auth lookup) -> work. Admin client loaded inside handlers only.
