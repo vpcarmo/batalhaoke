@@ -17,6 +17,11 @@ export class SuperadminError extends Error {
 export const emailSchema = z.string().trim().toLowerCase().email().max(254);
 export const venueNameSchema = z.string().trim().min(2).max(120);
 export const roleSchema = z.enum(["owner", "operator"]);
+const rpcVenueResultSchema = z.object({
+  account_id: z.string().uuid(),
+  venue_id: z.string().uuid(),
+  slug: z.string().min(1),
+});
 
 const PER_PAGE = 200;
 const MAX_PAGES = 50;
@@ -170,11 +175,15 @@ export async function linkOperator(
   return { linkId: link.id as string, userId: user.id, role: parsedRole.data };
 }
 
-export type CreateVenueResult =
-  | { status: "linked"; venueId: string; slug: string; linkId: string; ownerUserId: string }
-  | { status: "link_pending"; venueId: string; slug: string; message: string };
+export type CreateVenueResult = {
+  status: "created";
+  accountId: string;
+  venueId: string;
+  slug: string;
+  ownerUserId: string;
+};
 
-/** Two independent writes (not atomic): venue first, then owner link; partial failures are reported, never rolled back. */
+/** Creates the account, venue, and owner links atomically through the server-only RPC. */
 export async function createVenueWithOwner(
   admin: AdminClient,
   rawName: string,
@@ -185,42 +194,40 @@ export async function createVenueWithOwner(
     throw new SuperadminError("Informe um nome entre 2 e 120 caracteres.", "validation");
   const owner = await requireConfirmedUser(admin, ownerEmail);
   const base = slugBase(name.data);
-  let venue: { id: string; slug: string } | null = null;
-  for (let attempt = 0; attempt < 3 && !venue; attempt++) {
+  for (let attempt = 0; attempt < 3; attempt++) {
     const slug = `${base}-${randomSuffix()}`;
-    const { data, error } = await admin
-      .from("venues")
-      .insert({ name: name.data, slug })
-      .select("id, slug")
-      .single();
-    if (error?.code === "23505") continue; // definite rejection: nothing written, safe to try another slug
-    if (error || !data)
+    const { data, error } = await admin.rpc("create_individual_venue_with_owner", {
+      p_name: name.data,
+      p_slug: slug,
+      p_owner_user_id: owner.id,
+    });
+    const slugConstraintCollision =
+      error?.code === "23505" &&
+      (error?.constraint === "venues_slug_key" ||
+        /venues_slug_key/.test(`${error?.message ?? ""} ${error?.details ?? ""}`));
+    if (slugConstraintCollision) continue;
+    if (error)
       throw new SuperadminError(
         "Resultado incerto ao criar o estabelecimento. Atualize a lista antes de tentar novamente.",
         "uncertain",
       );
-    venue = data;
-  }
-  if (!venue) throw new SuperadminError("Não foi possível gerar um identificador único.", "failed");
-  try {
-    const link = await linkOperator(admin, venue.id, owner.email, "owner");
+    const rows = Array.isArray(data) ? data : null;
+    const row = rows?.length === 1 ? rpcVenueResultSchema.safeParse(rows[0]) : null;
+    if (!row?.success || row.data.slug !== slug)
+      throw new SuperadminError(
+        "Resultado incerto ao criar o estabelecimento. Atualize a lista antes de tentar novamente.",
+        "uncertain",
+      );
     return {
-      status: "linked",
-      venueId: venue.id,
-      slug: venue.slug,
-      linkId: link.linkId,
+      status: "created",
+      accountId: row.data.account_id,
+      venueId: row.data.venue_id,
+      slug: row.data.slug,
       ownerUserId: owner.id,
     };
-  } catch (e) {
-    return {
-      status: "link_pending",
-      venueId: venue.id,
-      slug: venue.slug,
-      message: e instanceof SuperadminError ? e.message : "Vínculo do proprietário pendente.",
-    };
   }
+  throw new SuperadminError("Não foi possível gerar um identificador único.", "failed");
 }
-
 /** Maps any error to a safe client message; internal details only go to server logs. */
 export function toClientError(e: unknown): Error {
   if (e instanceof AuthorizationError) return new Error(PLATFORM_DENIED);

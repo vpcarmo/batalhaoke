@@ -14,6 +14,67 @@ export type Database = {
   }
   public: {
     Tables: {
+      accounts: {
+        Row: {
+          created_at: string;
+          id: string;
+          name: string;
+          type: string;
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          created_at?: string;
+          id?: string;
+          name: string;
+          type: string;
+          updated_at?: string;
+        };
+        Update: {
+          created_at?: string;
+          id?: string;
+          name?: string;
+          type?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      account_members: {
+        Row: {
+          account_id: string;
+          created_at: string;
+          id: string;
+          role: string;
+          updated_at: string;
+          user_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          account_id: string;
+          created_at?: string;
+          id?: string;
+          role: string;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          account_id?: string;
+          created_at?: string;
+          id?: string;
+          role?: string;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "account_members_account_id_fkey";
+            columns: ["account_id"];
+            isOneToOne: false;
+            referencedRelation: "accounts";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       championship_entries: {
         Row: {
           admin_notes: string | null
@@ -901,6 +962,7 @@ export type Database = {
           name: string
           slug: string | null
           updated_at: string
+          account_id: string | null;
         }
         Insert: {
           created_at?: string
@@ -908,6 +970,7 @@ export type Database = {
           name: string
           slug?: string | null
           updated_at?: string
+          account_id?: string | null;
         }
         Update: {
           created_at?: string
@@ -915,8 +978,17 @@ export type Database = {
           name?: string
           slug?: string | null
           updated_at?: string
+          account_id?: string | null;
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "venues_account_id_fkey";
+            columns: ["account_id"];
+            isOneToOne: false;
+            referencedRelation: "accounts";
+            referencedColumns: ["id"];
+          },
+        ]
       }
       voter_sessions: {
         Row: {
@@ -1053,6 +1125,10 @@ export type Database = {
       advance_championship_elimination: {
         Args: { p_championship_id: string; p_operator_user_id: string }
         Returns: Json
+      }
+      create_individual_venue_with_owner: {
+        Args: { p_name: string; p_slug: string; p_owner_user_id: string }
+        Returns: { account_id: string; venue_id: string; slug: string }[]
       }
       assert_championship_operator: {
         Args: { p_championship_id: string; p_operator_user_id: string }

@@ -4,11 +4,13 @@ import {
   createVenueWithOwner,
   findUserByEmail,
   linkOperator,
+  requirePlatformAdmin,
   toClientError,
 } from "./superadmin.server";
 
 const U = "11111111-1111-4111-8111-111111111111";
 const V = "22222222-2222-4222-8222-222222222222";
+const A = "33333333-3333-4333-8333-333333333333";
 const authWith = (user: unknown, error: unknown = null) => ({
   auth: { admin: { getUserById: vi.fn(async () => ({ data: { user }, error })) } },
 });
@@ -86,56 +88,43 @@ describe("assertPlatformAdmin", () => {
 type Users = { id: string; email: string; email_confirmed_at: string | null }[];
 function fakeAdmin(opts: {
   users: Users;
+  rpcResults?: { data?: unknown; error?: unknown }[];
   existingLink?: boolean;
-  venueInsertErrors?: unknown[];
-  linkError?: unknown;
 }) {
-  const venueErrors = [...(opts.venueInsertErrors ?? [])];
   const inserts: { table: string; row: unknown }[] = [];
-  const updates: unknown[] = [];
+  const rpcCalls: { name: string; args: unknown }[] = [];
+  const rpcResults = [...(opts.rpcResults ?? [{ data: [{ account_id: A, venue_id: V, slug: "__sent_slug__" }], error: null }])];
   const admin = {
     inserts,
-    updates,
+    rpcCalls,
     auth: {
       admin: {
         listUsers: vi.fn(async ({ page, perPage }: { page: number; perPage: number }) => ({
-          data: { users: opts.users.slice((page - 1) * perPage, page * perPage) },
-          error: null,
+          data: { users: opts.users.slice((page - 1) * perPage, page * perPage) }, error: null,
         })),
       },
     },
+    rpc: vi.fn(async (name: string, args: unknown) => {
+      rpcCalls.push({ name, args });
+      const result = rpcResults.shift() ?? { data: null, error: null };
+      if (
+        Array.isArray(result.data) &&
+        result.data.length === 1 &&
+        result.data[0]?.slug === "__sent_slug__"
+      ) {
+        return { ...result, data: [{ ...result.data[0], slug: (args as { p_slug: string }).p_slug }] };
+      }
+      return result;
+    }),
     from(table: string) {
       const chain: Record<string, unknown> = {};
       const self = () => chain;
       Object.assign(chain, {
-        select: self,
-        eq: self,
-        order: self,
-        update: (r: unknown) => {
-          updates.push(r);
-          return chain;
-        },
-        maybeSingle: async () => ({
-          data: table === "venues" ? { id: V } : opts.existingLink ? { id: "l" } : null,
-          error: null,
-        }),
+        select: self, eq: self, order: self,
+        maybeSingle: async () => ({ data: table === "venues" ? { id: V } : opts.existingLink ? { id: "l" } : null, error: null }),
         insert: (row: unknown) => {
           inserts.push({ table, row });
-          return {
-            select: () => ({
-              single: async () => {
-                if (table === "venues") {
-                  const err = venueErrors.shift();
-                  return err
-                    ? { data: null, error: err }
-                    : { data: { id: V, slug: (row as { slug: string }).slug }, error: null };
-                }
-                return opts.linkError
-                  ? { data: null, error: opts.linkError }
-                  : { data: { id: "link1" }, error: null };
-              },
-            }),
-          };
+          return { select: () => ({ single: async () => ({ data: { id: "link1" }, error: null }) }) };
         },
       });
       return chain;
@@ -163,32 +152,92 @@ describe("superadmin domain", () => {
     await expect(linkOperator(un, V, "a@x.com", "operator")).rejects.toThrow(/confirmou/);
     expect(un.inserts).toHaveLength(0);
   });
-  it("11 slug collision retried with new slug, single venue created", async () => {
-    const a = fakeAdmin({ users: confirmed, venueInsertErrors: [{ code: "23505" }] });
-    const r = await createVenueWithOwner(a, "Bar do Zé", "dono@bar.com");
-    expect(r.status).toBe("linked");
-    const venueInserts = a.inserts.filter((i) => i.table === "venues");
-    expect(venueInserts).toHaveLength(2);
-    expect((venueInserts[0]!.row as { slug: string }).slug).not.toBe(
-      (venueInserts[1]!.row as { slug: string }).slug,
-    );
-    expect((venueInserts[1]!.row as { slug: string }).slug).toMatch(/^v-bar-do-ze-[0-9a-f]{8}$/);
+  it("blocks venue creation for users without SuperAdmin access", async () => {
+    const a = fakeAdmin({ users: confirmed });
+    await expect(requirePlatformAdmin(authWith({ app_metadata: {} }), U)).rejects.toBeInstanceOf(AuthorizationError);
+    expect(a.rpcCalls).toHaveLength(0);
   });
-  it("uncertain venue insert is not retried", async () => {
-    const a = fakeAdmin({ users: confirmed, venueInsertErrors: [{ code: "500" }] });
-    await expect(createVenueWithOwner(a, "Bar", "dono@bar.com")).rejects.toThrow(/incerto/);
-    expect(a.inserts).toHaveLength(1);
+  it("creates account, venue, and owner links through the atomic RPC", async () => {
+    const a = fakeAdmin({ users: confirmed });
+    const r = await createVenueWithOwner(a, "Bar do Zé", "dono@bar.com");
+    expect(r).toMatchObject({ status: "created", accountId: A, venueId: V, ownerUserId: U });
+    expect(a.rpcCalls).toHaveLength(1);
+    expect(a.rpcCalls[0]?.name).toBe("create_individual_venue_with_owner");
+    expect(a.rpcCalls[0]?.args).toMatchObject({ p_name: "Bar do Zé", p_owner_user_id: U });
+    expect(a.rpcCalls[0]?.args).toMatchObject({ p_slug: /^v-bar-do-ze-[0-9a-f]{8}$/ });
+    expect(a.inserts).toHaveLength(0);
+  });
+  it("retries only a confirmed slug constraint collision", async () => {
+    const a = fakeAdmin({ users: confirmed, rpcResults: [
+      { data: null, error: { code: "23505", constraint: "venues_slug_key" } },
+      { data: [{ account_id: A, venue_id: V, slug: "__sent_slug__" }], error: null },
+    ] });
+    expect((await createVenueWithOwner(a, "Bar", "dono@bar.com")).status).toBe("created");
+    expect(a.rpcCalls).toHaveLength(2);
+    expect((a.rpcCalls[0]?.args as { p_slug: string }).p_slug).not.toBe((a.rpcCalls[1]?.args as { p_slug: string }).p_slug);
+  });
+  it("does not retry an ambiguous RPC error or malformed success", async () => {
+    for (const result of [{ data: null, error: { code: "500" } }, { data: [], error: null }]) {
+      const a = fakeAdmin({ users: confirmed, rpcResults: [result] });
+      await expect(createVenueWithOwner(a, "Bar", "dono@bar.com")).rejects.toThrow(/incerto/);
+      expect(a.rpcCalls).toHaveLength(1);
+    }
+  });
+  it("accepts only one complete RPC table row matching the requested slug", async () => {
+    const invalidResults = [
+      [],
+      [{ account_id: A, venue_id: V, slug: "__sent_slug__" }, { account_id: A, venue_id: V, slug: "__sent_slug__" }],
+      { account_id: A, venue_id: V, slug: "__sent_slug__" },
+      [{ account_id: "bad", venue_id: V, slug: "__sent_slug__" }],
+      [{ account_id: A, venue_id: "bad", slug: "__sent_slug__" }],
+      [{ account_id: A, venue_id: V }],
+      [{ account_id: A, venue_id: V, slug: "" }],
+      [{ account_id: A, venue_id: V, slug: "different-slug" }],
+    ];
+    for (const data of invalidResults) {
+      const a = fakeAdmin({ users: confirmed, rpcResults: [{ data, error: null }] });
+      await expect(createVenueWithOwner(a, "Bar", "dono@bar.com")).rejects.toThrow(/incerto/);
+      expect(a.rpcCalls).toHaveLength(1);
+    }
+    const a = fakeAdmin({ users: confirmed });
+    const result = await createVenueWithOwner(a, "Bar", "dono@bar.com");
+    expect(result.slug).toBe((a.rpcCalls[0]?.args as { p_slug: string }).p_slug);
+  });
+  it("recognizes only 23505 errors explicitly naming venues_slug_key", async () => {
+    for (const error of [
+      { code: "23505", message: "duplicate key venues_slug_key" },
+      { code: "23505", details: "constraint venues_slug_key violated" },
+    ]) {
+      const a = fakeAdmin({ users: confirmed, rpcResults: [
+        { data: null, error },
+        { data: [{ account_id: A, venue_id: V, slug: "__sent_slug__" }], error: null },
+      ] });
+      await expect(createVenueWithOwner(a, "Bar", "dono@bar.com")).resolves.toMatchObject({ status: "created" });
+      expect(a.rpcCalls).toHaveLength(2);
+    }
+    for (const error of [
+      { code: "23505", message: "duplicate key other_constraint" },
+      { code: "500", message: "venues_slug_key" },
+      { code: "ETIMEDOUT", message: "timeout" },
+      { message: "ambiguous network error" },
+    ]) {
+      const a = fakeAdmin({ users: confirmed, rpcResults: [{ data: null, error }] });
+      await expect(createVenueWithOwner(a, "Bar", "dono@bar.com")).rejects.toThrow(/incerto/);
+      expect(a.rpcCalls).toHaveLength(1);
+    }
+  });
+  it("rejects missing or unconfirmed owners before RPC", async () => {
+    const missing = fakeAdmin({ users: [] });
+    await expect(createVenueWithOwner(missing, "Bar", "no@x.com")).rejects.toThrow(/não encontrada/);
+    expect(missing.rpcCalls).toHaveLength(0);
+    const unconfirmed = fakeAdmin({ users: [{ id: U, email: "a@x.com", email_confirmed_at: null }] });
+    await expect(createVenueWithOwner(unconfirmed, "Bar", "a@x.com")).rejects.toThrow(/confirmou/);
+    expect(unconfirmed.rpcCalls).toHaveLength(0);
   });
   it("12 duplicate link refused without modifying existing", async () => {
     const a = fakeAdmin({ users: confirmed, existingLink: true });
     await expect(linkOperator(a, V, "dono@bar.com", "owner")).rejects.toThrow(/já está vinculada/);
     expect(a.inserts).toHaveLength(0);
-    expect(a.updates).toHaveLength(0);
-  });
-  it("13 partial failure keeps venue and reports pending", async () => {
-    const a = fakeAdmin({ users: confirmed, linkError: { code: "500" } });
-    const r = await createVenueWithOwner(a, "Bar", "dono@bar.com");
-    expect(r).toMatchObject({ status: "link_pending", venueId: V });
   });
   it("rejects invalid role", async () => {
     await expect(

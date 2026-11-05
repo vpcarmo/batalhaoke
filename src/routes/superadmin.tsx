@@ -197,7 +197,7 @@ function CreateVenueDialog({
   const [email, setEmail] = useState("");
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<{
-    kind: "ok" | "pending" | "error";
+    kind: "ok" | "error";
     text: string;
     venueId?: string;
   } | null>(null);
@@ -211,15 +211,7 @@ function CreateVenueDialog({
     setResult(null);
     try {
       const r = await createFn({ data: { name, ownerEmail: email } });
-      setResult(
-        r.status === "linked"
-          ? { kind: "ok", text: "Estabelecimento e proprietário vinculados com sucesso." }
-          : {
-              kind: "pending",
-              text: `Estabelecimento criado, mas vínculo do proprietário pendente: ${r.message}`,
-              venueId: r.venueId,
-            },
-      );
+      setResult({ kind: "ok", text: "Estabelecimento e proprietário vinculados com sucesso.", venueId: r.venueId });
     } catch (err) {
       setResult({ kind: "error", text: `Operação não concluída: ${errMsg(err)}` });
     } finally {
@@ -248,17 +240,6 @@ function CreateVenueDialog({
             <p className={result.kind === "ok" ? "text-success" : "text-destructive"}>
               {result.text}
             </p>
-            {result.kind === "pending" && result.venueId && (
-              <Button
-                onClick={() => {
-                  const v = { id: result.venueId!, name };
-                  close(false);
-                  onManage(v);
-                }}
-              >
-                Concluir vínculo do proprietário
-              </Button>
-            )}
             <Button variant="outline" onClick={() => close(false)}>
               Fechar
             </Button>
