@@ -14,67 +14,65 @@ export type Database = {
   }
   public: {
     Tables: {
-      accounts: {
-        Row: {
-          created_at: string;
-          id: string;
-          name: string;
-          type: string;
-          updated_at: string;
-        };
-        ComputedFields: never;
-        Insert: {
-          created_at?: string;
-          id?: string;
-          name: string;
-          type: string;
-          updated_at?: string;
-        };
-        Update: {
-          created_at?: string;
-          id?: string;
-          name?: string;
-          type?: string;
-          updated_at?: string;
-        };
-        Relationships: [];
-      };
       account_members: {
         Row: {
-          account_id: string;
-          created_at: string;
-          id: string;
-          role: string;
-          updated_at: string;
-          user_id: string;
-        };
-        ComputedFields: never;
+          account_id: string
+          created_at: string
+          id: string
+          role: string
+          updated_at: string
+          user_id: string
+        }
         Insert: {
-          account_id: string;
-          created_at?: string;
-          id?: string;
-          role: string;
-          updated_at?: string;
-          user_id: string;
-        };
+          account_id: string
+          created_at?: string
+          id?: string
+          role: string
+          updated_at?: string
+          user_id: string
+        }
         Update: {
-          account_id?: string;
-          created_at?: string;
-          id?: string;
-          role?: string;
-          updated_at?: string;
-          user_id?: string;
-        };
+          account_id?: string
+          created_at?: string
+          id?: string
+          role?: string
+          updated_at?: string
+          user_id?: string
+        }
         Relationships: [
           {
-            foreignKeyName: "account_members_account_id_fkey";
-            columns: ["account_id"];
-            isOneToOne: false;
-            referencedRelation: "accounts";
-            referencedColumns: ["id"];
+            foreignKeyName: "account_members_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
           },
-        ];
-      };
+        ]
+      }
+      accounts: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       championship_entries: {
         Row: {
           admin_notes: string | null
@@ -920,6 +918,74 @@ export type Database = {
           },
         ]
       }
+      venue_operator_invites: {
+        Row: {
+          accepted_at: string | null
+          accepted_by: string | null
+          cancelled_at: string | null
+          created_at: string
+          delivery_claim_id: string | null
+          delivery_claimed_at: string | null
+          delivery_lease_until: string | null
+          delivery_state: string
+          email_normalized: string
+          expires_at: string
+          id: string
+          invited_by: string
+          role: string
+          sent_at: string | null
+          status: string
+          token_hash: string
+          venue_id: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          accepted_by?: string | null
+          cancelled_at?: string | null
+          created_at?: string
+          delivery_claim_id?: string | null
+          delivery_claimed_at?: string | null
+          delivery_lease_until?: string | null
+          delivery_state?: string
+          email_normalized: string
+          expires_at: string
+          id?: string
+          invited_by: string
+          role?: string
+          sent_at?: string | null
+          status?: string
+          token_hash: string
+          venue_id: string
+        }
+        Update: {
+          accepted_at?: string | null
+          accepted_by?: string | null
+          cancelled_at?: string | null
+          created_at?: string
+          delivery_claim_id?: string | null
+          delivery_claimed_at?: string | null
+          delivery_lease_until?: string | null
+          delivery_state?: string
+          email_normalized?: string
+          expires_at?: string
+          id?: string
+          invited_by?: string
+          role?: string
+          sent_at?: string | null
+          status?: string
+          token_hash?: string
+          venue_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "venue_operator_invites_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       venue_operators: {
         Row: {
           created_at: string
@@ -957,36 +1023,36 @@ export type Database = {
       }
       venues: {
         Row: {
+          account_id: string | null
           created_at: string
           id: string
           name: string
           slug: string | null
           updated_at: string
-          account_id: string | null;
         }
         Insert: {
+          account_id?: string | null
           created_at?: string
           id?: string
           name: string
           slug?: string | null
           updated_at?: string
-          account_id?: string | null;
         }
         Update: {
+          account_id?: string | null
           created_at?: string
           id?: string
           name?: string
           slug?: string | null
           updated_at?: string
-          account_id?: string | null;
         }
         Relationships: [
           {
-            foreignKeyName: "venues_account_id_fkey";
-            columns: ["account_id"];
-            isOneToOne: false;
-            referencedRelation: "accounts";
-            referencedColumns: ["id"];
+            foreignKeyName: "venues_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -1122,13 +1188,20 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      accept_venue_operator_invite: {
+        Args: {
+          p_email_normalized: string
+          p_token_hash: string
+          p_user_id: string
+        }
+        Returns: {
+          role: string
+          venue_id: string
+        }[]
+      }
       advance_championship_elimination: {
         Args: { p_championship_id: string; p_operator_user_id: string }
         Returns: Json
-      }
-      create_individual_venue_with_owner: {
-        Args: { p_name: string; p_slug: string; p_owner_user_id: string }
-        Returns: { account_id: string; venue_id: string; slug: string }[]
       }
       assert_championship_operator: {
         Args: { p_championship_id: string; p_operator_user_id: string }
@@ -1156,6 +1229,15 @@ export type Database = {
         }
         Returns: boolean
       }
+      claim_venue_operator_invite_resend: {
+        Args: {
+          p_claim_id: string
+          p_expires_at: string
+          p_invite_id: string
+          p_token_hash: string
+        }
+        Returns: string
+      }
       close_championship_match_voting: {
         Args: { p_match_id: string; p_operator_user_id: string }
         Returns: Json
@@ -1168,10 +1250,27 @@ export type Database = {
         Args: { p_match_id: string; p_operator_user_id: string; p_slot: string }
         Returns: Json
       }
+      create_individual_venue_with_owner: {
+        Args: { p_name: string; p_owner_user_id: string; p_slug: string }
+        Returns: {
+          account_id: string
+          slug: string
+          venue_id: string
+        }[]
+      }
       draw_championship: { Args: { p_championship_id: string }; Returns: Json }
       finalize_group_stage_and_generate_quarters: {
         Args: { p_championship_id: string; p_operator_user_id: string }
         Returns: Json
+      }
+      finish_venue_operator_invite_delivery: {
+        Args: {
+          p_claim_id: string
+          p_invite_id: string
+          p_sent: boolean
+          p_token_hash: string
+        }
+        Returns: boolean
       }
       get_championship_match_score: {
         Args: { p_match_id: string; p_operator_user_id: string }
