@@ -176,6 +176,13 @@
       "when": 1792900000000,
       "tag": "0024_venue_operator_invites",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1793922033250,
+      "tag": "0025_fix_accept_invite_ambiguity",
+      "breakpoints": true
     }
   ]
 }
