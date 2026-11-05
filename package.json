@@ -9,6 +9,8 @@
     "build:dev": "vite build --mode development",
     "preview": "vite preview",
     "lint": "eslint .",
+    "test:unit": "vitest run",
+    "test:integration:invites": "node --test tests/integration/operator-invites.integration.mjs",
     "format": "prettier --write ."
   },
   "overrides": {

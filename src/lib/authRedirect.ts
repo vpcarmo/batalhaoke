@@ -7,10 +7,11 @@ function isLoopback(hostname: string) {
 /** Auth emails always return to a trusted app origin; only local development can use its local port. */
 export function authRedirectUrl(options: {
   pathname?: string;
+  search?: string;
   development?: boolean;
   localOrigin?: string;
 }) {
-  const pathname = options.pathname ?? "/login";
+  const pathname = `${options.pathname ?? "/login"}${options.search ?? ""}`;
   if (options.development && options.localOrigin) {
     const local = new URL(options.localOrigin);
     if (local.protocol === "http:" && isLoopback(local.hostname)) {

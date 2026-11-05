@@ -22,6 +22,16 @@ describe("auth email redirects", () => {
     );
   });
 
+  it("preserves the invite query through auth confirmation and recovery redirects", () => {
+    const search = "?operator_invite=" + "a".repeat(64);
+    expect(authRedirectUrl({ search, localOrigin: "https://lovable.dev" })).toBe(
+      `https://batalhaoke.lovable.app/login${search}`,
+    );
+    expect(
+      authRedirectUrl({ search, development: true, localOrigin: "http://localhost:3000" }),
+    ).toBe(`http://localhost:3000/login${search}`);
+  });
+
   it("recognizes recovery and invite links and the recovery auth event", () => {
     expect(isPasswordSetupLink("#access_token=secret&type=recovery")).toBe(true);
     expect(isPasswordSetupLink("#type=invite")).toBe(true);

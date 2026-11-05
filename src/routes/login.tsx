@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState, type FormEvent } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { acceptVenueOperatorInviteFn } from "@/lib/operator-invites.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -40,8 +41,14 @@ function LoginPage() {
   const [recoverySent, setRecoverySent] = useState(false);
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
+  const [inviteToken, setInviteToken] = useState<string | null>(null);
+  const [inviteState, setInviteState] = useState<string | null>(null);
+  const [inviteDone, setInviteDone] = useState(false);
 
   useEffect(() => {
+    const token = new URLSearchParams(window.location.search).get("operator_invite");
+    if (token && /^[A-Za-z0-9_-]{40,128}$/.test(token)) setInviteToken(token);
+    else if (token) setInviteState("O token do convite é inválido.");
     if (isPasswordSetupLink(window.location.hash)) setMode("set-password");
     // getUser re-validates with the auth server, so an expired/revoked session shows as signed out.
     supabase.auth.getUser().then(({ data, error: err }) => {
@@ -61,6 +68,44 @@ function LoginPage() {
     });
     return () => sub.subscription.unsubscribe();
   }, []);
+
+  useEffect(() => {
+    if (!inviteToken || !userEmail || inviteDone || !ready) return;
+    let active = true;
+    setInviteState("Confirmando sua identidade e aceitando o convite…");
+    void (async () => {
+      const { data, error: authError } = await supabase.auth.getUser();
+      if (!active) return;
+      if (authError || !data.user) {
+        setInviteState("Entre ou crie uma conta para aceitar este convite.");
+        return;
+      }
+      if (!data.user.email_confirmed_at) {
+        setInviteState("Confirme seu e-mail pelo link enviado para continuar.");
+        return;
+      }
+      try {
+        await acceptVenueOperatorInviteFn({ data: { token: inviteToken } });
+        if (!active) return;
+        setInviteDone(true);
+        setInviteState("Convite aceito. Você agora é operador deste estabelecimento.");
+        window.history.replaceState(null, "", window.location.pathname);
+      } catch (err) {
+        if (!active) return;
+        const message = err instanceof Error ? err.message : "Não foi possível aceitar o convite.";
+        setInviteState(
+          /e-mail|email/i.test(message)
+            ? "Este convite foi enviado para outro e-mail."
+            : /expir|inválid|invalid|cancel/i.test(message)
+              ? "O convite é inválido, expirou ou foi cancelado."
+              : "Não foi possível aceitar o convite. Tente novamente.",
+        );
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, [inviteToken, userEmail, ready, inviteDone]);
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -83,13 +128,18 @@ function LoginPage() {
       else {
         setPassword("");
         setMode("signin");
-        window.history.replaceState(null, "", window.location.pathname);
+        window.history.replaceState(
+          null,
+          "",
+          `${window.location.pathname}${window.location.search}`,
+        );
       }
       return;
     }
     if (mode === "recover") {
       const { error: err } = await supabase.auth.resetPasswordForEmail(email.trim(), {
         redirectTo: authRedirectUrl({
+          search: window.location.search,
           development: import.meta.env.DEV,
           localOrigin: window.location.origin,
         }),
@@ -106,6 +156,7 @@ function LoginPage() {
       password,
       options: {
         emailRedirectTo: authRedirectUrl({
+          search: window.location.search,
           development: import.meta.env.DEV,
           localOrigin: window.location.origin,
         }),
@@ -132,6 +183,11 @@ function LoginPage() {
             Acesso restrito aos operadores autorizados de cada estabelecimento.
           </p>
         </div>
+        {inviteState && (
+          <p role="status" className="text-sm text-muted-foreground">
+            {inviteState}
+          </p>
+        )}
         {!ready ? (
           <p className="text-sm text-muted-foreground">Carregando…</p>
         ) : userEmail && mode !== "set-password" && mode !== "recover" ? (
