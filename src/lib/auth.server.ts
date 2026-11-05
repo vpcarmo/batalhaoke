@@ -7,7 +7,9 @@ type Db = SupabaseClient<Database>;
 export const OPERATOR_ROLES = ["owner", "operator"] as const;
 export type OperatorRole = (typeof OPERATOR_ROLES)[number];
 
-export class AuthorizationError extends Error {}
+export class AuthorizationError extends Error {
+  override name = "AuthorizationError";
+}
 
 const DENIED = "Você não tem permissão para administrar este estabelecimento.";
 

@@ -22,7 +22,9 @@ type InviteDeps = {
   hashToken(token: string): Promise<string>;
 };
 
-export class OperatorInviteError extends Error {}
+export class OperatorInviteError extends Error {
+  override name = "OperatorInviteError";
+}
 function fail(message: string): never {
   throw new OperatorInviteError(message);
 }
