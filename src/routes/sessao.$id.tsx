@@ -99,6 +99,8 @@ function SessionPage() {
   const [localPlayerChoice, setLocalPlayer] = useState(false);
   const [qrOpen, setQrOpen] = useState(false);
   const [finishOpen, setFinishOpen] = useState(false);
+  const [restartOpen, setRestartOpen] = useState(false);
+  const restartInFlight = useRef(false);
   const playerRef = useRef<PlaybackPlayerRef>(null);
   const stats = useQuery({
     queryKey: ["api-stats", id],
@@ -124,10 +126,21 @@ function SessionPage() {
   }, [id]);
   const sendTv = (action: "play" | "pause" | "restart") =>
     chRef.current?.send({ type: "broadcast", event: "command", payload: { action } });
-  const restartActive = () => {
-    if (!confirm_("Reiniciar apresentação do início? A música atual voltará para 0:00.")) return;
-    if (localPlayer) playerRef.current?.restart();
-    else sendTv("restart");
+  const restartActive = () => setRestartOpen(true);
+  const confirmRestart = () => {
+    if (restartInFlight.current) return;
+    restartInFlight.current = true;
+    setBusy(true);
+    try {
+      if (localPlayer) playerRef.current?.restart();
+      else sendTv("restart");
+      setRestartOpen(false);
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      restartInFlight.current = false;
+      setBusy(false);
+    }
   };
 
   const session = live.session.data;
@@ -626,6 +639,31 @@ function SessionPage() {
         </DialogContent>
       </Dialog>
 
+      <Dialog open={restartOpen} onOpenChange={(open) => !busy && setRestartOpen(open)}>
+        <DialogContent className="max-w-[calc(100vw-2rem)] rounded-2xl sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="font-display text-2xl">Reiniciar apresentação?</DialogTitle>
+          </DialogHeader>
+          <p className="py-2 text-sm text-muted-foreground">
+            Reiniciar apresentação do início? A música atual voltará para 0:00.
+          </p>
+          <DialogFooter className="grid grid-cols-2 gap-3 sm:grid-cols-2">
+            <Button
+              type="button"
+              variant="secondary"
+              className="h-12"
+              disabled={busy}
+              onClick={() => setRestartOpen(false)}
+            >
+              Cancelar
+            </Button>
+            <Button type="button" className="h-12" disabled={busy} onClick={confirmRestart}>
+              {busy ? "Reiniciando…" : "Reiniciar"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <Sheet open={qrOpen} onOpenChange={setQrOpen}>
         <SheetContent side="bottom" className="max-h-[92dvh] overflow-y-auto rounded-t-2xl">
           <SheetHeader>
@@ -684,8 +722,8 @@ function SessionPage() {
   );
 }
 
-function confirm_(m: string) {
-  return typeof window !== "undefined" && window.confirm(m);
+function confirm_(message: string) {
+  return typeof window !== "undefined" && window.confirm(message);
 }
 
 function StatusOrAction({
@@ -761,10 +799,25 @@ function ActivePanel(props: {
   onPlay: () => void;
   onPause: () => void;
   onRestart: () => void;
-  onEnd: () => void;
+  onEnd: () => Promise<void>;
   onEnded: () => void;
 }) {
   const { perf } = props;
+  const [endOpen, setEndOpen] = useState(false);
+  const [ending, setEnding] = useState(false);
+  const endingRef = useRef(false);
+  const confirmEnd = async () => {
+    if (endingRef.current || props.busy) return;
+    endingRef.current = true;
+    setEnding(true);
+    try {
+      await props.onEnd();
+      setEndOpen(false);
+    } finally {
+      endingRef.current = false;
+      setEnding(false);
+    }
+  };
   return (
     <div className="mt-3 flex flex-col gap-4">
       <Singer perf={perf} />
@@ -825,10 +878,43 @@ function ActivePanel(props: {
         variant="destructive"
         className="h-14 text-base font-semibold"
         disabled={props.busy}
-        onClick={props.onEnd}
+        onClick={() => setEndOpen(true)}
       >
         <Square className="size-5" /> Encerrar apresentação
       </Button>
+      <Dialog open={endOpen} onOpenChange={(open) => !ending && setEndOpen(open)}>
+        <DialogContent className="max-w-[calc(100vw-2rem)] rounded-2xl sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="font-display text-2xl text-destructive">
+              Encerrar apresentação atual?
+            </DialogTitle>
+          </DialogHeader>
+          <p className="py-2 text-sm text-muted-foreground">
+            A apresentação atual de{" "}
+            {perf.participant ? displayName(perf.participant) : "este cantor"} será encerrada.
+          </p>
+          <DialogFooter className="grid grid-cols-2 gap-3 sm:grid-cols-2">
+            <Button
+              type="button"
+              variant="secondary"
+              className="h-12"
+              disabled={ending || props.busy}
+              onClick={() => setEndOpen(false)}
+            >
+              Continuar apresentação
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              className="h-12"
+              disabled={ending || props.busy}
+              onClick={() => void confirmEnd()}
+            >
+              {ending || props.busy ? "Encerrando…" : "Encerrar apresentação"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

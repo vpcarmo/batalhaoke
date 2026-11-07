@@ -1,9 +1,16 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { Mic2, Tv, Play, Trophy } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { createSession, getActiveSession, type VotingMode } from "@/lib/karaoke";
@@ -60,6 +67,8 @@ function Home() {
   const [deviceName, setDeviceName] = useState("");
   const [tvTab, setTvTab] = useState<"tv" | "device">("device");
   const [initializedDeviceVenue, setInitializedDeviceVenue] = useState<string | null>(null);
+  const [deviceToDelete, setDeviceToDelete] = useState<string | null>(null);
+  const busyRef = useRef(false);
   const venues = useQuery({ queryKey: ["operator-venues"], queryFn: listOperatorVenues, retry: 1 });
   useEffect(() => {
     const authorizedVenues = venues.data ?? [];
@@ -132,11 +141,8 @@ function Home() {
   }
 
   async function updateDevice(venueDeviceId: string, action: "disable" | "enable" | "delete") {
-    if (
-      action === "delete" &&
-      !window.confirm("Excluir esta TV? Ela precisará parear novamente para ser usada.")
-    )
-      return;
+    if (busyRef.current) return;
+    busyRef.current = true;
     setErr(null);
     setNotice(null);
     setBusy(true);
@@ -155,8 +161,16 @@ function Home() {
     } catch (e) {
       setErr((e as Error).message);
     } finally {
+      busyRef.current = false;
       setBusy(false);
     }
+  }
+
+  function confirmDeleteDevice() {
+    if (!deviceToDelete || busyRef.current) return;
+    const id = deviceToDelete;
+    setDeviceToDelete(null);
+    void updateDevice(id, "delete");
   }
 
   return (
@@ -473,7 +487,7 @@ function Home() {
                                   variant="ghost"
                                   size="sm"
                                   disabled={busy}
-                                  onClick={() => void updateDevice(device.id, "delete")}
+                                  onClick={() => setDeviceToDelete(device.id)}
                                 >
                                   Excluir
                                 </Button>
@@ -488,6 +502,43 @@ function Home() {
           </div>
         )}
       </section>
+
+      <Dialog
+        open={deviceToDelete !== null}
+        onOpenChange={(open) => !busy && !open && setDeviceToDelete(null)}
+      >
+        <DialogContent className="max-w-[calc(100vw-2rem)] rounded-2xl sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="font-display text-2xl text-destructive">
+              Excluir TV do estabelecimento?
+            </DialogTitle>
+          </DialogHeader>
+          <p className="py-2 text-sm text-muted-foreground">
+            Esta TV/dispositivo será excluído do estabelecimento e precisará ser pareado novamente
+            para ser usado.
+          </p>
+          <DialogFooter className="grid grid-cols-2 gap-3 sm:grid-cols-2">
+            <Button
+              type="button"
+              variant="secondary"
+              className="h-12"
+              disabled={busy}
+              onClick={() => setDeviceToDelete(null)}
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              className="h-12"
+              disabled={busy}
+              onClick={confirmDeleteDevice}
+            >
+              {busy ? "Excluindo…" : "Excluir"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Link
         to="/tv"
