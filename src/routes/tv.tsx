@@ -320,12 +320,35 @@ function TvPage() {
       </button>
     </header>
   );
+  const tvIdentity = paired ? (
+    <section
+      aria-label="Identificação da TV conectada"
+      className="mx-auto w-full max-w-3xl rounded-2xl border border-primary/40 bg-primary/10 px-5 py-3 text-center shadow-glow sm:flex sm:items-center sm:justify-between sm:gap-6 sm:text-left"
+    >
+      <div className="mb-2 sm:mb-0">
+        <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">TV conectada</p>
+        <p className="text-sm text-muted-foreground">Estabelecimento</p>
+        <p className="text-lg font-semibold">
+          {tvState.data?.venueName ?? "Carregando estabelecimento…"}
+        </p>
+      </div>
+      <div>
+        <p className="text-sm text-muted-foreground">Dispositivo</p>
+        <p className="text-lg font-semibold">
+          {tvState.data?.venueDeviceName ?? "Carregando dispositivo…"}
+        </p>
+      </div>
+    </section>
+  ) : null;
 
   if (!tokenReady || (deviceToken && tvState.isLoading)) {
     return (
       <main className="grid min-h-dvh place-items-center p-8 text-center">
         <div>
           {brand}
+          {deviceToken && tvState.isLoading && (
+            <p className="mt-5 text-sm text-muted-foreground">Carregando identificação da TV…</p>
+          )}
           <p className="mt-6 text-2xl text-muted-foreground lg:text-4xl">Conectando…</p>
         </div>
       </main>
@@ -360,6 +383,7 @@ function TvPage() {
       <main className="grid min-h-dvh place-items-center p-8 text-center">
         <div>
           {brand}
+          {tvIdentity}
           <p className="mt-6 text-2xl text-muted-foreground lg:text-4xl">
             Esta TV ainda não está configurada.
           </p>
@@ -390,6 +414,7 @@ function TvPage() {
       <main className="grid min-h-dvh place-items-center p-8 text-center">
         <div>
           {brand}
+          {tvIdentity}
           <p className="mt-6 text-2xl text-muted-foreground lg:text-4xl">
             {paired
               ? "Aguardando início da sessão neste estabelecimento"
@@ -405,6 +430,7 @@ function TvPage() {
       <main className="grid min-h-dvh place-items-center p-8 text-center">
         <div>
           {brand}
+          {tvIdentity}
           <p className="mt-6 text-2xl text-muted-foreground lg:text-4xl">
             Tela da TV desativada para esta sessão.
           </p>
@@ -431,6 +457,7 @@ function TvPage() {
   return (
     <main className="tv-screen flex min-h-dvh flex-col gap-3 p-3 sm:gap-4 sm:p-5 lg:p-6">
       {brand}
+      {tvIdentity}
       {live.error && (
         <p role="alert" className="text-center text-xl text-destructive">
           Conexão perdida com o servidor.

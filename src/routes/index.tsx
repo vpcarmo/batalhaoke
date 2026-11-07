@@ -58,6 +58,8 @@ function Home() {
   const [venueId, setVenueId] = useState("");
   const [pairingCode, setPairingCode] = useState("");
   const [deviceName, setDeviceName] = useState("");
+  const [tvTab, setTvTab] = useState<"tv" | "device">("device");
+  const [initializedDeviceVenue, setInitializedDeviceVenue] = useState<string | null>(null);
   const venues = useQuery({ queryKey: ["operator-venues"], queryFn: listOperatorVenues, retry: 1 });
   useEffect(() => {
     const authorizedVenues = venues.data ?? [];
@@ -80,6 +82,11 @@ function Home() {
     enabled: !!venueId,
     retry: 1,
   });
+  useEffect(() => {
+    if (!venueId || !devices.isSuccess || initializedDeviceVenue === venueId) return;
+    setTvTab((devices.data ?? []).some((device) => device.status === "paired") ? "tv" : "device");
+    setInitializedDeviceVenue(venueId);
+  }, [venueId, devices.isSuccess, devices.data, initializedDeviceVenue]);
 
   function selectSessionType(type: SessionType) {
     setSessionType(type);
@@ -353,81 +360,131 @@ function Home() {
                 </Link>
               </Button>
             )}
-            <p className="font-medium">Parear TV</p>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Digite o código exibido na TV e dê um nome para ela.
+            <p className="mt-3 rounded-xl border border-primary/20 bg-primary/5 p-3 text-sm text-muted-foreground">
+              O pareamento pertence ao estabelecimento. Todos os operadores autorizados compartilham
+              as TVs; cada operador usa sua própria conta no dispositivo de operação. Não é
+              necessário reconfigurar a TV quando outro operador assume o turno.
             </p>
-            <Input
-              className="mt-3 h-11"
-              placeholder="Código da TV (ex.: ABC123)"
-              value={pairingCode}
-              onChange={(e) => setPairingCode(e.target.value.toUpperCase())}
-              maxLength={6}
-            />
-            <Input
-              className="mt-2 h-11"
-              placeholder="Nome da TV (ex.: TV Palco Principal)"
-              value={deviceName}
-              onChange={(e) => setDeviceName(e.target.value)}
-            />
-            <Button
-              type="button"
-              variant="secondary"
-              className="mt-2 h-11 w-full"
-              disabled={busy || pairingCode.length !== 6 || !deviceName.trim()}
-              onClick={() => void pairTv()}
-            >
-              Concluir pareamento
-            </Button>
-            <div className="mt-3 text-sm text-muted-foreground">
-              {devices.isLoading
-                ? "Carregando TVs…"
-                : (devices.data ?? []).length
-                  ? (devices.data ?? []).map((device) => (
-                      <div key={device.id} className="mt-2 flex items-center justify-between gap-2">
-                        <span>
-                          {device.name || "TV sem nome"} ·{" "}
-                          {device.status === "paired" ? "pareada" : device.status}
-                        </span>
-                        <div className="flex shrink-0 gap-1">
-                          {device.status === "paired" && (
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              disabled={busy}
-                              onClick={() => void updateDevice(device.id, "disable")}
-                            >
-                              Desabilitar
-                            </Button>
-                          )}
-                          {device.status === "disabled" && (
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              disabled={busy}
-                              onClick={() => void updateDevice(device.id, "enable")}
-                            >
-                              Reativar
-                            </Button>
-                          )}
-                          {(device.status === "paired" || device.status === "disabled") && (
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              disabled={busy}
-                              onClick={() => void updateDevice(device.id, "delete")}
-                            >
-                              Excluir
-                            </Button>
-                          )}
-                        </div>
-                      </div>
-                    ))
-                  : "Nenhuma TV pareada ainda."}
+            <div className="mt-4 grid grid-cols-2 gap-2" role="tablist" aria-label="Gestão de TVs">
+              <button
+                type="button"
+                role="tab"
+                aria-selected={tvTab === "tv"}
+                className={`h-11 rounded-lg border text-sm font-semibold ${tvTab === "tv" ? "border-primary bg-primary text-primary-foreground" : "bg-background text-muted-foreground"}`}
+                onClick={() => setTvTab("tv")}
+              >
+                TV
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={tvTab === "device"}
+                className={`h-11 rounded-lg border text-sm font-semibold ${tvTab === "device" ? "border-primary bg-primary text-primary-foreground" : "bg-background text-muted-foreground"}`}
+                onClick={() => setTvTab("device")}
+              >
+                Dispositivo
+              </button>
             </div>
+            {tvTab === "device" && (
+              <>
+                <p className="mt-4 font-medium">Parear TV</p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Digite o código exibido na TV e dê um nome para ela.
+                </p>
+                <Input
+                  className="mt-3 h-11"
+                  placeholder="Código da TV (ex.: ABC123)"
+                  value={pairingCode}
+                  onChange={(e) => setPairingCode(e.target.value.toUpperCase())}
+                  maxLength={6}
+                />
+                <Input
+                  className="mt-2 h-11"
+                  placeholder="Nome da TV (ex.: TV Palco Principal)"
+                  value={deviceName}
+                  onChange={(e) => setDeviceName(e.target.value)}
+                />
+                <Button
+                  type="button"
+                  variant="secondary"
+                  className="mt-2 h-11 w-full"
+                  disabled={busy || pairingCode.length !== 6 || !deviceName.trim()}
+                  onClick={() => void pairTv()}
+                >
+                  Concluir pareamento
+                </Button>
+              </>
+            )}
+            {tvTab === "tv" && (
+              <div className="mt-3 text-sm text-muted-foreground">
+                {devices.isLoading
+                  ? "Carregando TVs…"
+                  : (devices.data ?? []).length
+                    ? (devices.data ?? []).map((device) => (
+                        <div
+                          key={device.id}
+                          className={`mt-3 rounded-xl border p-3 ${device.status === "paired" ? "border-success/40 bg-success/10" : device.status === "disabled" ? "border-border bg-muted/50" : "border-border border-dashed bg-background"}`}
+                        >
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="min-w-0">
+                              <p className="truncate font-semibold text-foreground">
+                                {device.name || "TV sem nome"}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                {(venues.data ?? []).find((venue) => venue.id === venueId)?.name ??
+                                  "Estabelecimento"}
+                              </p>
+                              <span
+                                className={`mt-2 inline-flex rounded-full px-2.5 py-1 text-xs font-bold ${device.status === "paired" ? "bg-success text-success-foreground" : "bg-muted text-muted-foreground"}`}
+                              >
+                                {device.status === "paired"
+                                  ? "Pareada · pronta para uso"
+                                  : device.status === "disabled"
+                                    ? "Desabilitada"
+                                    : "Pendente"}
+                              </span>
+                            </div>
+                            <div className="flex shrink-0 gap-1">
+                              {device.status === "paired" && (
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  disabled={busy}
+                                  onClick={() => void updateDevice(device.id, "disable")}
+                                >
+                                  Desabilitar
+                                </Button>
+                              )}
+                              {device.status === "disabled" && (
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  disabled={busy}
+                                  onClick={() => void updateDevice(device.id, "enable")}
+                                >
+                                  Reativar
+                                </Button>
+                              )}
+                              {(device.status === "paired" || device.status === "disabled") && (
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  disabled={busy}
+                                  onClick={() => void updateDevice(device.id, "delete")}
+                                >
+                                  Excluir
+                                </Button>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ))
+                    : "Nenhuma TV pareada ainda."}
+              </div>
+            )}
           </div>
         )}
       </section>

@@ -371,7 +371,7 @@ function SessionPage() {
       <div className={`order-4 grid gap-3 ${session.tv_enabled ? "grid-cols-2" : "grid-cols-1"}`}>
         {session.tv_enabled && (
           <Button variant="secondary" asChild className="h-12">
-            <a href={`/tv?session=${id}`} target="_blank" rel="noreferrer">
+            <a href="/tv" target="_blank" rel="noreferrer">
               <Tv className="size-4" /> Abrir tela da TV
             </a>
           </Button>

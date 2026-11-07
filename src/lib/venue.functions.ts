@@ -37,6 +37,7 @@ export type TvState = {
   venueId: string | null;
   venueDeviceId: string | null;
   venueDeviceName: string | null;
+  venueName: string | null;
   activeSessionId: string | null;
 };
 
@@ -58,6 +59,7 @@ export const getTvState = createServerFn({ method: "POST" })
         venueId: null,
         venueDeviceId: null,
         venueDeviceName: null,
+        venueName: null,
         activeSessionId: null,
       };
 
@@ -73,6 +75,7 @@ export const getTvState = createServerFn({ method: "POST" })
         venueId: null,
         venueDeviceId: device.id,
         venueDeviceName: device.name,
+        venueName: null,
         activeSessionId: null,
       };
     if (device.status !== "paired" || !device.venue_id)
@@ -82,6 +85,7 @@ export const getTvState = createServerFn({ method: "POST" })
         venueId: null,
         venueDeviceId: device.id,
         venueDeviceName: device.name,
+        venueName: null,
         activeSessionId: null,
       };
 
@@ -91,12 +95,18 @@ export const getTvState = createServerFn({ method: "POST" })
       .eq("venue_id", device.venue_id)
       .eq("status", "active")
       .maybeSingle();
+    const { data: venue } = await supabaseAdmin
+      .from("venues")
+      .select("name")
+      .eq("id", device.venue_id)
+      .maybeSingle();
     return {
       paired: true,
       disabled: false,
       venueId: device.venue_id,
       venueDeviceId: device.id,
       venueDeviceName: device.name,
+      venueName: venue?.name ?? null,
       activeSessionId: session?.id ?? null,
     };
   });
