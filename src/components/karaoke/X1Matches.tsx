@@ -45,6 +45,7 @@ const statusLabel: Record<string, string> = {
 export function X1Matches(props: {
   className?: string;
   sessionId: string;
+  venueId: string | null;
   sessionStatus: string;
   x1VotingMode: X1VotingMode;
   matches: Match[];
@@ -54,7 +55,7 @@ export function X1Matches(props: {
   busy: boolean;
   act: (fn: () => Promise<unknown>, ok?: string) => void;
 }) {
-  const { sessionId, participants, perfs } = props;
+  const { sessionId, venueId, participants, perfs } = props;
   const [matchToCancel, setMatchToCancel] = useState<Match | null>(null);
   const byId = (pid: string) => participants.find((participant) => participant.id === pid);
   const list = props.matches;
@@ -299,6 +300,7 @@ export function X1Matches(props: {
                 <div className="mt-4 flex flex-col gap-3">
                   <SongPreparation
                     label="A"
+                    venueId={venueId}
                     participant={a}
                     performance={pa}
                     busy={props.busy}
@@ -312,6 +314,7 @@ export function X1Matches(props: {
                   />
                   <SongPreparation
                     label="B"
+                    venueId={venueId}
                     participant={b}
                     performance={pb}
                     busy={props.busy}
@@ -639,12 +642,14 @@ function CancelMatchDialog({
 
 function SongPreparation({
   label,
+  venueId,
   participant,
   performance,
   busy,
   onPick,
 }: {
   label: "A" | "B";
+  venueId: string | null;
   participant: Participant | undefined;
   performance: Performance | undefined;
   busy: boolean;
@@ -666,6 +671,7 @@ function SongPreparation({
       {searching ? (
         <div className="mt-3">
           <MusicSearch
+            venueId={venueId}
             onPick={(playback) => {
               onPick(playback);
               setSearching(false);

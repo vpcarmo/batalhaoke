@@ -467,6 +467,7 @@ function SessionPage() {
         <X1Matches
           className="order-2"
           sessionId={id}
+          venueId={session.venue_id}
           sessionStatus={session.status}
           x1VotingMode={session.x1_voting_mode}
           matches={live.matches?.data ?? []}
@@ -578,6 +579,7 @@ function SessionPage() {
         open={singerFlowOpen}
         onOpenChange={(open) => (open ? setSingerFlowOpen(true) : closeSingerFlow())}
         sessionId={id}
+        venueId={session.venue_id}
         initialParticipant={singerFlowParticipant}
         allowMusic={session.session_type !== "x1"}
         busy={busy}
@@ -835,6 +837,7 @@ function SingerMusicSheet({
   open,
   onOpenChange,
   sessionId,
+  venueId,
   initialParticipant,
   allowMusic,
   busy,
@@ -845,6 +848,7 @@ function SingerMusicSheet({
   open: boolean;
   onOpenChange: (o: boolean) => void;
   sessionId: string;
+  venueId: string | null;
   initialParticipant: Participant | null;
   allowMusic: boolean;
   busy: boolean;
@@ -1008,7 +1012,7 @@ function SingerMusicSheet({
             </div>
           ) : (
             <>
-              <MusicSearch onPick={setSelected} onSearched={onSearched} />
+              <MusicSearch onPick={setSelected} onSearched={onSearched} venueId={venueId} />
               <Button
                 type="button"
                 variant="secondary"
