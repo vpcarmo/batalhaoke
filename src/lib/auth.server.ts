@@ -108,6 +108,17 @@ export async function assertPairedVenueDevice(
   if (!session) throw new AuthorizationError(DENIED);
 }
 
+/** Resolve a paired device from its raw client credential; only the hash is queried or stored. */
+export async function resolvePairedVenueDevice(db: Db, deviceToken: string) {
+  const hash = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(deviceToken));
+  const tokenHash = Array.from(new Uint8Array(hash), (byte) => byte.toString(16).padStart(2, "0")).join("");
+  const { data, error } = await db.from("venue_devices").select("id, venue_id, status")
+    .eq("device_token_hash", tokenHash).maybeSingle();
+  if (error) throw new AuthorizationError("NÃ£o foi possÃ­vel verificar a TV.");
+  if (!data || data.status !== "paired" || !data.venue_id) throw new AuthorizationError(DENIED);
+  return { id: data.id, venueId: data.venue_id };
+}
+
 export const PLATFORM_DENIED = "Acesso restrito à administração da plataforma.";
 
 type AuthAdminLike = {

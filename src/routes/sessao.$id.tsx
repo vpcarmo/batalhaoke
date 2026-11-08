@@ -947,6 +947,7 @@ function ActivePanel(props: {
       {props.localPlayer && perf.source && (
         <PlaybackPlayer
           ref={props.playerRef}
+          performanceId={perf.id}
           provider={perf.source.provider}
           externalId={perf.source.external_id}
           onState={(s) => s === "ended" && props.onEnded()}

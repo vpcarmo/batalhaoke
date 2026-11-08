@@ -1,6 +1,7 @@
 import { useEffect, useImperativeHandle, useRef, useState, forwardRef } from "react";
 import { getProvider } from "@/lib/playback/registry";
 import type { PlayerHandle, PlayerState } from "@/lib/playback/types";
+import { acquirePerformanceMeasurement, acquireTvPerformanceMeasurement, sendPerformanceHeartbeat, sendTvPerformanceHeartbeat } from "@/lib/measurement.functions";
 
 export interface PlaybackPlayerRef {
   play(): void;
@@ -15,11 +16,13 @@ interface Props {
   externalId: string;
   onState?: (s: PlayerState) => void;
   className?: string;
+  performanceId?: string;
+  deviceToken?: string;
 }
 
 /** Generic player slot. Nothing is ever rendered on top of the provider's player. */
 export const PlaybackPlayer = forwardRef<PlaybackPlayerRef, Props>(function PlaybackPlayer(
-  { provider, externalId, onState, className },
+  { provider, externalId, onState, className, performanceId, deviceToken },
   ref,
 ) {
   const box = useRef<HTMLDivElement>(null);
@@ -30,6 +33,8 @@ export const PlaybackPlayer = forwardRef<PlaybackPlayerRef, Props>(function Play
   cb.current = onState;
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const telemetryState = useRef<PlayerState>("unstarted");
+  const sendTransition = useRef<((s: PlayerState) => void) | null>(null);
 
   useImperativeHandle(
     ref,
@@ -116,10 +121,13 @@ export const PlaybackPlayer = forwardRef<PlaybackPlayerRef, Props>(function Play
         flushIntent();
       },
       onStateChange: (s) => {
-        if (alive) cb.current?.(s);
+        if (alive) { telemetryState.current = s; sendTransition.current?.(s); cb.current?.(s); }
       },
       onError: (m) => {
         if (!alive) return;
+        telemetryState.current = "error";
+        sendTransition.current?.("error");
+        cb.current?.("error");
         isReady = true;
         clearTimeout(t);
         setError(m);
@@ -147,6 +155,65 @@ export const PlaybackPlayer = forwardRef<PlaybackPlayerRef, Props>(function Play
       host.remove();
     };
   }, [provider, externalId]);
+
+  useEffect(() => {
+    if (!performanceId) return;
+    let active = true;
+    let timer: ReturnType<typeof setInterval> | undefined;
+    let instanceId: string;
+    let epochId: string | undefined;
+    let sequence = 0;
+    let acquiring = false;
+    let lastTransitionState: PlayerState | undefined;
+    const pendingTransitions: PlayerState[] = [];
+    const acquire = deviceToken ? acquireTvPerformanceMeasurement : acquirePerformanceMeasurement;
+    const record = deviceToken ? sendTvPerformanceHeartbeat : sendPerformanceHeartbeat;
+    const heartbeat = async (eventState?: PlayerState, forceAcquire = false) => {
+      if (
+        !active ||
+        (!eventState &&
+          (!epochId || telemetryState.current === "ended" || telemetryState.current === "error"))
+      )
+        return;
+      if (acquiring) {
+        if (eventState) pendingTransitions.push(eventState);
+        return;
+      }
+      const positionSeconds = handle.current?.getPositionSeconds();
+      if (positionSeconds == null) return;
+      acquiring = true;
+      try {
+        if (!epochId || forceAcquire) {
+          const lease = await (acquire as any)({ data: { performanceId, instanceId, ...(deviceToken ? { deviceToken } : {}) } });
+          if (!active) return;
+          epochId = lease.epoch_id;
+        }
+        const result = await (record as any)({ data: {
+          performanceId, instanceId, epochId, sequence: sequence++,
+          state: eventState ?? telemetryState.current, positionSeconds,
+          ...(deviceToken ? { deviceToken } : {}),
+        } });
+        if (active && !result.accepted && result.reason === "epoch") epochId = undefined;
+      } catch {
+        epochId = undefined;
+      } finally {
+        acquiring = false;
+        const next = pendingTransitions.shift();
+        if (active && next) queueMicrotask(() => void heartbeat(next));
+      }
+    };
+    instanceId = crypto.randomUUID();
+    sendTransition.current = (s) => {
+      if (s === lastTransitionState) return;
+      lastTransitionState = s;
+      void heartbeat(s);
+    };
+    void heartbeat(telemetryState.current, true);
+    timer = setInterval(() => void heartbeat(), 5_000);
+    const onOnline = () => { epochId = undefined; void heartbeat(telemetryState.current, true); };
+    window.addEventListener("online", onOnline);
+    return () => { active = false; sendTransition.current = null; if (timer) clearInterval(timer); window.removeEventListener("online", onOnline); };
+  }, [performanceId, deviceToken]);
 
   const attribution = getProvider(provider).attribution;
   return (

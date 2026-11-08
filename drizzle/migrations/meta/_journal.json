@@ -190,6 +190,27 @@
       "when": 1794000000000,
       "tag": "0026_venue_favorite_songs",
       "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "7",
+      "when": 1794096000000,
+      "tag": "0027_performance_telemetry",
+      "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "7",
+      "when": 1794182400000,
+      "tag": "0028_finalize_performance_measurement",
+      "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1794268800000,
+      "tag": "0029_measurement_tv_priority",
+      "breakpoints": true
     }
   ]
 }

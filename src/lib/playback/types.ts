@@ -27,6 +27,7 @@ export interface PlayerHandle {
   pause(): void;
   restart(): void;
   destroy(): void;
+  getPositionSeconds(): number | null;
 }
 
 export interface PlaybackProvider {

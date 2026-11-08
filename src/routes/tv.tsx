@@ -514,6 +514,8 @@ function TvPage() {
             <section className="tv-video order-1 mx-auto w-full min-w-0 max-w-[min(100%,115dvh)] lg:col-start-1 lg:row-start-1">
               <PlaybackPlayer
                 key={active.id}
+                performanceId={active.id}
+                {...(paired && deviceToken ? { deviceToken } : {})}
                 ref={playerRef}
                 provider={active.source.provider}
                 externalId={active.source.external_id}

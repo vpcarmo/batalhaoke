@@ -9,16 +9,29 @@ function loadApi(): Promise<any> {
   if (apiPromise) return apiPromise;
   apiPromise = new Promise((resolve, reject) => {
     const prev = w.onYouTubeIframeAPIReady;
-    w.onYouTubeIframeAPIReady = () => { prev?.(); resolve(w.YT); };
+    w.onYouTubeIframeAPIReady = () => {
+      prev?.();
+      resolve(w.YT);
+    };
     const s = document.createElement("script");
     s.src = "https://www.youtube.com/iframe_api";
-    s.onerror = () => { apiPromise = null; reject(new Error("YouTube indisponível")); };
+    s.onerror = () => {
+      apiPromise = null;
+      reject(new Error("YouTube indisponível"));
+    };
     document.head.appendChild(s);
   });
   return apiPromise;
 }
 
-const STATES: Record<number, PlayerState> = { [-1]: "unstarted", 0: "ended", 1: "playing", 2: "paused", 3: "buffering", 5: "unstarted" };
+const STATES: Record<number, PlayerState> = {
+  [-1]: "unstarted",
+  0: "ended",
+  1: "playing",
+  2: "paused",
+  3: "buffering",
+  5: "unstarted",
+};
 const ERRORS: Record<number, string> = {
   2: "ID de vídeo inválido.",
   5: "Erro no player HTML5.",
@@ -50,14 +63,31 @@ export const youtubeProvider: PlaybackProvider = {
       events: {
         onReady: () => events.onReady?.(),
         onStateChange: (e: any) => events.onStateChange?.(STATES[e.data] ?? "unstarted"),
-        onError: (e: any) => { events.onStateChange?.("error"); events.onError?.(ERRORS[e.data] ?? "Erro de reprodução."); },
+        onError: (e: any) => {
+          events.onStateChange?.("error");
+          events.onError?.(ERRORS[e.data] ?? "Erro de reprodução.");
+        },
       },
     });
     return {
       play: () => player.playVideo?.(),
       pause: () => player.pauseVideo?.(),
-      restart: () => { player.seekTo?.(0, true); player.playVideo?.(); },
-      destroy: () => { try { player.destroy(); } catch { /* noop */ } container.innerHTML = ""; },
+      restart: () => {
+        player.seekTo?.(0, true);
+        player.playVideo?.();
+      },
+      getPositionSeconds: () => {
+        const value = player.getCurrentTime?.();
+        return typeof value === "number" && Number.isFinite(value) ? value : null;
+      },
+      destroy: () => {
+        try {
+          player.destroy();
+        } catch {
+          /* noop */
+        }
+        container.innerHTML = "";
+      },
     };
   },
 };
