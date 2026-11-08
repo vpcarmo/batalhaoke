@@ -12,6 +12,13 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { createSession, getActiveSession, type VotingMode } from "@/lib/karaoke";
 import type { SessionType, X1VotingMode } from "@/lib/karaoke";
@@ -103,10 +110,12 @@ function Home() {
   }
 
   async function start() {
+    if (busyRef.current) return;
     if (!venueId) {
       setErr("Selecione um estabelecimento que você administra.");
       return;
     }
+    busyRef.current = true;
     setBusy(true);
     setErr(null);
     try {
@@ -119,11 +128,15 @@ function Home() {
       nav({ to: "/sessao/$id", params: { id: s.id } });
     } catch (e) {
       setErr((e as Error).message);
+    } finally {
+      busyRef.current = false;
       setBusy(false);
     }
   }
 
   async function pairTv() {
+    if (busyRef.current) return;
+    busyRef.current = true;
     setBusy(true);
     setErr(null);
     try {
@@ -136,6 +149,7 @@ function Home() {
     } catch (e) {
       setErr((e as Error).message);
     } finally {
+      busyRef.current = false;
       setBusy(false);
     }
   }
@@ -173,14 +187,20 @@ function Home() {
     void updateDevice(id, "delete");
   }
 
+  const connectedTvCount = (devices.data ?? []).filter(
+    (device) => device.status === "paired",
+  ).length;
+
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col justify-center gap-8 px-5 py-10">
+    <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col justify-center gap-5 px-5 py-6 sm:gap-8 sm:py-10">
       <header className="text-center">
-        <div className="mx-auto mb-4 grid size-16 place-items-center rounded-2xl bg-primary text-primary-foreground shadow-glow animate-in zoom-in-50 duration-500">
-          <Mic2 className="size-8" aria-hidden />
+        <div className="mx-auto mb-2 grid size-12 place-items-center rounded-2xl bg-primary text-primary-foreground shadow-glow animate-in zoom-in-50 duration-500 sm:mb-4 sm:size-16">
+          <Mic2 className="size-6 sm:size-8" aria-hidden />
         </div>
-        <h1 className="font-display text-6xl leading-none sm:text-7xl">BatalhaOkê</h1>
-        <p className="mt-3 text-lg text-muted-foreground">O público decide quem continua.</p>
+        <h1 className="font-display text-5xl leading-none sm:text-7xl">BatalhaOkê</h1>
+        <p className="mt-2 text-base text-muted-foreground sm:mt-3 sm:text-lg">
+          O público decide quem continua.
+        </p>
       </header>
 
       <section className="flex flex-col gap-3">
@@ -225,11 +245,46 @@ function Home() {
               value={name}
               onChange={(e) => setName(e.target.value)}
             />
-            <p className="mt-3 text-sm text-muted-foreground">
-              Estabelecimento:{" "}
-              {(venues.data ?? []).find((venue) => venue.id === venueId)?.name ??
-                "Selecione na seção Gestão de TVs"}
-            </p>
+            <Label htmlFor="session-venue" className="mt-3 block">
+              Estabelecimento
+            </Label>
+            <Select
+              value={venueId ?? ""}
+              onValueChange={setVenueId}
+              disabled={venues.isLoading || (venues.data ?? []).length === 1}
+            >
+              <SelectTrigger
+                id="session-venue"
+                className="mt-2 h-12 w-full"
+                aria-invalid={!venueId}
+              >
+                <SelectValue
+                  placeholder={
+                    venues.isLoading
+                      ? "Carregando estabelecimentos..."
+                      : "Selecione um estabelecimento"
+                  }
+                />
+              </SelectTrigger>
+              <SelectContent>
+                {(venues.data ?? []).map((venue) => (
+                  <SelectItem key={venue.id} value={venue.id}>
+                    {venue.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {!venues.isLoading && !(venues.data ?? []).length && (
+              <p className="mt-2 text-sm text-muted-foreground">
+                Nenhum estabelecimento autorizado disponível para sua conta.
+              </p>
+            )}
+            {!!venues.data?.length && !venueId && (
+              <p className="mt-2 text-sm text-destructive">
+                Selecione um estabelecimento para iniciar a sessão.
+              </p>
+            )}
+
             <div className="mt-5 border-t pt-4">
               <p className="mb-2 text-sm font-medium">Formato</p>
               <div className="grid gap-2" role="radiogroup" aria-label="Formato da sessão">
@@ -318,7 +373,11 @@ function Home() {
               <Button variant="secondary" className="h-12" onClick={() => setCreating(false)}>
                 Cancelar
               </Button>
-              <Button className="h-12" disabled={busy} onClick={start}>
+              <Button
+                className="h-12"
+                disabled={busy || !venueId || venues.isLoading}
+                onClick={start}
+              >
                 {busy ? "Criando…" : "Iniciar"}
               </Button>
             </div>
@@ -367,13 +426,6 @@ function Home() {
         )}
         {venueId && (
           <div className="mt-5 border-t pt-4">
-            {(venues.data ?? []).find((venue) => venue.id === venueId)?.role === "owner" && (
-              <Button asChild type="button" variant="outline" className="mb-4 h-11 w-full">
-                <Link to="/estabelecimento/$venueId/operadores" params={{ venueId }}>
-                  Gerenciar operadores
-                </Link>
-              </Button>
-            )}
             <p className="mt-3 rounded-xl border border-primary/20 bg-primary/5 p-3 text-sm text-muted-foreground">
               O pareamento pertence ao estabelecimento. Todos os operadores autorizados compartilham
               as TVs; cada operador usa sua própria conta no dispositivo de operação. Não é
@@ -387,7 +439,7 @@ function Home() {
                 className={`h-11 rounded-lg border text-sm font-semibold ${tvTab === "tv" ? "border-primary bg-primary text-primary-foreground" : "bg-background text-muted-foreground"}`}
                 onClick={() => setTvTab("tv")}
               >
-                TV
+                TVs Pareadas ({connectedTvCount})
               </button>
               <button
                 type="button"
@@ -396,7 +448,7 @@ function Home() {
                 className={`h-11 rounded-lg border text-sm font-semibold ${tvTab === "device" ? "border-primary bg-primary text-primary-foreground" : "bg-background text-muted-foreground"}`}
                 onClick={() => setTvTab("device")}
               >
-                Dispositivo
+                Parear Nova TV
               </button>
             </div>
             {tvTab === "device" && (
@@ -500,6 +552,24 @@ function Home() {
               </div>
             )}
           </div>
+        )}
+      </section>
+
+      <section className="rounded-2xl border bg-card p-4">
+        <h2 className="font-display text-2xl">Gestão de operadores</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Acesso e permissões de quem opera este estabelecimento.
+        </p>
+        {venueId && (venues.data ?? []).find((venue) => venue.id === venueId)?.role === "owner" ? (
+          <Button asChild variant="outline" className="mt-3 min-h-11 w-full">
+            <Link to="/estabelecimento/$venueId/operadores" params={{ venueId }}>
+              Gerenciar operadores
+            </Link>
+          </Button>
+        ) : (
+          <p className="mt-3 text-sm text-muted-foreground">
+            A gestão de operadores está disponível para proprietários.
+          </p>
         )}
       </section>
 

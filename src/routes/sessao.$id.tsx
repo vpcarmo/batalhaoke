@@ -34,6 +34,12 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { supabase } from "@/integrations/supabase/client";
 import {
   addParticipant,
@@ -394,87 +400,89 @@ function SessionPage() {
         </Button>
       </div>
 
-      <details className="order-5 rounded-2xl border bg-card p-4">
-        <summary
-          id="display"
-          className="cursor-pointer text-xs font-semibold uppercase tracking-widest text-muted-foreground"
-        >
-          Exibição pública e configurações
-        </summary>
-        <div className="mt-3 flex flex-col gap-3">
-          <label className="flex min-h-11 items-center justify-between gap-3">
-            <span>Tela da TV ativa</span>
-            <Switch
-              checked={session.tv_enabled}
-              onCheckedChange={(v) => {
-                if (!v) setLocalPlayer(true);
-                act(() => updateSessionDisplay(id, { tv_enabled: v }));
-              }}
-            />
-          </label>
-          <label
-            className={`flex min-h-11 items-center justify-between gap-3 ${session.tv_enabled ? "" : "opacity-50"}`}
+      <Accordion type="single" collapsible className="order-5 rounded-2xl border bg-card px-4">
+        <AccordionItem value="display" className="border-0">
+          <AccordionTrigger
+            id="display"
+            className="min-h-12 py-3 text-left text-xs font-semibold uppercase tracking-widest text-foreground hover:no-underline"
           >
-            <span>Mostrar QR Code na TV</span>
-            <Switch
-              checked={session.show_qr_on_tv}
-              disabled={!session.tv_enabled}
-              onCheckedChange={(v) => act(() => updateSessionDisplay(id, { show_qr_on_tv: v }))}
-            />
-          </label>
-          <div>
-            <p className="mb-1">Formato</p>
-            <p className="text-sm text-muted-foreground">
-              {sessionTypeLabels[session.session_type]}
-            </p>
-          </div>
-          <div>
-            <p className="mb-2">Modo de votação</p>
-            <div
-              className="grid grid-cols-1 gap-2 sm:grid-cols-2"
-              role="radiogroup"
-              aria-label="Modo de votação"
+            Exibição pública e configurações
+          </AccordionTrigger>
+          <AccordionContent className="flex flex-col gap-3">
+            <label className="flex min-h-11 items-center justify-between gap-3">
+              <span>Tela da TV ativa</span>
+              <Switch
+                checked={session.tv_enabled}
+                onCheckedChange={(v) => {
+                  if (!v) setLocalPlayer(true);
+                  act(() => updateSessionDisplay(id, { tv_enabled: v }));
+                }}
+              />
+            </label>
+            <label
+              className={`flex min-h-11 items-center justify-between gap-3 ${session.tv_enabled ? "" : "opacity-50"}`}
             >
-              {session.session_type === "free" && (
+              <span>Mostrar QR Code na TV</span>
+              <Switch
+                checked={session.show_qr_on_tv}
+                disabled={!session.tv_enabled}
+                onCheckedChange={(v) => act(() => updateSessionDisplay(id, { show_qr_on_tv: v }))}
+              />
+            </label>
+            <div>
+              <p className="mb-1">Formato</p>
+              <p className="text-sm text-muted-foreground">
+                {sessionTypeLabels[session.session_type]}
+              </p>
+            </div>
+            <div>
+              <p className="mb-2">Modo de votação</p>
+              <div
+                className="grid grid-cols-1 gap-2 sm:grid-cols-2"
+                role="radiogroup"
+                aria-label="Modo de votação"
+              >
+                {session.session_type === "free" && (
+                  <Button
+                    variant={session.voting_mode === "like_only" ? "default" : "secondary"}
+                    className="h-auto min-h-11 whitespace-normal py-2"
+                    disabled={busy || votingModeLocked}
+                    role="radio"
+                    aria-checked={session.voting_mode === "like_only"}
+                    onClick={() =>
+                      session.voting_mode !== "like_only" &&
+                      act(() => updateSessionDisplay(id, { voting_mode: "like_only" }))
+                    }
+                  >
+                    👍 Apenas Gostei
+                  </Button>
+                )}
                 <Button
-                  variant={session.voting_mode === "like_only" ? "default" : "secondary"}
+                  variant={session.voting_mode === "like_dislike" ? "default" : "secondary"}
                   className="h-auto min-h-11 whitespace-normal py-2"
                   disabled={busy || votingModeLocked}
                   role="radio"
-                  aria-checked={session.voting_mode === "like_only"}
+                  aria-checked={session.voting_mode === "like_dislike"}
                   onClick={() =>
-                    session.voting_mode !== "like_only" &&
-                    act(() => updateSessionDisplay(id, { voting_mode: "like_only" }))
+                    session.voting_mode !== "like_dislike" &&
+                    act(() => updateSessionDisplay(id, { voting_mode: "like_dislike" }))
                   }
                 >
-                  👍 Apenas Gostei
+                  👍 Gostei / 👎 Não gostei
                 </Button>
+              </div>
+              {session.session_type !== "free" && (
+                <p className="mt-2 text-sm text-muted-foreground">Obrigatório para este formato.</p>
               )}
-              <Button
-                variant={session.voting_mode === "like_dislike" ? "default" : "secondary"}
-                className="h-auto min-h-11 whitespace-normal py-2"
-                disabled={busy || votingModeLocked}
-                role="radio"
-                aria-checked={session.voting_mode === "like_dislike"}
-                onClick={() =>
-                  session.voting_mode !== "like_dislike" &&
-                  act(() => updateSessionDisplay(id, { voting_mode: "like_dislike" }))
-                }
-              >
-                👍 Gostei / 👎 Não gostei
-              </Button>
+              {session.session_type === "free" && session.status !== "draft" && (
+                <p className="mt-2 text-sm text-muted-foreground">
+                  O modo de votação não pode ser alterado após o início da sessão.
+                </p>
+              )}
             </div>
-            {session.session_type !== "free" && (
-              <p className="mt-2 text-sm text-muted-foreground">Obrigatório para este formato.</p>
-            )}
-            {session.session_type === "free" && session.status !== "draft" && (
-              <p className="mt-2 text-sm text-muted-foreground">
-                O modo de votação não pode ser alterado após o início da sessão.
-              </p>
-            )}
-          </div>
-        </div>
-      </details>
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
 
       {session.session_type === "x1" && (
         <X1Matches
@@ -505,11 +513,47 @@ function SessionPage() {
               Nenhum cantor ainda.
             </p>
           )}
-          <ol className="flex flex-col gap-2">
-            {participants.map((p) => {
+          {(() => {
+            const queue = participants.filter((p) => perfFor(p)?.status === "queued");
+            const awaitingMusic = participants.filter((p) => !perfFor(p));
+            const activeParticipantIds = new Set(
+              perfs
+                .filter((performance) => performance.status === "active")
+                .map((performance) => performance.participant_id),
+            );
+            const history = participants.filter((p) => {
+              const latest = perfFor(p);
+              const hasCompletedPerformance = perfs.some(
+                (performance) =>
+                  performance.participant_id === p.id && performance.status === "completed",
+              );
+              return (
+                hasCompletedPerformance &&
+                latest?.status !== "queued" &&
+                !activeParticipantIds.has(p.id)
+              );
+            });
+            const other = participants.filter((p) => {
+              const latest = perfFor(p);
+              const hasCompletedPerformance = perfs.some(
+                (performance) =>
+                  performance.participant_id === p.id && performance.status === "completed",
+              );
+              return (
+                !!latest &&
+                latest.status !== "completed" &&
+                latest.status !== "queued" &&
+                !hasCompletedPerformance &&
+                !activeParticipantIds.has(p.id)
+              );
+            });
+            const row = (p: Participant) => {
               const pf = perfFor(p);
               return (
-                <li key={p.id} className="flex items-center gap-3 rounded-xl border bg-card p-3">
+                <li
+                  key={p.id}
+                  className="flex min-h-[68px] items-center gap-3 rounded-xl border bg-card p-3"
+                >
                   <span className="grid size-10 shrink-0 place-items-center rounded-lg bg-secondary font-display text-xl">
                     {p.participant_number}
                   </span>
@@ -523,20 +567,66 @@ function SessionPage() {
                       </p>
                     )}
                   </div>
-                  {session.session_type === "x1" ? null : (
+                  {session.session_type !== "x1" && (
                     <StatusOrAction
                       pf={pf}
                       onPick={() => {
                         setSingerFlowParticipant(p);
                         setSingerFlowOpen(true);
                       }}
-                      disabled={session.status !== "active"}
+                      disabled={session.status !== "active" || busy}
                     />
                   )}
                 </li>
               );
-            })}
-          </ol>
+            };
+            return (
+              <div className="space-y-4">
+                {active && (
+                  <p className="text-sm text-muted-foreground">
+                    No palco:{" "}
+                    {active.participant
+                      ? displayName(active.participant)
+                      : "Apresentação em andamento"}
+                  </p>
+                )}
+                {!!queue.length && (
+                  <section aria-label="Fila atual">
+                    <h3 className="mb-2 text-sm font-semibold">Na fila ({queue.length})</h3>
+                    <ol className="flex flex-col gap-2">{queue.map(row)}</ol>
+                  </section>
+                )}
+                {!!awaitingMusic.length && (
+                  <section aria-label="Participantes aguardando música">
+                    <h3 className="mb-2 text-sm font-semibold">
+                      Aguardando música ({awaitingMusic.length})
+                    </h3>
+                    <ol className="flex flex-col gap-2">{awaitingMusic.map(row)}</ol>
+                  </section>
+                )}
+                {!!history.length && (
+                  <Accordion type="single" collapsible className="rounded-xl border px-3">
+                    <AccordionItem value="history" className="border-0">
+                      <AccordionTrigger className="min-h-12 py-3 text-sm font-semibold hover:no-underline">
+                        Histórico ({history.length})
+                      </AccordionTrigger>
+                      <AccordionContent>
+                        <ol className="flex flex-col gap-2">{history.map(row)}</ol>
+                      </AccordionContent>
+                    </AccordionItem>
+                  </Accordion>
+                )}
+                {!!other.length && (
+                  <section aria-label="Outras apresentações">
+                    <h3 className="mb-2 text-sm font-semibold">
+                      Outros registros ({other.length})
+                    </h3>
+                    <ol className="flex flex-col gap-2">{other.map(row)}</ol>
+                  </section>
+                )}
+              </div>
+            );
+          })()}
         </section>
       )}
 
@@ -751,7 +841,7 @@ function StatusOrAction({
       <Button
         size="sm"
         variant={pf ? "secondary" : "default"}
-        className="h-10"
+        className="h-11"
         disabled={disabled}
         onClick={onPick}
       >

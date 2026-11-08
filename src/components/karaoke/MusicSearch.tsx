@@ -51,7 +51,7 @@ export function MusicSearch({
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-3">
       {venueId && (
         <div
           role="tablist"
@@ -80,7 +80,7 @@ export function MusicSearch({
       )}
       {tab === "search" && (
         <>
-          <div className="flex flex-col gap-2 sm:flex-row">
+          <div className="flex flex-row gap-2">
             <label htmlFor="q" className="sr-only">
               Música
             </label>
@@ -95,12 +95,12 @@ export function MusicSearch({
                 }
               }}
               placeholder="Ex.: Evidências, Menina Veneno, Leão..."
-              className="h-12 text-base"
+              className="h-11 min-w-0 flex-1 text-base"
               autoComplete="off"
             />
             <Button
               type="button"
-              className="h-12 shrink-0"
+              className="h-11 shrink-0"
               disabled={!q.trim() || loading || q.trim() === lastQ}
               onClick={() => void run()}
             >
@@ -113,17 +113,20 @@ export function MusicSearch({
             </Button>
           </div>
           {err && (
-            <p role="alert" className="rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
+            <p role="alert" className="rounded-lg bg-destructive/10 p-2 text-sm text-destructive">
               {err}
             </p>
           )}
           {results && results.length === 0 && (
-            <p className="text-sm text-muted-foreground">
+            <p role="status" className="text-sm text-muted-foreground">
               Nenhum resultado incorporável para "{lastQ}".
             </p>
           )}
           {results && results.length > 0 && (
-            <ul className="grid gap-3 sm:grid-cols-2">
+            <ul
+              aria-label="Resultados da pesquisa"
+              className="grid max-h-[38dvh] gap-2 overflow-y-auto overscroll-contain pr-1 sm:max-h-[44dvh] sm:grid-cols-2"
+            >
               {results.map((r) => (
                 <li key={r.externalId} className="overflow-hidden rounded-xl border bg-card">
                   {r.thumbnailUrl && (
@@ -133,10 +136,10 @@ export function MusicSearch({
                       loading="lazy"
                       width={320}
                       height={180}
-                      className="aspect-video w-full object-cover"
+                      className="aspect-video max-h-28 w-full object-cover"
                     />
                   )}
-                  <div className="flex flex-col gap-1 p-3">
+                  <div className="flex flex-col gap-1 p-2">
                     <p className="line-clamp-2 font-semibold leading-snug">{r.title}</p>
                     <p className="text-sm text-muted-foreground">Canal: {r.channelName ?? "—"}</p>
                     {r.duration && (
@@ -144,7 +147,12 @@ export function MusicSearch({
                         <Clock className="size-3" /> {r.duration}
                       </p>
                     )}
-                    <Button type="button" className="mt-2 h-11" onClick={() => onPick(r)}>
+                    <Button
+                      type="button"
+                      className="mt-2 h-11"
+                      disabled={loading}
+                      onClick={() => onPick(r)}
+                    >
                       Selecionar
                     </Button>
                   </div>
@@ -170,7 +178,10 @@ export function MusicSearch({
             </p>
           )}
           {!!topSongs.data?.length && (
-            <ul className="grid gap-3 sm:grid-cols-2">
+            <ul
+              aria-label="Músicas mais tocadas"
+              className="grid max-h-[38dvh] gap-2 overflow-y-auto overscroll-contain pr-1 sm:max-h-[44dvh] sm:grid-cols-2"
+            >
               {topSongs.data.map(({ result, playCount }) => (
                 <li
                   key={`${result.provider}:${result.externalId}`}
@@ -183,10 +194,10 @@ export function MusicSearch({
                       loading="lazy"
                       width={320}
                       height={180}
-                      className="aspect-video w-full object-cover"
+                      className="aspect-video max-h-28 w-full object-cover"
                     />
                   )}
-                  <div className="flex flex-col gap-1 p-3">
+                  <div className="flex flex-col gap-1 p-2">
                     <p className="line-clamp-2 font-semibold leading-snug">{result.title}</p>
                     <p className="text-sm text-muted-foreground">
                       Canal: {result.channelName ?? "—"}
