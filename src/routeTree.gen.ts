@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as CampeonatosRouteImport } from './routes/campeonatos'
+import { Route as FinanceiroRouteImport } from './routes/financeiro'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as SuperadminRouteImport } from './routes/superadmin'
 import { Route as TvRouteImport } from './routes/tv'
@@ -19,6 +20,8 @@ import { Route as InscreverIdRouteImport } from './routes/inscrever.$id'
 import { Route as QrCodeRouteImport } from './routes/qr.$code'
 import { Route as SessaoIdRouteImport } from './routes/sessao.$id'
 import { Route as VotarCodeRouteImport } from './routes/votar.$code'
+import { Route as ApiCronCommercialRouteImport } from './routes/api.cron.commercial'
+import { Route as ApiMercadoPagoWebhookRouteImport } from './routes/api.mercado-pago.webhook'
 import { Route as EstabelecimentoVenueIdOperadoresRouteImport } from './routes/estabelecimento.$venueId.operadores'
 
 const IndexRoute = IndexRouteImport.update({
@@ -29,6 +32,11 @@ const IndexRoute = IndexRouteImport.update({
 const CampeonatosRoute = CampeonatosRouteImport.update({
   id: '/campeonatos',
   path: '/campeonatos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FinanceiroRoute = FinanceiroRouteImport.update({
+  id: '/financeiro',
+  path: '/financeiro',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -71,6 +79,16 @@ const VotarCodeRoute = VotarCodeRouteImport.update({
   path: '/votar/$code',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiCronCommercialRoute = ApiCronCommercialRouteImport.update({
+  id: '/api/cron/commercial',
+  path: '/api/cron/commercial',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiMercadoPagoWebhookRoute = ApiMercadoPagoWebhookRouteImport.update({
+  id: '/api/mercado-pago/webhook',
+  path: '/api/mercado-pago/webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const EstabelecimentoVenueIdOperadoresRoute =
   EstabelecimentoVenueIdOperadoresRouteImport.update({
     id: '/estabelecimento/$venueId/operadores',
@@ -81,6 +99,7 @@ const EstabelecimentoVenueIdOperadoresRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/campeonatos': typeof CampeonatosRouteWithChildren
+  '/financeiro': typeof FinanceiroRoute
   '/login': typeof LoginRoute
   '/superadmin': typeof SuperadminRoute
   '/tv': typeof TvRoute
@@ -89,11 +108,14 @@ export interface FileRoutesByFullPath {
   '/qr/$code': typeof QrCodeRoute
   '/sessao/$id': typeof SessaoIdRoute
   '/votar/$code': typeof VotarCodeRoute
+  '/api/cron/commercial': typeof ApiCronCommercialRoute
+  '/api/mercado-pago/webhook': typeof ApiMercadoPagoWebhookRoute
   '/estabelecimento/$venueId/operadores': typeof EstabelecimentoVenueIdOperadoresRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/campeonatos': typeof CampeonatosRouteWithChildren
+  '/financeiro': typeof FinanceiroRoute
   '/login': typeof LoginRoute
   '/superadmin': typeof SuperadminRoute
   '/tv': typeof TvRoute
@@ -102,12 +124,15 @@ export interface FileRoutesByTo {
   '/qr/$code': typeof QrCodeRoute
   '/sessao/$id': typeof SessaoIdRoute
   '/votar/$code': typeof VotarCodeRoute
+  '/api/cron/commercial': typeof ApiCronCommercialRoute
+  '/api/mercado-pago/webhook': typeof ApiMercadoPagoWebhookRoute
   '/estabelecimento/$venueId/operadores': typeof EstabelecimentoVenueIdOperadoresRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/campeonatos': typeof CampeonatosRouteWithChildren
+  '/financeiro': typeof FinanceiroRoute
   '/login': typeof LoginRoute
   '/superadmin': typeof SuperadminRoute
   '/tv': typeof TvRoute
@@ -116,6 +141,8 @@ export interface FileRoutesById {
   '/qr/$code': typeof QrCodeRoute
   '/sessao/$id': typeof SessaoIdRoute
   '/votar/$code': typeof VotarCodeRoute
+  '/api/cron/commercial': typeof ApiCronCommercialRoute
+  '/api/mercado-pago/webhook': typeof ApiMercadoPagoWebhookRoute
   '/estabelecimento/$venueId/operadores': typeof EstabelecimentoVenueIdOperadoresRoute
 }
 export interface FileRouteTypes {
@@ -123,6 +150,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/campeonatos'
+    | '/financeiro'
     | '/login'
     | '/superadmin'
     | '/tv'
@@ -131,11 +159,14 @@ export interface FileRouteTypes {
     | '/qr/$code'
     | '/sessao/$id'
     | '/votar/$code'
+    | '/api/cron/commercial'
+    | '/api/mercado-pago/webhook'
     | '/estabelecimento/$venueId/operadores'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/campeonatos'
+    | '/financeiro'
     | '/login'
     | '/superadmin'
     | '/tv'
@@ -144,11 +175,14 @@ export interface FileRouteTypes {
     | '/qr/$code'
     | '/sessao/$id'
     | '/votar/$code'
+    | '/api/cron/commercial'
+    | '/api/mercado-pago/webhook'
     | '/estabelecimento/$venueId/operadores'
   id:
     | '__root__'
     | '/'
     | '/campeonatos'
+    | '/financeiro'
     | '/login'
     | '/superadmin'
     | '/tv'
@@ -157,12 +191,15 @@ export interface FileRouteTypes {
     | '/qr/$code'
     | '/sessao/$id'
     | '/votar/$code'
+    | '/api/cron/commercial'
+    | '/api/mercado-pago/webhook'
     | '/estabelecimento/$venueId/operadores'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CampeonatosRoute: typeof CampeonatosRouteWithChildren
+  FinanceiroRoute: typeof FinanceiroRoute
   LoginRoute: typeof LoginRoute
   SuperadminRoute: typeof SuperadminRoute
   TvRoute: typeof TvRoute
@@ -170,6 +207,8 @@ export interface RootRouteChildren {
   QrCodeRoute: typeof QrCodeRoute
   SessaoIdRoute: typeof SessaoIdRoute
   VotarCodeRoute: typeof VotarCodeRoute
+  ApiCronCommercialRoute: typeof ApiCronCommercialRoute
+  ApiMercadoPagoWebhookRoute: typeof ApiMercadoPagoWebhookRoute
   EstabelecimentoVenueIdOperadoresRoute: typeof EstabelecimentoVenueIdOperadoresRoute
 }
 
@@ -187,6 +226,13 @@ declare module '@tanstack/react-router' {
       path: '/campeonatos'
       fullPath: '/campeonatos'
       preLoaderRoute: typeof CampeonatosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/financeiro': {
+      id: '/financeiro'
+      path: '/financeiro'
+      fullPath: '/financeiro'
+      preLoaderRoute: typeof FinanceiroRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -245,6 +291,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof VotarCodeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/cron/commercial': {
+      id: '/api/cron/commercial'
+      path: '/api/cron/commercial'
+      fullPath: '/api/cron/commercial'
+      preLoaderRoute: typeof ApiCronCommercialRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/mercado-pago/webhook': {
+      id: '/api/mercado-pago/webhook'
+      path: '/api/mercado-pago/webhook'
+      fullPath: '/api/mercado-pago/webhook'
+      preLoaderRoute: typeof ApiMercadoPagoWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/estabelecimento/$venueId/operadores': {
       id: '/estabelecimento/$venueId/operadores'
       path: '/estabelecimento/$venueId/operadores'
@@ -270,6 +330,7 @@ const CampeonatosRouteWithChildren = CampeonatosRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CampeonatosRoute: CampeonatosRouteWithChildren,
+  FinanceiroRoute: FinanceiroRoute,
   LoginRoute: LoginRoute,
   SuperadminRoute: SuperadminRoute,
   TvRoute: TvRoute,
@@ -277,6 +338,8 @@ const rootRouteChildren: RootRouteChildren = {
   QrCodeRoute: QrCodeRoute,
   SessaoIdRoute: SessaoIdRoute,
   VotarCodeRoute: VotarCodeRoute,
+  ApiCronCommercialRoute: ApiCronCommercialRoute,
+  ApiMercadoPagoWebhookRoute: ApiMercadoPagoWebhookRoute,
   EstabelecimentoVenueIdOperadoresRoute: EstabelecimentoVenueIdOperadoresRoute,
 }
 export const routeTree = rootRouteImport

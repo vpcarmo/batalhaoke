@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any -- commercial tables are newer than generated Supabase types. */
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -23,6 +24,20 @@ import {
   recoverSuperadminUserFn,
   deleteSuperadminUserFn,
 } from "@/lib/superadmin.functions";
+import {
+  getCommercialAdminDataFn,
+  updateCommercialSettingsFn,
+  reconcileCommercialFn,
+  saveCommercialPlanFn,
+  saveCreditPackFn,
+  grantCommercialTrialFn,
+  grantCommercialCreditsFn,
+  setAccountBillingFn,
+  manageCommercialTrialFn,
+  reprocessCommercialEventFn,
+  getCommercialAccountDetailFn,
+  settleCommercialDebtFn,
+} from "@/lib/commercial.functions";
 
 export const Route = createFileRoute("/superadmin")({
   ssr: false,
@@ -111,6 +126,7 @@ function Dashboard() {
         />
       </section>
       <UsersPanel />
+      <CommercialAdminPanel />
       {venues.isLoading && <Loader2 className="h-5 w-5 animate-spin" />}
       {venues.error && <p className="text-destructive">{errMsg(venues.error)}</p>}
       <ul className="space-y-2">
@@ -142,6 +158,667 @@ function Dashboard() {
       <CreateVenueDialog open={createOpen} onOpenChange={setCreateOpen} onManage={setManage} />
       {manage && <OperatorsDialog venue={manage} onClose={() => setManage(null)} />}
     </main>
+  );
+}
+
+function CommercialAdminPanel() {
+  const qc = useQueryClient();
+  const load = useServerFn(getCommercialAdminDataFn);
+  const save = useServerFn(updateCommercialSettingsFn);
+  const reconcile = useServerFn(reconcileCommercialFn);
+  const savePlan = useServerFn(saveCommercialPlanFn);
+  const savePack = useServerFn(saveCreditPackFn);
+  const grantTrial = useServerFn(grantCommercialTrialFn);
+  const grantCredits = useServerFn(grantCommercialCreditsFn);
+  const setBilling = useServerFn(setAccountBillingFn);
+  const manageTrial = useServerFn(manageCommercialTrialFn);
+  const reprocessEvent = useServerFn(reprocessCommercialEventFn);
+  const loadAccountDetail = useServerFn(getCommercialAccountDetailFn);
+  const settleDebt = useServerFn(settleCommercialDebtFn);
+  const data = useQuery({ queryKey: ["sa-commercial"], queryFn: () => load(), retry: false });
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState("");
+  const [accountTypeFilter, setAccountTypeFilter] = useState("all");
+  const [planFilter, setPlanFilter] = useState("all");
+  const [subscriptionFilter, setSubscriptionFilter] = useState("all");
+  const [trialFilter, setTrialFilter] = useState("all");
+  const [billingFilter, setBillingFilter] = useState("all");
+  const [eventFilter, setEventFilter] = useState("all");
+  const [selectedAccount, setSelectedAccount] = useState("");
+  const accountDetail = useQuery({
+    queryKey: ["sa-commercial-account", selectedAccount],
+    queryFn: () => loadAccountDetail({ data: { accountId: selectedAccount } }),
+    enabled: Boolean(selectedAccount),
+    retry: false,
+  });
+  async function run(work: () => Promise<unknown>) {
+    setBusy(true);
+    setMessage("");
+    try {
+      const result = await work();
+      setMessage(
+        result && typeof result === "object" && "processed" in result
+          ? `Reconciliação concluída: ${String((result as { processed: number }).processed)} pedidos processados.`
+          : "Operação concluída.",
+      );
+      await qc.invalidateQueries({ queryKey: ["sa-commercial"] });
+    } catch (e) {
+      setMessage(errMsg(e));
+    } finally {
+      setBusy(false);
+    }
+  }
+  return (
+    <section className="space-y-4 rounded-lg border p-4">
+      <header className="flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <h2 className="text-lg font-semibold">Gestão comercial</h2>
+          <p className="text-sm text-muted-foreground">
+            Cobrança global desativada por padrão; operações dependem de configuração e credenciais.
+          </p>
+        </div>
+        <Button
+          variant="outline"
+          disabled={busy}
+          onClick={() => void run(() => reconcile({ data: {} }))}
+        >
+          Reconciliar Mercado Pago
+        </Button>
+      </header>
+      {data.error && <p className="text-sm text-destructive">{errMsg(data.error)}</p>}
+      {message && <p className="text-sm">{message}</p>}
+      {data.isLoading && <Loader2 className="h-4 w-4 animate-spin" />}
+      {data.data && (
+        <>
+          <div className="flex flex-wrap items-center gap-3 rounded border p-3">
+            <strong>Configuração</strong>
+            <span>Trials: {data.data.settings?.trial_duration_days ?? "não configurado"} dias</span>
+            <span>Tolerância: {data.data.settings?.delinquency_grace_days} dias</span>
+            <span>Cobrança: {data.data.settings?.billing_enabled ? "ativa" : "desativada"}</span>
+            <label className="flex items-center gap-2 text-sm">
+              Duração padrão do trial (dias)
+              <Input
+                className="w-24"
+                type="number"
+                min="1"
+                defaultValue={data.data.settings?.trial_duration_days ?? ""}
+                onBlur={(e) => {
+                  const n = Number(e.currentTarget.value);
+                  if (n > 0 && n !== data.data.settings?.trial_duration_days)
+                    void run(() => save({ data: { trial_duration_days: n } }));
+                }}
+              />
+            </label>
+            <label className="flex items-center gap-2 text-sm">
+              Tolerância (dias)
+              <Input
+                className="w-20"
+                type="number"
+                min="0"
+                defaultValue={data.data.settings?.delinquency_grace_days ?? 0}
+                onBlur={(e) => {
+                  const n = Number(e.currentTarget.value);
+                  if (n >= 0 && n !== data.data.settings?.delinquency_grace_days)
+                    void run(() => save({ data: { delinquency_grace_days: n } }));
+                }}
+              />
+            </label>
+          </div>
+          <div className="grid gap-4 md:grid-cols-2">
+            <div>
+              <div className="flex items-center justify-between">
+                <h3 className="font-medium">Planos ({data.data.plans.length})</h3>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={busy}
+                  onClick={() => {
+                    const name = window.prompt("Nome do plano");
+                    if (!name) return;
+                    const code = window.prompt(
+                      "Código único",
+                      name.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
+                    );
+                    if (!code) return;
+                    const type = window.prompt("Tipo: individual ou business", "individual");
+                    if (type !== "individual" && type !== "business") return;
+                    void run(() =>
+                      savePlan({
+                        data: {
+                          code,
+                          account_type: type,
+                          name,
+                          description: "",
+                          monthly_price_cents: Number(
+                            window.prompt("Mensalidade em centavos", "0") ?? 0,
+                          ),
+                          included_executions: Number(window.prompt("Franquia mensal", "0") ?? 0),
+                          venue_limit: Number(
+                            window.prompt("Limite de estabelecimentos", "0") ?? 0,
+                          ),
+                          status: "draft",
+                          display_order: data.data.plans.length,
+                        },
+                      }),
+                    );
+                  }}
+                >
+                  Novo plano
+                </Button>
+              </div>
+              <ul className="mt-2 space-y-2">
+                {data.data.plans.map((p: any) => (
+                  <li
+                    className="flex items-center justify-between gap-2 rounded border p-2 text-sm"
+                    key={p.id}
+                  >
+                    <span>
+                      <b>{p.name}</b> · {p.account_type} · R${" "}
+                      {(p.monthly_price_cents / 100).toFixed(2)} · {p.included_executions} execuções
+                      · {p.venue_limit} estabelecimentos · {p.status}
+                    </span>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={busy}
+                      onClick={() => {
+                        const price = window.prompt(
+                          "Mensalidade em centavos",
+                          String(p.monthly_price_cents),
+                        );
+                        if (price === null) return;
+                        const included = window.prompt(
+                          "Franquia mensal",
+                          String(p.included_executions),
+                        );
+                        if (included === null) return;
+                        const venues = window.prompt(
+                          "Limite de estabelecimentos",
+                          String(p.venue_limit),
+                        );
+                        if (venues === null) return;
+                        const status = window.prompt("Status: draft, active ou inactive", p.status);
+                        if (status !== "draft" && status !== "active" && status !== "inactive")
+                          return;
+                        void run(() =>
+                          savePlan({
+                            data: {
+                              id: p.id,
+                              code: p.code,
+                              account_type: p.account_type,
+                              name: p.name,
+                              description: p.description,
+                              monthly_price_cents: Number(price),
+                              included_executions: Number(included),
+                              venue_limit: Number(venues),
+                              status,
+                              display_order: p.display_order,
+                            },
+                          }),
+                        );
+                      }}
+                    >
+                      Editar
+                    </Button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div>
+              <div className="flex items-center justify-between">
+                <h3 className="font-medium">Pacotes de créditos ({data.data.packs.length})</h3>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={busy}
+                  onClick={() => {
+                    const name = window.prompt("Nome do pacote");
+                    if (!name) return;
+                    void run(() =>
+                      savePack({
+                        data: {
+                          name,
+                          description: "",
+                          credits: Number(window.prompt("Quantidade de créditos", "1") ?? 1),
+                          price_cents: Number(window.prompt("Preço em centavos", "0") ?? 0),
+                          validity_days: null,
+                          active: false,
+                          display_order: data.data.packs.length,
+                        },
+                      }),
+                    );
+                  }}
+                >
+                  Novo pacote
+                </Button>
+              </div>
+              <ul className="mt-2 space-y-2">
+                {data.data.packs.map((p: any) => (
+                  <li
+                    className="flex items-center justify-between gap-2 rounded border p-2 text-sm"
+                    key={p.id}
+                  >
+                    <span>
+                      {p.name} · {p.credits} créditos · R$ {(p.price_cents / 100).toFixed(2)} ·{" "}
+                      {p.active ? "ativo" : "inativo"}
+                    </span>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={busy}
+                      onClick={() => {
+                        const credits = window.prompt("Quantidade de créditos", String(p.credits));
+                        if (credits === null) return;
+                        const price = window.prompt("Preço em centavos", String(p.price_cents));
+                        if (price === null) return;
+                        const active = window.confirm("Ativar pacote? Cancelar mantém inativo.");
+                        void run(() =>
+                          savePack({
+                            data: {
+                              id: p.id,
+                              name: p.name,
+                              description: p.description,
+                              credits: Number(credits),
+                              price_cents: Number(price),
+                              validity_days: p.validity_days,
+                              active,
+                              display_order: p.display_order,
+                            },
+                          }),
+                        );
+                      }}
+                    >
+                      Editar
+                    </Button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+          <div className="grid gap-4 md:grid-cols-3">
+            <AdminList
+              title="Trials"
+              items={data.data.trials}
+              label={(x) =>
+                `${x.accounts?.name ?? x.account_id} · ${x.status} · até ${new Date(x.ends_at).toLocaleDateString("pt-BR")}`
+              }
+            />
+            <AdminList
+              title="Assinaturas"
+              items={data.data.subscriptions}
+              label={(x) =>
+                `${x.accounts?.name ?? x.account_id} · ${x.status} · ${x.plan_snapshot?.name ?? "—"}`
+              }
+            />
+            <AdminList
+              title="Pedidos"
+              items={data.data.orders}
+              label={(x) =>
+                `${x.accounts?.name ?? x.account_id} · ${x.kind} · ${x.status} · R$ ${(x.amount_cents / 100).toFixed(2)}`
+              }
+            />
+          </div>
+          <div>
+            <h3 className="font-medium">Contas e ações comerciais ({data.data.accounts.length})</h3>
+            <div className="my-2 grid gap-2 sm:grid-cols-6">
+              <select
+                aria-label="Tipo de conta"
+                value={accountTypeFilter}
+                onChange={(e) => setAccountTypeFilter(e.target.value)}
+                className="rounded border bg-background p-2 text-sm"
+              >
+                <option value="all">Todos os tipos</option>
+                <option value="individual">Individual</option>
+                <option value="business">Business</option>
+              </select>
+              <select
+                aria-label="Plano"
+                value={planFilter}
+                onChange={(e) => setPlanFilter(e.target.value)}
+                className="rounded border bg-background p-2 text-sm"
+              >
+                <option value="all">Todos os planos</option>
+                {data.data.plans.map((p: any) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name}
+                  </option>
+                ))}
+              </select>
+              <select
+                aria-label="Assinatura"
+                value={subscriptionFilter}
+                onChange={(e) => setSubscriptionFilter(e.target.value)}
+                className="rounded border bg-background p-2 text-sm"
+              >
+                <option value="all">Todas as assinaturas</option>
+                {["pending_payment", "active", "past_due", "suspended", "cancelled"].map((s) => (
+                  <option key={s}>{s}</option>
+                ))}
+              </select>
+              <select
+                aria-label="Trial"
+                value={trialFilter}
+                onChange={(e) => setTrialFilter(e.target.value)}
+                className="rounded border bg-background p-2 text-sm"
+              >
+                <option value="all">Todos os trials</option>
+                <option value="active">Ativo</option>
+                <option value="expired">Vencido</option>
+                <option value="none">Sem trial</option>
+              </select>
+              <select
+                aria-label="Cobrança"
+                value={billingFilter}
+                onChange={(e) => setBillingFilter(e.target.value)}
+                className="rounded border bg-background p-2 text-sm"
+              >
+                <option value="all">Cobrança (todos)</option>
+                <option value="true">Habilitada</option>
+                <option value="false">Desabilitada</option>
+              </select>
+              <select
+                aria-label="Eventos"
+                value={eventFilter}
+                onChange={(e) => setEventFilter(e.target.value)}
+                className="rounded border bg-background p-2 text-sm"
+              >
+                <option value="all">Todos os eventos</option>
+                <option value="problem">Evento falho/pendente</option>
+              </select>
+            </div>
+            <ul className="mt-2 max-h-96 space-y-2 overflow-auto">
+              {data.data.accounts
+                .filter((a: any) => {
+                  const sub = data.data.subscriptions.find((x: any) => x.account_id === a.id);
+                  const trial = data.data.trials.find((x: any) => x.account_id === a.id);
+                  const billing =
+                    data.data.accountSettings.find((x: any) => x.account_id === a.id)
+                      ?.billing_enabled ?? false;
+                  const hasProblemEvent = data.data.problemEvents.some(
+                    (e: any) => e.account_id === a.id,
+                  );
+                  const effectiveTrial =
+                    trial && trial.status === "active" && Date.parse(trial.ends_at) <= Date.now()
+                      ? "expired"
+                      : trial?.status;
+                  return (
+                    (accountTypeFilter === "all" || a.type === accountTypeFilter) &&
+                    (planFilter === "all" || sub?.plan_id === planFilter) &&
+                    (subscriptionFilter === "all" || sub?.status === subscriptionFilter) &&
+                    (trialFilter === "all" ||
+                      (trialFilter === "none" ? !trial : effectiveTrial === trialFilter)) &&
+                    (billingFilter === "all" || String(billing) === billingFilter) &&
+                    (eventFilter === "all" || hasProblemEvent)
+                  );
+                })
+                .map((a: any) => (
+                  <li
+                    key={a.id}
+                    className="flex flex-wrap items-center justify-between gap-2 rounded border p-2 text-sm"
+                  >
+                    <span>
+                      {a.name} · {a.type} · {a.id}
+                    </span>
+                    <div className="flex gap-1">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        disabled={busy}
+                        onClick={() => setSelectedAccount(a.id)}
+                      >
+                        Visão consolidada
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        disabled={busy}
+                        onClick={() => {
+                          const amount = Number(window.prompt("Valor regularizado em centavos"));
+                          if (!Number.isInteger(amount) || amount <= 0) return;
+                          const reason = window.prompt(
+                            "Justificativa obrigatória da regularização",
+                          );
+                          if (!reason || reason.trim().length < 3) return;
+                          void run(() => settleDebt({ data: { accountId: a.id, amount, reason } }));
+                        }}
+                      >
+                        Regularizar débito
+                      </Button>
+                      {data.data.trials
+                        .filter((t: any) => t.account_id === a.id && t.status === "active")
+                        .map((t: any) => (
+                          <div className="flex gap-1" key={t.id}>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              disabled={busy}
+                              onClick={() => {
+                                const date = window.prompt(
+                                  "Novo vencimento do trial (data e hora ISO)",
+                                  new Date(t.ends_at).toISOString(),
+                                );
+                                if (!date) return;
+                                const reason = window.prompt("Justificativa obrigatória");
+                                if (!reason || reason.trim().length < 3) return;
+                                if (!window.confirm(`Confirmar extensão/ajuste até ${date}?`))
+                                  return;
+                                void run(() =>
+                                  manageTrial({
+                                    data: {
+                                      accountId: a.id,
+                                      operation:
+                                        Date.parse(date) > Date.parse(t.ends_at)
+                                          ? "extended"
+                                          : "adjusted",
+                                      endsAt: new Date(date).toISOString(),
+                                      reason,
+                                    },
+                                  }),
+                                );
+                              }}
+                            >
+                              Ajustar trial
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              disabled={busy}
+                              onClick={() => {
+                                if (
+                                  !window.confirm(
+                                    "Revogar este trial agora? Esta operação é auditada e não pode ser desfeita.",
+                                  )
+                                )
+                                  return;
+                                const reason = window.prompt(
+                                  "Justificativa obrigatória para revogação",
+                                );
+                                if (!reason || reason.trim().length < 3) return;
+                                void run(() =>
+                                  manageTrial({
+                                    data: {
+                                      accountId: a.id,
+                                      operation: "revoked",
+                                      endsAt: null,
+                                      reason,
+                                    },
+                                  }),
+                                );
+                              }}
+                            >
+                              Revogar trial
+                            </Button>
+                          </div>
+                        ))}
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        disabled={busy}
+                        onClick={() => {
+                          const reason = window.prompt("Justificativa do trial");
+                          if (!reason || reason.trim().length < 3) return;
+                          void run(() =>
+                            grantTrial({
+                              data: {
+                                accountId: a.id,
+                                days: Number(data.data.settings?.trial_duration_days ?? 14),
+                                reason,
+                              },
+                            }),
+                          );
+                        }}
+                      >
+                        Conceder trial
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        disabled={busy}
+                        onClick={() => {
+                          const quantity = Number(
+                            window.prompt(
+                              "Créditos para conceder (negativo para ajuste compensatório)",
+                              "10",
+                            ),
+                          );
+                          if (!quantity) return;
+                          const reason = window.prompt("Justificativa");
+                          if (!reason || reason.trim().length < 3) return;
+                          void run(() =>
+                            grantCredits({
+                              data: {
+                                accountId: a.id,
+                                quantity,
+                                reason,
+                                idempotencyKey: crypto.randomUUID(),
+                              },
+                            }),
+                          );
+                        }}
+                      >
+                        Ajustar créditos
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        disabled={busy}
+                        onClick={() => {
+                          const reason = window.prompt(
+                            "Justificativa para alterar habilitação de cobrança",
+                          );
+                          if (!reason || reason.trim().length < 3) return;
+                          void run(() =>
+                            setBilling({
+                              data: { accountId: a.id, billing_enabled: true, reason },
+                            }),
+                          );
+                        }}
+                      >
+                        Habilitar conta
+                      </Button>
+                    </div>
+                  </li>
+                ))}
+            </ul>
+            {selectedAccount && (
+              <div className="mt-3 rounded border p-3">
+                <div className="flex justify-between">
+                  <b>Conta selecionada: {selectedAccount}</b>
+                  <Button size="sm" variant="outline" onClick={() => setSelectedAccount("")}>
+                    Fechar
+                  </Button>
+                </div>
+                {accountDetail.isLoading ? (
+                  <p>Carregando histórico completo…</p>
+                ) : accountDetail.error ? (
+                  <p>{errMsg(accountDetail.error)}</p>
+                ) : (
+                  accountDetail.data && (
+                    <pre className="mt-2 max-h-96 overflow-auto whitespace-pre-wrap text-xs">
+                      {JSON.stringify(accountDetail.data, null, 2)}
+                    </pre>
+                  )
+                )}
+              </div>
+            )}
+          </div>
+          <div className="grid gap-4 md:grid-cols-2">
+            <div>
+              <h3 className="font-medium">Eventos MP recentes ({data.data.events.length})</h3>
+              <ul className="mt-2 max-h-48 space-y-1 overflow-auto text-xs">
+                {data.data.events.map((event: any) => (
+                  <li
+                    className="flex items-center justify-between gap-2 rounded bg-muted p-2"
+                    key={event.id}
+                  >
+                    <span>
+                      {event.topic} · {event.status} · {event.resource_id} · tentativas{" "}
+                      {event.attempts ?? 0}
+                      {event.last_error ? ` · ${event.last_error}` : ""}
+                      <details>
+                        <summary>Payload e tentativas</summary>
+                        <pre className="max-h-40 overflow-auto whitespace-pre-wrap">
+                          {JSON.stringify(
+                            { payload: event.payload, attempts: event.mercado_pago_event_attempts },
+                            null,
+                            2,
+                          )}
+                        </pre>
+                      </details>
+                    </span>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={
+                        busy ||
+                        !event.signature_valid ||
+                        !["failed", "received", "processed", "reprocessed"].includes(event.status)
+                      }
+                      onClick={() =>
+                        void run(() => reprocessEvent({ data: { eventId: event.id } }))
+                      }
+                    >
+                      Reprocessar
+                    </Button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <AdminList
+              title="Falhas/reconciliações"
+              items={data.data.reconciliation.filter((x: any) => x.outcome === "failed")}
+              label={(x) => `${x.outcome} · ${x.detail ?? "sem detalhes"}`}
+            />
+          </div>
+        </>
+      )}
+    </section>
+  );
+}
+
+function AdminList({
+  title,
+  items,
+  label,
+}: {
+  title: string;
+  items: any[];
+  label: (item: any) => string;
+}) {
+  return (
+    <div>
+      <h3 className="font-medium">
+        {title} ({items.length})
+      </h3>
+      <ul className="mt-2 max-h-48 space-y-1 overflow-auto text-xs">
+        {items.slice(0, 30).map((x, i) => (
+          <li className="rounded bg-muted p-2" key={x.id ?? i}>
+            {label(x)}
+          </li>
+        ))}
+        {items.length === 0 && <li className="text-muted-foreground">Sem registros.</li>}
+      </ul>
+    </div>
   );
 }
 
