@@ -236,6 +236,20 @@ function CommercialAdminPanel() {
             <span>Tolerância: {data.data.settings?.delinquency_grace_days} dias</span>
             <span>Cobrança: {data.data.settings?.billing_enabled ? "ativa" : "desativada"}</span>
             <label className="flex items-center gap-2 text-sm">
+              Estabelecimentos no Trial
+              <Input
+                type="number"
+                min="1"
+                className="w-24"
+                defaultValue={data.data.settings?.trial_venue_limit ?? 1}
+                onBlur={(e) => {
+                  const n = Number(e.currentTarget.value);
+                  if (Number.isInteger(n) && n >= 1 && n !== data.data.settings?.trial_venue_limit)
+                    void run(() => save({ data: { trial_venue_limit: n } }));
+                }}
+              />
+            </label>
+            <label className="flex items-center gap-2 text-sm">
               Duração padrão do trial (dias)
               <Input
                 className="w-24"

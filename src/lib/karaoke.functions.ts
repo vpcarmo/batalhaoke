@@ -1,3 +1,4 @@
+import { commercialPlaybackError } from "./commercial-playback";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
@@ -166,14 +167,12 @@ async function loadLiveSnapshot(
           : championshipStatus === "final" || championshipStatus === "completed"
             ? "final"
             : null;
-    const stageMatches = championshipMatches.filter(
-      (match) => match.stage === currentStage,
-    );
+    const stageMatches = championshipMatches.filter((match) => match.stage === currentStage);
     const scoredMatch =
       stageMatches.find((match) => match.status === "in_progress") ??
-      [...stageMatches].reverse().find(
-        (match) => match.status === "completed" || match.status === "wo",
-      );
+      [...stageMatches]
+        .reverse()
+        .find((match) => match.status === "completed" || match.status === "wo");
     const tallyResults = scoredMatch
       ? await Promise.all([
           countVotesForEntry(scoredMatch.id, scoredMatch.entry_a_id),
@@ -660,7 +659,6 @@ export const setKaraokePerformanceStatus = createServerFn({ method: "POST" })
       throw new Error("Esta apresentação deve ser gerenciada pelo fluxo de disputa.");
     await assertGenericPerformanceAllowed(db, performance.id, session);
 
-
     if (data.status === "active" && performance.status !== "queued")
       throw new Error("Só apresentações na fila podem ser iniciadas.");
     if (data.status !== "active" && performance.status !== "active")
@@ -677,7 +675,12 @@ export const setKaraokePerformanceStatus = createServerFn({ method: "POST" })
       .eq("status", performance.status)
       .select("id")
       .maybeSingle();
-    if (updateError || !updated) throw new Error("Não foi possível atualizar a apresentação.");
+    if (updateError || !updated)
+      throw new Error(
+        data.status === "active"
+          ? commercialPlaybackError(updateError)
+          : "Não foi possível atualizar a apresentação.",
+      );
   });
 
 export const completePerformanceFromTv = createServerFn({ method: "POST" })

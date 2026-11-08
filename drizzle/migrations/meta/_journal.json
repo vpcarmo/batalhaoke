@@ -239,6 +239,13 @@
       "when": 1794614400000,
       "tag": "0033_commercial_operations",
       "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1794700800000,
+      "tag": "0034_commercial_audit_fixes",
+      "breakpoints": true
     }
   ]
 }

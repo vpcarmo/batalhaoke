@@ -1,7 +1,13 @@
 import { useEffect, useImperativeHandle, useRef, useState, forwardRef } from "react";
 import { getProvider } from "@/lib/playback/registry";
+import { commercialPlaybackError, createPlaybackPermit } from "@/lib/commercial-playback";
 import type { PlayerHandle, PlayerState } from "@/lib/playback/types";
-import { acquirePerformanceMeasurement, acquireTvPerformanceMeasurement, sendPerformanceHeartbeat, sendTvPerformanceHeartbeat } from "@/lib/measurement.functions";
+import {
+  acquirePerformanceMeasurement,
+  acquireTvPerformanceMeasurement,
+  sendPerformanceHeartbeat,
+  sendTvPerformanceHeartbeat,
+} from "@/lib/measurement.functions";
 
 export interface PlaybackPlayerRef {
   play(): void;
@@ -33,6 +39,10 @@ export const PlaybackPlayer = forwardRef<PlaybackPlayerRef, Props>(function Play
   cb.current = onState;
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const authorizationKey = performanceId
+    ? performanceId + ":" + (deviceToken ?? "local")
+    : "unmetered";
+  const [authorizedFor, setAuthorizedFor] = useState<string | null>(null);
   const telemetryState = useRef<PlayerState>("unstarted");
   const sendTransition = useRef<((s: PlayerState) => void) | null>(null);
 
@@ -57,30 +67,12 @@ export const PlaybackPlayer = forwardRef<PlaybackPlayerRef, Props>(function Play
     else current.restart();
   }
 
-  /* useEffect(() => {
-    let alive = true;
-    setError(null);
-    setLoading(true);
-    let isReady = false;
-    const p = getProvider(provider);
-    const t = setTimeout(() => alive && !isReady && setError("O player demorou demais para carregar. Verifique a internet."), 15000);
-    p.mount(box.current!, externalId, {
-      onReady: () => { isReady = true; clearTimeout(t); if (alive) setLoading(false); },
-      onStateChange: (s) => cb.current?.(s),
-      onError: (m) => { isReady = true; clearTimeout(t); if (alive) setError(m); },
-    })
-      .then((h) => { if (!alive) h.destroy(); else handle.current = h; })
-      .catch((e) => alive && setError(e.message || "Player indisponível."));
-    return () => { alive = false; clearTimeout(t); handle.current?.destroy(); handle.current = null; };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [provider, externalId]); */
-
   useEffect(() => {
+    if (performanceId && authorizedFor !== authorizationKey) return;
     let alive = true;
     setError(null);
     setLoading(true);
     providerReady.current = false;
-    pendingIntent.current = null;
     let isReady = false;
     const p = getProvider(provider);
     const t = setTimeout(
@@ -121,7 +113,11 @@ export const PlaybackPlayer = forwardRef<PlaybackPlayerRef, Props>(function Play
         flushIntent();
       },
       onStateChange: (s) => {
-        if (alive) { telemetryState.current = s; sendTransition.current?.(s); cb.current?.(s); }
+        if (alive) {
+          telemetryState.current = s;
+          sendTransition.current?.(s);
+          cb.current?.(s);
+        }
       },
       onError: (m) => {
         if (!alive) return;
@@ -154,23 +150,39 @@ export const PlaybackPlayer = forwardRef<PlaybackPlayerRef, Props>(function Play
       handle.current = null;
       host.remove();
     };
-  }, [provider, externalId]);
+  }, [provider, externalId, performanceId, authorizationKey, authorizedFor]);
 
   useEffect(() => {
     if (!performanceId) return;
     let active = true;
-    let timer: ReturnType<typeof setInterval> | undefined;
-    let instanceId: string;
+    telemetryState.current = "unstarted";
+    setAuthorizedFor(null);
+    setError(null);
+    setLoading(true);
+    const permit = createPlaybackPermit((failure) => {
+      if (!active) return;
+      setAuthorizedFor(null);
+      pendingIntent.current = null;
+      providerReady.current = false;
+      handle.current?.pause();
+      handle.current?.destroy();
+      handle.current = null;
+      setLoading(false);
+      setError(commercialPlaybackError(failure));
+      cb.current?.("error");
+    });
+    const instanceId = crypto.randomUUID();
     let epochId: string | undefined;
     let sequence = 0;
+    let commercialRequired = true;
     let acquiring = false;
     let lastTransitionState: PlayerState | undefined;
     const pendingTransitions: PlayerState[] = [];
-    const acquire = deviceToken ? acquireTvPerformanceMeasurement : acquirePerformanceMeasurement;
-    const record = deviceToken ? sendTvPerformanceHeartbeat : sendPerformanceHeartbeat;
+
     const heartbeat = async (eventState?: PlayerState, forceAcquire = false) => {
       if (
         !active ||
+        permit.closed ||
         (!eventState &&
           (!epochId || telemetryState.current === "ended" || telemetryState.current === "error"))
       )
@@ -179,41 +191,71 @@ export const PlaybackPlayer = forwardRef<PlaybackPlayerRef, Props>(function Play
         if (eventState) pendingTransitions.push(eventState);
         return;
       }
-      const positionSeconds = handle.current?.getPositionSeconds();
-      if (positionSeconds == null) return;
+
       acquiring = true;
+      const requestStartedAt = Date.now();
       try {
         if (!epochId || forceAcquire) {
-          const lease = await (acquire as any)({ data: { performanceId, instanceId, ...(deviceToken ? { deviceToken } : {}) } });
-          if (!active) return;
+          const lease = deviceToken
+            ? await acquireTvPerformanceMeasurement({
+                data: { performanceId, instanceId, deviceToken },
+              })
+            : await acquirePerformanceMeasurement({ data: { performanceId, instanceId } });
+          if (!active || permit.closed) return;
+          if (!lease?.epoch_id && lease?.commercial_required !== false)
+            throw new Error("commercial_authorization_required");
+          commercialRequired = lease.commercial_required !== false;
+          if (!commercialRequired) permit.unmetered();
           epochId = lease.epoch_id;
+          if (!permit.confirm(12_000 - (Date.now() - requestStartedAt))) return;
+          setAuthorizedFor(authorizationKey);
         }
-        const result = await (record as any)({ data: {
-          performanceId, instanceId, epochId, sequence: sequence++,
-          state: eventState ?? telemetryState.current, positionSeconds,
-          ...(deviceToken ? { deviceToken } : {}),
-        } });
-        if (active && !result.accepted && result.reason === "epoch") epochId = undefined;
-      } catch {
+        if (!epochId) return;
+        const positionSeconds = handle.current?.getPositionSeconds();
+        if (positionSeconds == null) return;
+        const data = {
+          performanceId,
+          instanceId,
+          epochId,
+          sequence: sequence++,
+          state: eventState ?? telemetryState.current,
+          positionSeconds,
+        };
+        const result = deviceToken
+          ? await sendTvPerformanceHeartbeat({ data: { ...data, deviceToken } })
+          : await sendPerformanceHeartbeat({ data });
+        if (!result.accepted && result.reason !== "duplicate")
+          throw new Error("commercial_authorization_required");
+        if (active) permit.confirm(12_000 - (Date.now() - requestStartedAt));
+      } catch (failure) {
         epochId = undefined;
+        if (commercialRequired) permit.revoke(failure);
       } finally {
         acquiring = false;
         const next = pendingTransitions.shift();
         if (active && next) queueMicrotask(() => void heartbeat(next));
       }
     };
-    instanceId = crypto.randomUUID();
     sendTransition.current = (s) => {
       if (s === lastTransitionState) return;
       lastTransitionState = s;
       void heartbeat(s);
     };
     void heartbeat(telemetryState.current, true);
-    timer = setInterval(() => void heartbeat(), 5_000);
-    const onOnline = () => { epochId = undefined; void heartbeat(telemetryState.current, true); };
+    const timer = setInterval(() => void heartbeat(), 5_000);
+    const onOnline = () => {
+      epochId = undefined;
+      void heartbeat(telemetryState.current, true);
+    };
     window.addEventListener("online", onOnline);
-    return () => { active = false; sendTransition.current = null; if (timer) clearInterval(timer); window.removeEventListener("online", onOnline); };
-  }, [performanceId, deviceToken]);
+    return () => {
+      active = false;
+      permit.close();
+      sendTransition.current = null;
+      if (timer) clearInterval(timer);
+      window.removeEventListener("online", onOnline);
+    };
+  }, [performanceId, deviceToken, authorizationKey]);
 
   const attribution = getProvider(provider).attribution;
   return (

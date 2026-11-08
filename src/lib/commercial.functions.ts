@@ -11,8 +11,7 @@ async function ownerAccount(db: any, userId: string) {
     .eq("role", "owner")
     .limit(1)
     .maybeSingle();
-  if (error || !data)
-    throw new Error("Somente o proprietÃ¡rio da conta pode acessar o financeiro.");
+  if (error || !data) throw new Error("Somente o proprietário da conta pode acessar o financeiro.");
   return data;
 }
 
@@ -23,19 +22,19 @@ async function checkoutConfig(db: any, accountId: string) {
     .eq("id", true)
     .single();
   if (error || !data?.billing_enabled)
-    throw new Error("ContrataÃ§Ãµes estÃ£o temporariamente indisponÃ­veis.");
+    throw new Error("Contratações estão temporariamente indisponíveis.");
   const { data: accountSettings } = await db
     .from("commercial_account_settings")
     .select("billing_enabled")
     .eq("account_id", accountId)
     .maybeSingle();
   if (!accountSettings?.billing_enabled)
-    throw new Error("CobranÃ§a nÃ£o estÃ¡ habilitada para esta conta.");
+    throw new Error("Cobrança não está habilitada para esta conta.");
 }
 
 function publicUrl(path: string) {
   const origin = process.env["APP_URL"];
-  if (!origin) throw new Error("APP_URL nÃ£o configurada no servidor.");
+  if (!origin) throw new Error("APP_URL não configurada no servidor.");
   return new URL(path, origin).toString();
 }
 
@@ -54,8 +53,8 @@ export const getAccountCommercialOverviewFn = createServerFn({ method: "GET" })
       .eq("role", "owner")
       .limit(1)
       .maybeSingle();
-    if (memberError) throw new Error("NÃ£o foi possÃ­vel validar a conta.");
-    if (!membership) throw new Error("Somente o proprietÃ¡rio da conta pode acessar o financeiro.");
+    if (memberError) throw new Error("Não foi possível validar a conta.");
+    if (!membership) throw new Error("Somente o proprietário da conta pode acessar o financeiro.");
 
     const accountId = membership.account_id as string;
     const [settings, subscription, trial, venues, credits, walletEntries, periods, purchases] =
@@ -112,7 +111,7 @@ export const getAccountCommercialOverviewFn = createServerFn({ method: "GET" })
       periods,
       purchases,
     ]) {
-      if (result.error) throw new Error("NÃ£o foi possÃ­vel carregar os dados comerciais.");
+      if (result.error) throw new Error("Não foi possível carregar os dados comerciais.");
     }
     const periodList = periods.data ?? [];
     const current = periodList.find(
@@ -139,8 +138,7 @@ export const getAccountCommercialOverviewFn = createServerFn({ method: "GET" })
           { count: 0, error: null },
           { count: 0, error: null },
         ];
-    if (usage.error || reservations.error)
-      throw new Error("NÃ£o foi possÃ­vel carregar o consumo.");
+    if (usage.error || reservations.error) throw new Error("Não foi possível carregar o consumo.");
     const walletBalance = (walletEntries.data ?? []).reduce(
       (sum: number, item: { quantity: number; expires_at: string | null }) =>
         sum + (item.expires_at && Date.parse(item.expires_at) <= Date.now() ? 0 : item.quantity),
@@ -190,7 +188,7 @@ export const listCommercialOffersFn = createServerFn({ method: "GET" })
         .eq("active", true)
         .order("display_order"),
     ]);
-    if (plans.error || packs.error) throw new Error("NÃ£o foi possÃ­vel consultar as ofertas.");
+    if (plans.error || packs.error) throw new Error("Não foi possível consultar as ofertas.");
     return { plans: plans.data ?? [], packs: packs.data ?? [] };
   });
 
@@ -209,7 +207,7 @@ export const startCreditCheckoutFn = createServerFn({ method: "POST" })
       .eq("id", data.packId)
       .eq("active", true)
       .single();
-    if (error || !pack) throw new Error("Pacote indisponÃ­vel.");
+    if (error || !pack) throw new Error("Pacote indisponível.");
     const reference = crypto.randomUUID();
     const creditExpiresAt = pack.validity_days
       ? new Date(Date.now() + pack.validity_days * 86400000).toISOString()
@@ -227,7 +225,7 @@ export const startCreditCheckoutFn = createServerFn({ method: "POST" })
       })
       .select("id")
       .single();
-    if (insertError || !order) throw new Error("NÃ£o foi possÃ­vel iniciar o pedido.");
+    if (insertError || !order) throw new Error("Não foi possível iniciar o pedido.");
     try {
       const { createCreditCheckout } = await import("./mercado-pago.server");
       const checkout = await createCreditCheckout({
@@ -243,7 +241,7 @@ export const startCreditCheckoutFn = createServerFn({ method: "POST" })
         .update({ external_preference_id: checkout.id })
         .eq("id", order.id);
       if (updateError || typeof checkout["init_point"] !== "string")
-        throw new Error("Resposta de checkout invÃ¡lida.");
+        throw new Error("Resposta de checkout inválida.");
       return { checkoutUrl: checkout["init_point"] };
     } catch (e) {
       await db.from("commercial_orders").update({ status: "cancelled" }).eq("id", order.id);
@@ -267,7 +265,7 @@ export const startSubscriptionCheckoutFn = createServerFn({ method: "POST" })
       .eq("status", "active")
       .eq("account_type", member.accounts.type)
       .single();
-    if (error || !plan || plan.monthly_price_cents <= 0) throw new Error("Plano indisponÃ­vel.");
+    if (error || !plan || plan.monthly_price_cents <= 0) throw new Error("Plano indisponível.");
     const { data: existing } = await db
       .from("account_subscriptions")
       .select("id")
@@ -275,7 +273,7 @@ export const startSubscriptionCheckoutFn = createServerFn({ method: "POST" })
       .in("status", ["pending_payment", "active", "past_due", "cancel_requested", "suspended"])
       .limit(1)
       .maybeSingle();
-    if (existing) throw new Error("A conta jÃ¡ possui uma assinatura em andamento.");
+    if (existing) throw new Error("A conta já possui uma assinatura em andamento.");
     const snapshot = {
       code: plan.code,
       name: plan.name,
@@ -297,7 +295,7 @@ export const startSubscriptionCheckoutFn = createServerFn({ method: "POST" })
       })
       .select("id")
       .single();
-    if (subError || !sub) throw new Error("NÃ£o foi possÃ­vel iniciar a assinatura.");
+    if (subError || !sub) throw new Error("Não foi possível iniciar a assinatura.");
     const reference = crypto.randomUUID();
     const { data: authUser, error: authError } = await supabaseAdmin.auth.admin.getUserById(
       context.userId,
@@ -305,7 +303,7 @@ export const startSubscriptionCheckoutFn = createServerFn({ method: "POST" })
     const payerEmail = authUser?.user?.email;
     if (authError || !payerEmail) {
       await db.from("account_subscriptions").update({ status: "cancelled" }).eq("id", sub.id);
-      throw new Error("NÃ£o foi possÃ­vel confirmar o e-mail do proprietÃ¡rio.");
+      throw new Error("Não foi possível confirmar o e-mail do proprietário.");
     }
     const { data: order, error: orderError } = await db
       .from("commercial_orders")
@@ -320,19 +318,19 @@ export const startSubscriptionCheckoutFn = createServerFn({ method: "POST" })
       .single();
     if (orderError || !order) {
       await db.from("account_subscriptions").update({ status: "cancelled" }).eq("id", sub.id);
-      throw new Error("NÃ£o foi possÃ­vel iniciar o pedido.");
+      throw new Error("Não foi possível iniciar o pedido.");
     }
     try {
       const { createRecurringSubscription } = await import("./mercado-pago.server");
       const provider = await createRecurringSubscription({
-        reason: `BatalhaOkÃª - ${plan.name}`,
+        reason: `BatalhaOkê - ${plan.name}`,
         amountCents: plan.monthly_price_cents,
         externalReference: reference,
         payerEmail,
         backUrl: publicUrl("/financeiro"),
       });
       if (typeof provider["init_point"] !== "string" || !provider.id)
-        throw new Error("Resposta de checkout invÃ¡lida.");
+        throw new Error("Resposta de checkout inválida.");
       await db
         .from("account_subscriptions")
         .update({ external_id: String(provider.id) })
@@ -878,6 +876,7 @@ export const updateCommercialSettingsFn = createServerFn({ method: "POST" })
     z
       .object({
         billing_enabled: z.boolean().optional(),
+        trial_venue_limit: z.number().int().min(1).max(10000).optional(),
         trial_duration_days: z.number().int().positive().nullable().optional(),
         delinquency_grace_days: z.number().int().min(0).max(90).optional(),
       })

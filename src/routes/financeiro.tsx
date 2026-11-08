@@ -28,8 +28,7 @@ function FinanceiroPage() {
     queryFn: () => load(),
     retry: false,
   });
-  if (query.isLoading)
-    return <main className="mx-auto max-w-3xl p-6">Carregando financeiroÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦</main>;
+  if (query.isLoading) return <main className="mx-auto max-w-3xl p-6">Carregando financeiro…</main>;
   if (query.error)
     return (
       <main className="mx-auto max-w-3xl p-6">
@@ -66,13 +65,12 @@ function FinanceiroPage() {
       <header>
         <h1 className="text-2xl font-bold">Financeiro da conta</h1>
         <p className="text-muted-foreground">
-          {data.account?.name} Ãƒâ€šÃ‚Â·{" "}
-          {data.account?.type === "business" ? "Business" : "Individual"}
+          {data.account?.name} · {data.account?.type === "business" ? "Business" : "Individual"}
         </p>
       </header>
       <section className="grid gap-4 md:grid-cols-2">
         <article className="space-y-3 rounded-lg border p-4">
-          <h2 className="font-semibold">Planos disponÃƒÆ’Ã‚Â­veis</h2>
+          <h2 className="font-semibold">Planos disponíveis</h2>
           {offers.data?.plans.map(
             (p: {
               id: string;
@@ -85,11 +83,11 @@ function FinanceiroPage() {
               <div key={p.id} className="flex items-center justify-between gap-3 border-t pt-3">
                 <div>
                   <p className="font-medium">
-                    {p.name} Ãƒâ€šÃ‚Â· R$ {(p.monthly_price_cents / 100).toFixed(2)}/mÃƒÆ’Ã‚Âªs
+                    {p.name} · R$ {(p.monthly_price_cents / 100).toFixed(2)}/mês
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    {p.description} Ãƒâ€šÃ‚Â· {p.included_executions} execuÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Âµes
-                    Ãƒâ€šÃ‚Â· {p.venue_limit} estabelecimentos
+                    {p.description} · {p.included_executions} execuções · {p.venue_limit}{" "}
+                    estabelecimentos
                   </p>
                 </div>
                 <button
@@ -110,7 +108,7 @@ function FinanceiroPage() {
           )}
         </article>
         <article className="space-y-3 rounded-lg border p-4">
-          <h2 className="font-semibold">Comprar crÃƒÆ’Ã‚Â©ditos</h2>
+          <h2 className="font-semibold">Comprar créditos</h2>
           {offers.data?.packs.map(
             (p: {
               id: string;
@@ -122,10 +120,10 @@ function FinanceiroPage() {
               <div key={p.id} className="flex items-center justify-between gap-3 border-t pt-3">
                 <div>
                   <p className="font-medium">
-                    {p.name} Ãƒâ€šÃ‚Â· {p.credits} crÃƒÆ’Ã‚Â©ditos
+                    {p.name} · {p.credits} créditos
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    {p.description} Ãƒâ€šÃ‚Â· R$ {(p.price_cents / 100).toFixed(2)}
+                    {p.description} · R$ {(p.price_cents / 100).toFixed(2)}
                   </p>
                 </div>
                 <button
@@ -138,7 +136,7 @@ function FinanceiroPage() {
             ),
           )}
           {!offers.isLoading && !offers.data?.packs.length && (
-            <p className="text-sm text-muted-foreground">Nenhum pacote disponÃƒÆ’Ã‚Â­vel.</p>
+            <p className="text-sm text-muted-foreground">Nenhum pacote disponível.</p>
           )}
         </article>
       </section>
@@ -147,7 +145,7 @@ function FinanceiroPage() {
           <h2 className="font-semibold">Plano e assinatura</h2>
           <p className="mt-2">{plan?.name ?? "Sem plano contratado"}</p>
           <p className="text-sm text-muted-foreground">
-            SituaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o: {data.subscription?.status ?? "nÃƒÆ’Ã‚Â£o contratada"}
+            Situação: {data.subscription?.status ?? "não contratada"}
           </p>
           {data.subscription?.status === "active" && (
             <button
@@ -158,13 +156,13 @@ function FinanceiroPage() {
             </button>
           )}
           {plan?.monthly_price_cents != null && (
-            <p>R$ {(plan.monthly_price_cents / 100).toFixed(2)} / mÃƒÆ’Ã‚Âªs</p>
+            <p>R$ {(plan.monthly_price_cents / 100).toFixed(2)} / mês</p>
           )}
           <p className="text-sm">
-            PrÃƒÆ’Ã‚Â³xima renovaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o:{" "}
+            Próxima renovação:{" "}
             {data.subscription?.next_renewal_at
               ? new Date(data.subscription.next_renewal_at).toLocaleDateString("pt-BR")
-              : "ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â"}
+              : "—"}
           </p>
           {data.subscription?.status === "past_due" && (
             <p role="status" className="mt-2 text-sm text-destructive">
@@ -190,35 +188,33 @@ function FinanceiroPage() {
           <h2 className="font-semibold">Trial</h2>
           <p className="mt-2">
             {data.trial
-              ? `${data.trial.status} Ãƒâ€šÃ‚Â· atÃƒÆ’Ã‚Â© ${new Date(data.trial.ends_at).toLocaleDateString("pt-BR")}`
+              ? `${data.trial.status} · até ${new Date(data.trial.ends_at).toLocaleDateString("pt-BR")}`
               : "Nenhum trial registrado"}
           </p>
           <p className="text-sm text-muted-foreground">
-            CobranÃƒÆ’Ã‚Â§a {data.billingEnabled ? "habilitada" : "desativada"} para esta conta
+            Cobrança {data.billingEnabled ? "habilitada" : "desativada"} para esta conta
           </p>
         </article>
         <article className="rounded-lg border p-4">
           <h2 className="font-semibold">Consumo do ciclo</h2>
           <p className="mt-2">
-            Franquia: {data.currentUsage.included} Ãƒâ€šÃ‚Â· consumidas:{" "}
-            {data.currentUsage.consumed}
+            Franquia: {data.currentUsage.included} · consumidas: {data.currentUsage.consumed}
           </p>
           <p>
-            Reservadas: {data.currentUsage.reserved} Ãƒâ€šÃ‚Â· disponÃƒÆ’Ã‚Â­veis:{" "}
-            {data.currentUsage.available}
+            Reservadas: {data.currentUsage.reserved} · disponíveis: {data.currentUsage.available}
           </p>
           <p className="text-sm text-muted-foreground">
             {data.venueCount} estabelecimento(s) vinculado(s)
           </p>
         </article>
         <article className="rounded-lg border p-4">
-          <h2 className="font-semibold">Carteira de crÃƒÆ’Ã‚Â©ditos</h2>
+          <h2 className="font-semibold">Carteira de créditos</h2>
           <p className="mt-2">Saldo: {data.walletBalance}</p>
-          <p className="text-sm text-muted-foreground">MovimentaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Âµes financeiras</p>
+          <p className="text-sm text-muted-foreground">Movimentações financeiras</p>
         </article>
       </section>
       <section className="rounded-lg border p-4">
-        <h2 className="font-semibold">HistÃƒÆ’Ã‚Â³rico de crÃƒÆ’Ã‚Â©ditos</h2>
+        <h2 className="font-semibold">Histórico de créditos</h2>
         {data.movements.length ? (
           <ul className="mt-3 divide-y">
             {data.movements.map(
@@ -232,28 +228,24 @@ function FinanceiroPage() {
                 <li key={entry.id} className="flex justify-between gap-3 py-2 text-sm">
                   <span>
                     {entry.entry_type}
-                    {entry.reason ? ` Ãƒâ€šÃ‚Â· ${entry.reason}` : ""}
+                    {entry.reason ? ` · ${entry.reason}` : ""}
                   </span>
                   <span>
                     {entry.quantity > 0 ? "+" : ""}
-                    {entry.quantity} Ãƒâ€šÃ‚Â·{" "}
-                    {new Date(entry.created_at).toLocaleDateString("pt-BR")}
+                    {entry.quantity} · {new Date(entry.created_at).toLocaleDateString("pt-BR")}
                   </span>
                 </li>
               ),
             )}
           </ul>
         ) : (
-          <p className="mt-2 text-sm text-muted-foreground">
-            Nenhuma movimentaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o registrada.
-          </p>
+          <p className="mt-2 text-sm text-muted-foreground">Nenhuma movimentação registrada.</p>
         )}
       </section>
       <p className="text-sm text-muted-foreground">
-        AlteraÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Âµes de plano sÃƒÆ’Ã‚Â£o programadas para o prÃƒÆ’Ã‚Â³ximo ciclo, sem
-        cobranÃƒÆ’Ã‚Â§a proporcional. ContrataÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o e compra de crÃƒÆ’Ã‚Â©ditos
-        ficarÃƒÆ’Ã‚Â£o disponÃƒÆ’Ã‚Â­veis apÃƒÆ’Ã‚Â³s configuraÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o do catÃƒÆ’Ã‚Â¡logo
-        e do provedor de pagamentos.
+        Alterações de plano são programadas para o próximo ciclo, sem cobrança proporcional.
+        Contratação e compra de créditos ficarão disponíveis após configuração do catálogo e do
+        provedor de pagamentos.
       </p>
     </main>
   );

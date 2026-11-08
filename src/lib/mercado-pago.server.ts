@@ -25,6 +25,7 @@ async function request<T extends MpResource>(path: string, init: RequestInit = {
   const { token } = config();
   const response = await fetch(`${apiBase}${path}`, {
     ...init,
+    signal: init.signal ?? AbortSignal.timeout(20_000),
     headers: {
       Authorization: `Bearer ${token}`,
       "Content-Type": "application/json",
