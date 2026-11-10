@@ -380,7 +380,7 @@ function FavoriteButton({
       disabled={pendingFavorite !== null}
       onClick={() => onToggle(result)}
     >
-      <Heart className={`size-5 ${favorite ? "fill-current text-red-500" : ""}`} />
+      <Heart className={`size-5 ${favorite ? "fill-current text-destructive" : ""}`} />
     </Button>
   );
 }

@@ -352,7 +352,7 @@ function ChampionshipAdminPage() {
           </div>
         </div>
         {event.status === "drawn" && event.format !== 8 && !participantsReady && (
-          <p className="mt-3 text-sm text-amber-700">
+          <p className="mt-3 text-sm text-warning">
             Prepare a sessão de palco e associe cada inscrição confirmada a um cantor antes de iniciar a fase de grupos.
           </p>
         )}
@@ -924,7 +924,7 @@ function EntryGroup({
 }
 
 function Eligibility({ value }: { value: boolean | null }) {
-  return <span className={`shrink-0 text-xs font-semibold ${value === true ? "text-success" : value === false ? "text-muted-foreground" : "text-amber-600"}`}>
+  return <span className={`shrink-0 text-xs font-semibold ${value === true ? "text-success" : value === false ? "text-muted-foreground" : "text-warning"}`}>
     {value === true ? "Classifica" : value === false ? "Não classifica" : "Pendente de desempate"}
   </span>;
 }
@@ -952,7 +952,7 @@ function TieBreakCard({
   onSave: () => void;
 }) {
   return (
-    <div className="rounded-xl border border-amber-500/40 p-3">
+    <div className="rounded-xl border border-warning/40 p-3">
       <h4 className="font-medium">{tie.groupLetter ? `Grupo ${tie.groupLetter}` : "Disputa entre melhores terceiros"} · Participantes empatados</h4>
       <p className="mt-1 text-sm text-muted-foreground">{tie.entries.map((entry) => entry.stageName || entry.name).join(" · ")}</p>
       <p className="mt-2 text-xs text-muted-foreground">Critérios já aplicados: aprovação percentual → likes → menor número de dislikes.</p>

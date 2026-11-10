@@ -141,7 +141,7 @@ function PublicChampionshipRegistrationPage() {
               Formato com {event.format} participantes · {available} vaga(s) disponível(is)
             </p>
             {available === 0 && (
-              <p role="status" className="mt-3 rounded-lg bg-amber-500/10 p-3 text-sm">
+              <p role="status" className="mt-3 rounded-lg bg-warning/10 p-3 text-sm">
                 As vagas estão esgotadas. Ainda é possível se inscrever na lista de espera.
               </p>
             )}

@@ -43,6 +43,9 @@
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
   --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-info: var(--info);
+  --color-gold: var(--gold);
   --font-display: "Bebas Neue", Impact, sans-serif;
   --font-sans: "Barlow", system-ui, sans-serif;
   --color-border: var(--border);
@@ -113,42 +116,48 @@ html[data-tv-page] .tv-audio-prompt { flex: 0 0 auto; min-height: 56px; max-widt
 }
 
 :root {
+  /* BatalhaOkê "Arena" palette: broadcast navy stage, championship gold as the
+     brand/primary action, electric blue as the challenger/info voice. */
   --radius: 0.9rem;
-  --background: oklch(0.16 0.03 285);
-  --foreground: oklch(0.97 0.01 90);
-  --card: oklch(0.21 0.035 285);
-  --card-foreground: oklch(0.97 0.01 90);
-  --popover: oklch(0.21 0.035 285);
-  --popover-foreground: oklch(0.97 0.01 90);
-  --primary: oklch(0.72 0.19 35);
-  --primary-foreground: oklch(0.15 0.03 285);
-  --secondary: oklch(0.27 0.04 285);
-  --secondary-foreground: oklch(0.97 0.01 90);
-  --muted: oklch(0.25 0.035 285);
-  --muted-foreground: oklch(0.72 0.03 285);
-  --accent: oklch(0.88 0.19 125);
-  --accent-foreground: oklch(0.15 0.03 285);
-  --destructive: oklch(0.64 0.22 22);
+  --background: oklch(0.15 0.03 262);
+  --foreground: oklch(0.97 0.008 85);
+  --card: oklch(0.2 0.035 262);
+  --card-foreground: oklch(0.97 0.008 85);
+  --popover: oklch(0.21 0.035 262);
+  --popover-foreground: oklch(0.97 0.008 85);
+  --primary: oklch(0.83 0.155 82);
+  --primary-foreground: oklch(0.18 0.03 262);
+  --secondary: oklch(0.26 0.04 262);
+  --secondary-foreground: oklch(0.97 0.008 85);
+  --muted: oklch(0.24 0.035 262);
+  --muted-foreground: oklch(0.74 0.025 262);
+  --accent: oklch(0.72 0.15 248);
+  --accent-foreground: oklch(0.15 0.03 262);
+  --destructive: oklch(0.65 0.21 25);
   --destructive-foreground: oklch(0.98 0 0);
-  --success: oklch(0.8 0.18 150);
+  --success: oklch(0.78 0.17 152);
+  --warning: oklch(0.8 0.16 62);
+  --info: oklch(0.72 0.15 248);
+  --gold: oklch(0.83 0.155 82);
   --border: oklch(1 0 0 / 11%);
-  --input: oklch(1 0 0 / 16%);
-  --ring: oklch(0.72 0.19 35);
-  --chart-1: oklch(0.72 0.19 35);
-  --chart-2: oklch(0.88 0.19 125);
-  --chart-3: oklch(0.7 0.15 250);
-  --chart-4: oklch(0.8 0.15 85);
-  --chart-5: oklch(0.65 0.2 330);
-  --sidebar: oklch(0.21 0.035 285);
-  --sidebar-foreground: oklch(0.97 0.01 90);
-  --sidebar-primary: oklch(0.72 0.19 35);
-  --sidebar-primary-foreground: oklch(0.15 0.03 285);
-  --sidebar-accent: oklch(0.27 0.04 285);
-  --sidebar-accent-foreground: oklch(0.97 0.01 90);
+  --input: oklch(1 0 0 / 17%);
+  --ring: oklch(0.83 0.155 82);
+  --chart-1: oklch(0.83 0.155 82);
+  --chart-2: oklch(0.72 0.15 248);
+  --chart-3: oklch(0.78 0.17 152);
+  --chart-4: oklch(0.65 0.21 25);
+  --chart-5: oklch(0.7 0.05 262);
+  --sidebar: oklch(0.2 0.035 262);
+  --sidebar-foreground: oklch(0.97 0.008 85);
+  --sidebar-primary: oklch(0.83 0.155 82);
+  --sidebar-primary-foreground: oklch(0.18 0.03 262);
+  --sidebar-accent: oklch(0.26 0.04 262);
+  --sidebar-accent-foreground: oklch(0.97 0.008 85);
   --sidebar-border: oklch(1 0 0 / 11%);
-  --sidebar-ring: oklch(0.72 0.19 35);
-  --gradient-stage: radial-gradient(120% 80% at 50% -10%, oklch(0.32 0.1 330 / 55%), transparent 60%), radial-gradient(90% 60% at 100% 100%, oklch(0.4 0.14 35 / 35%), transparent 60%);
-  --shadow-glow: 0 10px 40px -10px oklch(0.72 0.19 35 / 55%);
+  --sidebar-ring: oklch(0.83 0.155 82);
+  /* Two overhead spotlights (warm gold + cool blue) over the navy stage. */
+  --gradient-stage: radial-gradient(70% 55% at 22% -12%, oklch(0.55 0.12 80 / 22%), transparent 62%), radial-gradient(70% 55% at 80% -12%, oklch(0.5 0.15 250 / 26%), transparent 62%), radial-gradient(120% 70% at 50% 110%, oklch(0.24 0.06 262 / 70%), transparent 70%);
+  --shadow-glow: 0 10px 40px -12px oklch(0.83 0.155 82 / 50%);
 }
 
 @layer base {
@@ -170,14 +179,18 @@ html[data-tv-page] .tv-audio-prompt { flex: 0 0 auto; min-height: 56px; max-widt
 /* Fallback for browsers without oklch() (LG webOS 5 / Chromium 68). Modern browsers keep the oklch values. */
 @supports not (color: oklch(0 0 0)) {
   :root {
-    --background: #0c0b1a; --foreground: #f8f5ee; --card: #171628; --card-foreground: #f8f5ee;
-    --popover: #171628; --popover-foreground: #f8f5ee; --primary: #ff6f4a; --primary-foreground: #0a0917;
-    --secondary: #242439; --secondary-foreground: #f8f5ee; --muted: #201f32; --muted-foreground: #a2a2b7;
-    --accent: #bbec4c; --accent-foreground: #0a0917; --destructive: #f53b4b; --destructive-foreground: #f8f8f8;
-    --success: #54dd7d; --border: rgba(255,255,255,0.11); --input: rgba(255,255,255,0.16); --ring: #ff6f4a;
-    --gradient-stage: none; --shadow-glow: 0 10px 40px -10px rgba(255,111,74,0.55);
+    --background: #0b1120; --foreground: #f8f5ee; --card: #131b2e; --card-foreground: #f8f5ee;
+    --popover: #151e32; --popover-foreground: #f8f5ee; --primary: #f2b730; --primary-foreground: #101626;
+    --secondary: #1e2840; --secondary-foreground: #f8f5ee; --muted: #1a2338; --muted-foreground: #a7b0c4;
+    --accent: #4b9bff; --accent-foreground: #0b1120; --destructive: #ef4c48; --destructive-foreground: #f8f8f8;
+    --success: #3fd38a; --warning: #f5a23a; --info: #4b9bff; --gold: #f2b730;
+    --border: rgba(255,255,255,0.11); --input: rgba(255,255,255,0.17); --ring: #f2b730;
+    --chart-1: #f2b730; --chart-2: #4b9bff; --chart-3: #3fd38a; --chart-4: #ef4c48; --chart-5: #9aa3b8;
+    --sidebar: #131b2e; --sidebar-foreground: #f8f5ee; --sidebar-primary: #f2b730; --sidebar-primary-foreground: #101626;
+    --sidebar-accent: #1e2840; --sidebar-accent-foreground: #f8f5ee; --sidebar-border: rgba(255,255,255,0.11); --sidebar-ring: #f2b730;
+    --gradient-stage: none; --shadow-glow: 0 10px 40px -12px rgba(242,183,48,0.5);
   }
-  html, body { background-color: #0c0b1a; color: #f8f5ee; }
+  html, body { background-color: #0b1120; color: #f8f5ee; }
 }
 
 @utility font-display { font-family: var(--font-display); letter-spacing: 0.02em; }
@@ -199,9 +212,9 @@ html[data-tv-page] .tv-audio-prompt { flex: 0 0 auto; min-height: 56px; max-widt
   html[data-tv-page] {
     --font-display: "Bebas Neue", Impact, sans-serif;
     --font-sans: "Barlow", system-ui, sans-serif;
-    --tv-accent-soft: rgba(187, 236, 76, 0.15);
-    --tv-error-soft: rgba(245, 59, 75, 0.1);
-    --tv-error-border: rgba(245, 59, 75, 0.5);
+    --tv-accent-soft: rgba(75, 155, 255, 0.15);
+    --tv-error-soft: rgba(239, 76, 72, 0.1);
+    --tv-error-border: rgba(239, 76, 72, 0.5);
     --tv-qr-paper: #fff;
     --radius-xl: calc(var(--radius) + 4px);
     --radius-lg: var(--radius);
