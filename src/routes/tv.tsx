@@ -4,7 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { zodValidator, fallback } from "@tanstack/zod-adapter";
 import { z } from "zod";
-import { Maximize2, Mic2, Minimize2 } from "lucide-react";
+import { Maximize2, Mic2, Minimize2, Tv } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSessionLive } from "@/hooks/use-session-live";
 import {
@@ -323,20 +323,33 @@ function TvPage() {
   const tvIdentity = paired ? (
     <section
       aria-label="Identificação da TV conectada"
-      className="mx-auto w-full max-w-3xl rounded-2xl border border-primary/40 bg-primary/10 px-5 py-3 text-center shadow-glow sm:flex sm:items-center sm:justify-between sm:gap-6 sm:text-left"
+      className="mx-auto flex w-full max-w-3xl flex-col items-center gap-3 rounded-2xl border border-border bg-card/90 px-5 py-4 text-center shadow-lg sm:flex-row sm:gap-5 sm:text-left lg:px-7"
     >
-      <div className="mb-2 sm:mb-0">
-        <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">TV conectada</p>
-        <p className="text-sm text-muted-foreground">Estabelecimento</p>
-        <p className="text-lg font-semibold">
+      <span
+        role="status"
+        className="inline-flex shrink-0 items-center gap-2 rounded-full border border-success/40 bg-success/10 px-3 py-1.5 text-sm font-bold uppercase tracking-[0.15em] text-success lg:text-base"
+      >
+        <span className="size-2.5 rounded-full bg-success animate-pulse" aria-hidden />
+        TV pareada
+      </span>
+      <div className="min-w-0 flex-1">
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground lg:text-sm">
+          Estabelecimento
+        </p>
+        <p className="truncate font-display text-3xl leading-tight text-foreground lg:text-4xl">
           {tvState.data?.venueName ?? "Carregando estabelecimento…"}
         </p>
       </div>
-      <div>
-        <p className="text-sm text-muted-foreground">Dispositivo</p>
-        <p className="text-lg font-semibold">
-          {tvState.data?.venueDeviceName ?? "Carregando dispositivo…"}
-        </p>
+      <div className="flex min-w-0 shrink-0 items-center gap-2 rounded-xl border border-border bg-background/60 px-3 py-2">
+        <Tv className="size-5 shrink-0 text-accent" aria-hidden />
+        <div className="min-w-0 text-left">
+          <p className="text-[0.7rem] font-semibold uppercase tracking-[0.15em] text-muted-foreground">
+            Dispositivo
+          </p>
+          <p className="truncate text-base font-semibold lg:text-lg">
+            {tvState.data?.venueDeviceName ?? "Carregando…"}
+          </p>
+        </div>
       </div>
     </section>
   ) : null;
