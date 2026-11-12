@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Check, Swords, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import {
   Dialog,
@@ -108,7 +109,7 @@ export function X1Matches(props: {
               Trocar para {afterBoth ? "Durante as apresentações" : "Após as apresentações"}
             </Button>
           ) : (
-            <p className="mt-1 text-xs text-muted-foreground">
+            <p className="mt-1 text-sm text-muted-foreground">
               🔒 Bloqueado após o primeiro confronto.
             </p>
           )}
@@ -129,7 +130,7 @@ export function X1Matches(props: {
       />
       {sessionActive && firstPair && (
         <section className="rounded-2xl border border-primary/40 bg-primary/5 p-4">
-          <p className="text-xs font-semibold uppercase tracking-widest text-primary">
+          <p className="text-sm font-semibold uppercase tracking-widest text-primary">
             Primeiro confronto
           </p>
           <p className="mt-2 text-center font-display text-2xl">
@@ -159,7 +160,7 @@ export function X1Matches(props: {
       )}
       {sessionActive && currentChampion && openMatches.length === 0 && nextChallenger && (
         <section className="rounded-2xl border border-primary/40 bg-primary/5 p-4">
-          <p className="text-xs font-semibold uppercase tracking-widest text-primary">
+          <p className="text-sm font-semibold uppercase tracking-widest text-primary">
             Próximo confronto
           </p>
           <p className="mt-2 text-center font-display text-2xl">
@@ -191,7 +192,7 @@ export function X1Matches(props: {
         currentChampion &&
         openMatches.length === 0 &&
         waitingQueue.length === 0 && (
-          <section className="rounded-2xl border border-accent/50 bg-accent/10 p-5 text-center">
+          <section className="rounded-2xl border border-gold/50 bg-card p-5 text-center text-gold">
             <p className="font-display text-2xl">
               👑 Campeão atual: {displayName(currentChampion)}
             </p>
@@ -201,7 +202,7 @@ export function X1Matches(props: {
           </section>
         )}
       {sessionFinished && currentChampion && (
-        <section className="rounded-2xl border border-accent/50 bg-accent/10 p-5 text-center">
+        <section className="rounded-2xl border border-gold/50 bg-card p-5 text-center text-gold">
           <p className="font-display text-2xl">
             🏆 Campeão da noite: {displayName(currentChampion)}
           </p>
@@ -225,19 +226,29 @@ export function X1Matches(props: {
               className={`rounded-2xl border bg-card p-4 ${m.status === "in_progress" ? "border-primary" : ""}`}
             >
               <div className="flex items-center justify-between gap-2">
-                <span className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+                <span className="flex items-center gap-1.5 text-sm font-semibold uppercase tracking-widest text-muted-foreground">
                   <Swords className="size-4" /> Confronto X1
                 </span>
-                <span
-                  className={`rounded-full px-2.5 py-1 text-xs font-semibold ${m.status === "in_progress" ? "bg-primary/20 text-primary" : "bg-secondary"}`}
+                <Badge
+                  variant={
+                    m.status === "in_progress"
+                      ? "active"
+                      : m.status === "completed"
+                        ? "success"
+                        : "neutral"
+                  }
                 >
                   {statusLabel[m.status]}
-                </span>
+                </Badge>
               </div>
               <div className="mt-3 grid grid-cols-[1fr_auto_1fr] items-center gap-2 text-center">
-                <p className="truncate font-semibold">{a ? displayName(a) : "—"}</p>
+                <p className="break-words font-semibold text-competitor-a">
+                  {a ? displayName(a) : "—"}
+                </p>
                 <span className="font-display text-2xl text-accent">VS</span>
-                <p className="truncate font-semibold">{b ? displayName(b) : "—"}</p>
+                <p className="break-words font-semibold text-competitor-b">
+                  {b ? displayName(b) : "—"}
+                </p>
               </div>
               {m.status === "in_progress" && (
                 <div className="mt-4 flex flex-col gap-2">
@@ -363,7 +374,7 @@ export function X1Matches(props: {
               )}
               {m.status === "scheduled" &&
                 list.some((other) => other.id !== m.id && other.status === "in_progress") && (
-                  <p className="mt-2 text-xs text-muted-foreground">
+                  <p className="mt-2 text-sm text-muted-foreground">
                     Termine o confronto em andamento antes de iniciar este.
                   </p>
                 )}
@@ -537,7 +548,7 @@ function QueueSummary({
   );
   return (
     <section aria-label="Fila eliminatória" className="rounded-2xl border bg-card p-4">
-      <h3 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+      <h3 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">
         Fila eliminatória
       </h3>
       <ol className="mt-3 flex flex-col gap-2">
@@ -747,14 +758,14 @@ function DirectVotePanel({
             Cantor A · {participantA ? displayName(participantA) : "—"}
           </p>
           <p className="font-display text-3xl">{a}</p>
-          <p className="text-xs text-muted-foreground">{a === 1 ? "voto" : "votos"}</p>
+          <p className="text-sm text-muted-foreground">{a === 1 ? "voto" : "votos"}</p>
         </div>
         <div className="rounded-md bg-background/60 p-2">
           <p className="truncate text-sm font-semibold">
             Cantor B · {participantB ? displayName(participantB) : "—"}
           </p>
           <p className="font-display text-3xl">{b}</p>
-          <p className="text-xs text-muted-foreground">{b === 1 ? "voto" : "votos"}</p>
+          <p className="text-sm text-muted-foreground">{b === 1 ? "voto" : "votos"}</p>
         </div>
       </div>
       {match.status === "in_progress" && match.voting_status === "idle" && canFallback && (

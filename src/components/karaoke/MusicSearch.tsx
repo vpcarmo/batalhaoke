@@ -131,7 +131,7 @@ export function MusicSearch({
       )}
       {tab === "search" && (
         <>
-          <div className="flex flex-row gap-2">
+          <div className="flex flex-col gap-2 sm:flex-row">
             <label htmlFor="q" className="sr-only">
               Música
             </label>
@@ -194,7 +194,7 @@ export function MusicSearch({
                     <p className="line-clamp-2 font-semibold leading-snug">{r.title}</p>
                     <p className="text-sm text-muted-foreground">Canal: {r.channelName ?? "—"}</p>
                     {r.duration && (
-                      <p className="flex items-center gap-1 text-xs text-muted-foreground">
+                      <p className="flex items-center gap-1 text-sm text-muted-foreground">
                         <Clock className="size-3" /> {r.duration}
                       </p>
                     )}
@@ -261,7 +261,7 @@ export function MusicSearch({
                     <p className="text-sm text-muted-foreground">
                       Canal: {result.channelName ?? "—"}
                     </p>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-sm text-muted-foreground">
                       {playCount} {playCount === 1 ? "reprodução" : "reproduções"}
                     </p>
                     <FavoriteButton
@@ -321,11 +321,11 @@ export function MusicSearch({
                       Canal: {result.channelName ?? "—"}
                     </p>
                     {result.duration && (
-                      <p className="flex items-center gap-1 text-xs text-muted-foreground">
+                      <p className="flex items-center gap-1 text-sm text-muted-foreground">
                         <Clock className="size-3" /> {result.duration}
                       </p>
                     )}
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap gap-2">
                       <Button
                         type="button"
                         className="mt-2 h-11 flex-1"

@@ -1,0 +1,589 @@
+{
+  "threshold": 4.5,
+  "minimum": 4.850038441301099,
+  "combinations": [
+    {
+      "name": "text",
+      "foreground": "#F5F8FC",
+      "background": "#08121F",
+      "ratio": 17.65585429504876
+    },
+    {
+      "name": "text",
+      "foreground": "#F5F8FC",
+      "background": "#111E30",
+      "ratio": 15.74408346748973
+    },
+    {
+      "name": "text",
+      "foreground": "#F5F8FC",
+      "background": "#1A2B42",
+      "ratio": 13.428606844457283
+    },
+    {
+      "name": "secondary",
+      "foreground": "#A8B5C9",
+      "background": "#08121F",
+      "ratio": 9.0611006519234
+    },
+    {
+      "name": "secondary",
+      "foreground": "#A8B5C9",
+      "background": "#111E30",
+      "ratio": 8.079967278117689
+    },
+    {
+      "name": "secondary",
+      "foreground": "#A8B5C9",
+      "background": "#1A2B42",
+      "ratio": 6.891649432497704
+    },
+    {
+      "name": "primary",
+      "foreground": "#45E0CF",
+      "background": "#08121F",
+      "ratio": 11.477630858096145
+    },
+    {
+      "name": "primary",
+      "foreground": "#45E0CF",
+      "background": "#111E30",
+      "ratio": 10.234836288243306
+    },
+    {
+      "name": "primary",
+      "foreground": "#45E0CF",
+      "background": "#1A2B42",
+      "ratio": 8.729602641907075
+    },
+    {
+      "name": "violet",
+      "foreground": "#A78BFA",
+      "background": "#08121F",
+      "ratio": 6.910569887576597
+    },
+    {
+      "name": "violet",
+      "foreground": "#A78BFA",
+      "background": "#111E30",
+      "ratio": 6.162295366723663
+    },
+    {
+      "name": "violet",
+      "foreground": "#A78BFA",
+      "background": "#1A2B42",
+      "ratio": 5.256008830874598
+    },
+    {
+      "name": "a",
+      "foreground": "#7AC7FF",
+      "background": "#08121F",
+      "ratio": 10.245876362437222
+    },
+    {
+      "name": "a",
+      "foreground": "#7AC7FF",
+      "background": "#111E30",
+      "ratio": 9.136455815283233
+    },
+    {
+      "name": "a",
+      "foreground": "#7AC7FF",
+      "background": "#1A2B42",
+      "ratio": 7.792760585177201
+    },
+    {
+      "name": "b",
+      "foreground": "#E6ACFF",
+      "background": "#08121F",
+      "ratio": 10.48653178670108
+    },
+    {
+      "name": "b",
+      "foreground": "#E6ACFF",
+      "background": "#111E30",
+      "ratio": 9.351053139388748
+    },
+    {
+      "name": "b",
+      "foreground": "#E6ACFF",
+      "background": "#1A2B42",
+      "ratio": 7.9757971589629095
+    },
+    {
+      "name": "gold",
+      "foreground": "#F4D17A",
+      "background": "#08121F",
+      "ratio": 12.759637236392845
+    },
+    {
+      "name": "gold",
+      "foreground": "#F4D17A",
+      "background": "#111E30",
+      "ratio": 11.37802738443499
+    },
+    {
+      "name": "gold",
+      "foreground": "#F4D17A",
+      "background": "#1A2B42",
+      "ratio": 9.704665039825747
+    },
+    {
+      "name": "success",
+      "foreground": "#69DEA5",
+      "background": "#08121F",
+      "ratio": 11.277190839017232
+    },
+    {
+      "name": "success",
+      "foreground": "#69DEA5",
+      "background": "#111E30",
+      "ratio": 10.056099856809988
+    },
+    {
+      "name": "success",
+      "foreground": "#69DEA5",
+      "background": "#1A2B42",
+      "ratio": 8.577152912365465
+    },
+    {
+      "name": "warning",
+      "foreground": "#FFD27A",
+      "background": "#08121F",
+      "ratio": 13.21084397259833
+    },
+    {
+      "name": "warning",
+      "foreground": "#FFD27A",
+      "background": "#111E30",
+      "ratio": 11.780377584952046
+    },
+    {
+      "name": "warning",
+      "foreground": "#FFD27A",
+      "background": "#1A2B42",
+      "ratio": 10.04784174285129
+    },
+    {
+      "name": "error",
+      "foreground": "#FF8B98",
+      "background": "#08121F",
+      "ratio": 8.41677299368069
+    },
+    {
+      "name": "error",
+      "foreground": "#FF8B98",
+      "background": "#111E30",
+      "ratio": 7.505407233485341
+    },
+    {
+      "name": "error",
+      "foreground": "#FF8B98",
+      "background": "#1A2B42",
+      "ratio": 6.401589724428091
+    },
+    {
+      "name": "action",
+      "foreground": "#07111F",
+      "background": "#45E0CF",
+      "ratio": 11.55663489869594
+    },
+    {
+      "name": "action",
+      "foreground": "#07111F",
+      "background": "#6DEBDD",
+      "ratio": 13.144880436625101
+    },
+    {
+      "name": "action",
+      "foreground": "#07111F",
+      "background": "#2DC3B4",
+      "ratio": 8.635421232602269
+    },
+    {
+      "name": "action",
+      "foreground": "#07111F",
+      "background": "#FF8B98",
+      "ratio": 8.474708214244343
+    },
+    {
+      "name": "action",
+      "foreground": "#07111F",
+      "background": "#A78BFA",
+      "ratio": 6.9581374518863255
+    },
+    {
+      "name": "action",
+      "foreground": "#07111F",
+      "background": "#69DEA5",
+      "ratio": 11.354815189714039
+    },
+    {
+      "name": "disabled",
+      "foreground": "#A8B5C9",
+      "background": "#26354A",
+      "ratio": 5.985034292078777
+    },
+    {
+      "name": "action opacity 0.8",
+      "foreground": "#07111F",
+      "background": [
+        57,
+        183,
+        172
+      ],
+      "ratio": 7.703409622134182
+    },
+    {
+      "name": "action opacity 0.9",
+      "foreground": "#07111F",
+      "background": [
+        63,
+        203,
+        189
+      ],
+      "ratio": 9.45766996453798
+    },
+    {
+      "name": "action opacity 0.8",
+      "foreground": "#07111F",
+      "background": [
+        206,
+        115,
+        128
+      ],
+      "ratio": 5.760469983069261
+    },
+    {
+      "name": "action opacity 0.9",
+      "foreground": "#07111F",
+      "background": [
+        230,
+        127,
+        140
+      ],
+      "ratio": 7.014464386828095
+    },
+    {
+      "name": "status 20% tint",
+      "foreground": "#45E0CF",
+      "background": [
+        27,
+        69,
+        80
+      ],
+      "ratio": 6.364590382882697
+    },
+    {
+      "name": "status 20% tint",
+      "foreground": "#69DEA5",
+      "background": [
+        35,
+        68,
+        71
+      ],
+      "ratio": 6.33010734562991
+    },
+    {
+      "name": "text on own 5% tint",
+      "foreground": "#F5F8FC",
+      "background": [
+        28,
+        41,
+        58
+      ],
+      "ratio": 13.809502399578193
+    },
+    {
+      "name": "text on own 10% tint",
+      "foreground": "#F5F8FC",
+      "background": [
+        40,
+        52,
+        68
+      ],
+      "ratio": 11.841683730138413
+    },
+    {
+      "name": "text on own 15% tint",
+      "foreground": "#F5F8FC",
+      "background": [
+        51,
+        63,
+        79
+      ],
+      "ratio": 10.03483689037889
+    },
+    {
+      "name": "secondary on own 5% tint",
+      "foreground": "#A8B5C9",
+      "background": [
+        25,
+        38,
+        56
+      ],
+      "ratio": 7.354828492176493
+    },
+    {
+      "name": "secondary on own 10% tint",
+      "foreground": "#A8B5C9",
+      "background": [
+        32,
+        45,
+        63
+      ],
+      "ratio": 6.707071048090844
+    },
+    {
+      "name": "secondary on own 15% tint",
+      "foreground": "#A8B5C9",
+      "background": [
+        40,
+        53,
+        71
+      ],
+      "ratio": 5.985340822659648
+    },
+    {
+      "name": "primary on own 5% tint",
+      "foreground": "#45E0CF",
+      "background": [
+        20,
+        40,
+        56
+      ],
+      "ratio": 9.217934456889788
+    },
+    {
+      "name": "primary on own 10% tint",
+      "foreground": "#45E0CF",
+      "background": [
+        22,
+        49,
+        64
+      ],
+      "ratio": 8.282085662952527
+    },
+    {
+      "name": "primary on own 15% tint",
+      "foreground": "#45E0CF",
+      "background": [
+        25,
+        59,
+        72
+      ],
+      "ratio": 7.279936763494399
+    },
+    {
+      "name": "violet on own 5% tint",
+      "foreground": "#A78BFA",
+      "background": [
+        25,
+        35,
+        58
+      ],
+      "ratio": 5.746434642240393
+    },
+    {
+      "name": "violet on own 10% tint",
+      "foreground": "#A78BFA",
+      "background": [
+        32,
+        41,
+        68
+      ],
+      "ratio": 5.277870279796912
+    },
+    {
+      "name": "violet on own 15% tint",
+      "foreground": "#A78BFA",
+      "background": [
+        40,
+        46,
+        78
+      ],
+      "ratio": 4.850038441301099
+    },
+    {
+      "name": "a on own 5% tint",
+      "foreground": "#7AC7FF",
+      "background": [
+        22,
+        38,
+        58
+      ],
+      "ratio": 8.336056941765639
+    },
+    {
+      "name": "a on own 10% tint",
+      "foreground": "#7AC7FF",
+      "background": [
+        28,
+        47,
+        69
+      ],
+      "ratio": 7.419916399222707
+    },
+    {
+      "name": "a on own 15% tint",
+      "foreground": "#7AC7FF",
+      "background": [
+        33,
+        55,
+        79
+      ],
+      "ratio": 6.636072386653664
+    },
+    {
+      "name": "b on own 5% tint",
+      "foreground": "#E6ACFF",
+      "background": [
+        28,
+        37,
+        58
+      ],
+      "ratio": 8.515458949028009
+    },
+    {
+      "name": "b on own 10% tint",
+      "foreground": "#E6ACFF",
+      "background": [
+        38,
+        44,
+        69
+      ],
+      "ratio": 7.6602437136912815
+    },
+    {
+      "name": "b on own 15% tint",
+      "foreground": "#E6ACFF",
+      "background": [
+        49,
+        51,
+        79
+      ],
+      "ratio": 6.819700493919854
+    },
+    {
+      "name": "gold on own 5% tint",
+      "foreground": "#F4D17A",
+      "background": [
+        28,
+        39,
+        52
+      ],
+      "ratio": 10.256367273814016
+    },
+    {
+      "name": "gold on own 10% tint",
+      "foreground": "#F4D17A",
+      "background": [
+        40,
+        48,
+        55
+      ],
+      "ratio": 9.085635673466433
+    },
+    {
+      "name": "gold on own 15% tint",
+      "foreground": "#F4D17A",
+      "background": [
+        51,
+        57,
+        59
+      ],
+      "ratio": 7.963394413834638
+    },
+    {
+      "name": "success on own 5% tint",
+      "foreground": "#69DEA5",
+      "background": [
+        21,
+        40,
+        54
+      ],
+      "ratio": 9.068011553542096
+    },
+    {
+      "name": "success on own 10% tint",
+      "foreground": "#69DEA5",
+      "background": [
+        26,
+        49,
+        60
+      ],
+      "ratio": 8.132072222551225
+    },
+    {
+      "name": "success on own 15% tint",
+      "foreground": "#69DEA5",
+      "background": [
+        30,
+        59,
+        66
+      ],
+      "ratio": 7.157019737955182
+    },
+    {
+      "name": "warning on own 5% tint",
+      "foreground": "#FFD27A",
+      "background": [
+        29,
+        39,
+        52
+      ],
+      "ratio": 10.597183480256108
+    },
+    {
+      "name": "warning on own 10% tint",
+      "foreground": "#FFD27A",
+      "background": [
+        41,
+        48,
+        55
+      ],
+      "ratio": 9.382629828963717
+    },
+    {
+      "name": "warning on own 15% tint",
+      "foreground": "#FFD27A",
+      "background": [
+        53,
+        57,
+        59
+      ],
+      "ratio": 8.19636627537912
+    },
+    {
+      "name": "error on own 5% tint",
+      "foreground": "#FF8B98",
+      "background": [
+        29,
+        35,
+        53
+      ],
+      "ratio": 6.992563727907841
+    },
+    {
+      "name": "error on own 10% tint",
+      "foreground": "#FF8B98",
+      "background": [
+        41,
+        41,
+        58
+      ],
+      "ratio": 6.382402722237824
+    },
+    {
+      "name": "error on own 15% tint",
+      "foreground": "#FF8B98",
+      "background": [
+        53,
+        46,
+        64
+      ],
+      "ratio": 5.815122607700454
+    }
+  ],
+  "failures": []
+}

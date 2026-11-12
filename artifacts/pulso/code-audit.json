@@ -1,0 +1,1040 @@
+{
+  "currentCounts": {
+    "react-refresh/only-export-components": 3,
+    "no-useless-escape": 1
+  },
+  "baselineCounts": {
+    "react-refresh/only-export-components": 3,
+    "prettier/prettier": 396,
+    "no-useless-escape": 1
+  },
+  "introduced": {},
+  "playerUnchanged": true,
+  "playerSlotUnchanged": true,
+  "oldSlots": [
+    {
+      "props": "<PlaybackPlayerkey={active.id}performanceId={active.id}{...(paired&&deviceToken?{deviceToken}:{})}ref={playerRef}provider={active.source.provider}externalId={active.source.external_id}onState={(s)=>{if(s===\"playing\")setAudioEnabled(true);if(s!==\"ended\")return;//Championshippresentationsoutsidethegroupstage(eliminations)are//concludedonlybytheauthenticatedChampionshipadminflow.if(isChampionship&&championship?.status!==\"group_stage\"){setManualCompletionId(active.id);return;}constcompletion=devSession?active.match_id?completeMatchPerformance({data:{performanceId:active.id}}):setPerformanceStatus(active.id,\"completed\"):active.match_id?completeMatchPerformanceFromTv({data:{performanceId:active.id,deviceToken:deviceToken!},}):completePerformanceFromTv({data:{performanceId:active.id,deviceToken:deviceToken!},});completion.catch((error:unknown)=>console.error(\"Nãofoipossívelconcluiraapresentação.\",error));}}/>",
+      "ancestors": [
+        "section",
+        "div",
+        "if:active?.source&&active.participant",
+        "div",
+        "main"
+      ]
+    }
+  ],
+  "newSlots": [
+    {
+      "props": "<PlaybackPlayerkey={active.id}performanceId={active.id}{...(paired&&deviceToken?{deviceToken}:{})}ref={playerRef}provider={active.source.provider}externalId={active.source.external_id}onState={(s)=>{if(s===\"playing\")setAudioEnabled(true);if(s!==\"ended\")return;//Championshippresentationsoutsidethegroupstage(eliminations)are//concludedonlybytheauthenticatedChampionshipadminflow.if(isChampionship&&championship?.status!==\"group_stage\"){setManualCompletionId(active.id);return;}constcompletion=devSession?active.match_id?completeMatchPerformance({data:{performanceId:active.id}}):setPerformanceStatus(active.id,\"completed\"):active.match_id?completeMatchPerformanceFromTv({data:{performanceId:active.id,deviceToken:deviceToken!},}):completePerformanceFromTv({data:{performanceId:active.id,deviceToken:deviceToken!},});completion.catch((error:unknown)=>console.error(\"Nãofoipossívelconcluiraapresentação.\",error));}}/>",
+      "ancestors": [
+        "section",
+        "div",
+        "if:active?.source&&active.participant",
+        "div",
+        "main"
+      ]
+    }
+  ],
+  "results": [
+    {
+      "filePath": "C:\\Users\\Valmir Carmo\\Workspace\\estudos\\lovable\\batalhaoke\\src\\components\\karaoke\\ArenaBackdrop.tsx",
+      "messages": [],
+      "suppressedMessages": [],
+      "errorCount": 0,
+      "fatalErrorCount": 0,
+      "warningCount": 0,
+      "fixableErrorCount": 0,
+      "fixableWarningCount": 0,
+      "usedDeprecatedRules": []
+    },
+    {
+      "filePath": "C:\\Users\\Valmir Carmo\\Workspace\\estudos\\lovable\\batalhaoke\\src\\components\\karaoke\\MusicSearch.tsx",
+      "messages": [],
+      "suppressedMessages": [],
+      "errorCount": 0,
+      "fatalErrorCount": 0,
+      "warningCount": 0,
+      "fixableErrorCount": 0,
+      "fixableWarningCount": 0,
+      "usedDeprecatedRules": []
+    },
+    {
+      "filePath": "C:\\Users\\Valmir Carmo\\Workspace\\estudos\\lovable\\batalhaoke\\src\\components\\karaoke\\SessionQr.tsx",
+      "messages": [
+        {
+          "ruleId": "react-refresh/only-export-components",
+          "severity": 1,
+          "message": "Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.",
+          "line": 3,
+          "column": 14,
+          "nodeType": "Identifier",
+          "messageId": "namedExport",
+          "endLine": 3,
+          "endColumn": 21
+        }
+      ],
+      "suppressedMessages": [],
+      "errorCount": 0,
+      "fatalErrorCount": 0,
+      "warningCount": 1,
+      "fixableErrorCount": 0,
+      "fixableWarningCount": 0,
+      "source": "import { QRCodeSVG } from \"qrcode.react\";\n\nexport const voteUrl = (code: string) =>\n  `${typeof window !== \"undefined\" ? window.location.origin : \"\"}/votar/${code}`;\n\n/** QR code for the session's permanent voting link (generated locally, no external service). */\nexport function SessionQr({ code, size = 220, id }: { code: string; size?: number; id?: string }) {\n  return (\n    <div className=\"session-qr inline-block rounded-xl bg-white p-3\">\n      <QRCodeSVG id={id} value={voteUrl(code)} size={size} level=\"M\" marginSize={4} />\n    </div>\n  );\n}\n",
+      "usedDeprecatedRules": []
+    },
+    {
+      "filePath": "C:\\Users\\Valmir Carmo\\Workspace\\estudos\\lovable\\batalhaoke\\src\\components\\karaoke\\X1Matches.tsx",
+      "messages": [],
+      "suppressedMessages": [],
+      "errorCount": 0,
+      "fatalErrorCount": 0,
+      "warningCount": 0,
+      "fixableErrorCount": 0,
+      "fixableWarningCount": 0,
+      "usedDeprecatedRules": []
+    },
+    {
+      "filePath": "C:\\Users\\Valmir Carmo\\Workspace\\estudos\\lovable\\batalhaoke\\src\\components\\ui\\alert.tsx",
+      "messages": [],
+      "suppressedMessages": [],
+      "errorCount": 0,
+      "fatalErrorCount": 0,
+      "warningCount": 0,
+      "fixableErrorCount": 0,
+      "fixableWarningCount": 0,
+      "usedDeprecatedRules": []
+    },
+    {
+      "filePath": "C:\\Users\\Valmir Carmo\\Workspace\\estudos\\lovable\\batalhaoke\\src\\components\\ui\\badge.tsx",
+      "messages": [
+        {
+          "ruleId": "react-refresh/only-export-components",
+          "severity": 1,
+          "message": "Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.",
+          "line": 41,
+          "column": 17,
+          "nodeType": "Identifier",
+          "messageId": "namedExport",
+          "endLine": 41,
+          "endColumn": 30
+        }
+      ],
+      "suppressedMessages": [],
+      "errorCount": 0,
+      "fatalErrorCount": 0,
+      "warningCount": 1,
+      "fixableErrorCount": 0,
+      "fixableWarningCount": 0,
+      "source": "import * as React from \"react\";\nimport { cva, type VariantProps } from \"class-variance-authority\";\n\nimport { cn } from \"@/lib/utils\";\n\nconst badgeVariants = cva(\n  \"inline-flex items-center rounded-md border px-2.5 py-0.5 text-sm font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2\",\n  {\n    variants: {\n      variant: {\n        neutral: \"border-border bg-secondary text-secondary-foreground\",\n        active: \"border-primary bg-primary text-primary-foreground\",\n        success: \"border-success bg-card text-success\",\n        warning: \"border-warning bg-card text-warning\",\n        error: \"border-destructive bg-card text-destructive\",\n        info: \"border-info bg-card text-info\",\n        competitorA: \"border-competitor-a bg-card text-competitor-a\",\n        competitorB: \"border-competitor-b bg-card text-competitor-b\",\n        champion: \"border-gold bg-card text-gold\",\n        default: \"border-transparent bg-primary text-primary-foreground shadow hover:bg-primary/80\",\n        secondary:\n          \"border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80\",\n        destructive:\n          \"border-transparent bg-destructive text-destructive-foreground shadow hover:bg-destructive/80\",\n        outline: \"text-foreground\",\n      },\n    },\n    defaultVariants: {\n      variant: \"default\",\n    },\n  },\n);\n\nexport interface BadgeProps\n  extends React.HTMLAttributes<HTMLDivElement>, VariantProps<typeof badgeVariants> {}\n\nfunction Badge({ className, variant, ...props }: BadgeProps) {\n  return <div className={cn(badgeVariants({ variant }), className)} {...props} />;\n}\n\nexport { Badge, badgeVariants };\n",
+      "usedDeprecatedRules": []
+    },
+    {
+      "filePath": "C:\\Users\\Valmir Carmo\\Workspace\\estudos\\lovable\\batalhaoke\\src\\components\\ui\\button.tsx",
+      "messages": [
+        {
+          "ruleId": "react-refresh/only-export-components",
+          "severity": 1,
+          "message": "Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.",
+          "line": 51,
+          "column": 18,
+          "nodeType": "Identifier",
+          "messageId": "namedExport",
+          "endLine": 51,
+          "endColumn": 32
+        }
+      ],
+      "suppressedMessages": [],
+      "errorCount": 0,
+      "fatalErrorCount": 0,
+      "warningCount": 1,
+      "fixableErrorCount": 0,
+      "fixableWarningCount": 0,
+      "source": "import * as React from \"react\";\nimport { Slot } from \"@radix-ui/react-slot\";\nimport { cva, type VariantProps } from \"class-variance-authority\";\n\nimport { cn } from \"@/lib/utils\";\n\nconst buttonVariants = cva(\n  \"inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-base font-semibold cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-100 disabled:bg-[var(--disabled)] disabled:text-muted-foreground disabled:cursor-not-allowed [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0\",\n  {\n    variants: {\n      variant: {\n        default:\n          \"bg-primary font-semibold text-primary-foreground shadow hover:bg-[var(--primary-hover)] active:bg-[var(--primary-active)] focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:opacity-100 disabled:bg-[var(--disabled)] disabled:text-muted-foreground disabled:shadow-none\",\n        destructive: \"bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90\",\n        outline:\n          \"border border-input bg-background shadow-sm hover:bg-secondary hover:text-foreground\",\n        secondary: \"bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/80\",\n        ghost: \"hover:bg-secondary hover:text-foreground\",\n        link: \"text-primary underline-offset-4 hover:underline\",\n      },\n      size: {\n        default: \"h-11 px-4 py-2\",\n        sm: \"h-9 rounded-md px-3 text-sm\",\n        lg: \"h-[52px] rounded-md px-6\",\n        vote: \"min-h-16 px-6 py-4 text-lg whitespace-normal\",\n        icon: \"h-11 w-11\",\n      },\n    },\n    defaultVariants: {\n      variant: \"default\",\n      size: \"default\",\n    },\n  },\n);\n\nexport interface ButtonProps\n  extends React.ButtonHTMLAttributes<HTMLButtonElement>, VariantProps<typeof buttonVariants> {\n  asChild?: boolean;\n}\n\nconst Button = React.forwardRef<HTMLButtonElement, ButtonProps>(\n  ({ className, variant, size, asChild = false, ...props }, ref) => {\n    const Comp = asChild ? Slot : \"button\";\n    return (\n      <Comp className={cn(buttonVariants({ variant, size, className }))} ref={ref} {...props} />\n    );\n  },\n);\nButton.displayName = \"Button\";\n\nexport { Button, buttonVariants };\n",
+      "usedDeprecatedRules": []
+    },
+    {
+      "filePath": "C:\\Users\\Valmir Carmo\\Workspace\\estudos\\lovable\\batalhaoke\\src\\components\\ui\\card.tsx",
+      "messages": [],
+      "suppressedMessages": [],
+      "errorCount": 0,
+      "fatalErrorCount": 0,
+      "warningCount": 0,
+      "fixableErrorCount": 0,
+      "fixableWarningCount": 0,
+      "usedDeprecatedRules": []
+    },
+    {
+      "filePath": "C:\\Users\\Valmir Carmo\\Workspace\\estudos\\lovable\\batalhaoke\\src\\components\\ui\\dialog.tsx",
+      "messages": [],
+      "suppressedMessages": [],
+      "errorCount": 0,
+      "fatalErrorCount": 0,
+      "warningCount": 0,
+      "fixableErrorCount": 0,
+      "fixableWarningCount": 0,
+      "usedDeprecatedRules": []
+    },
+    {
+      "filePath": "C:\\Users\\Valmir Carmo\\Workspace\\estudos\\lovable\\batalhaoke\\src\\components\\ui\\input.tsx",
+      "messages": [],
+      "suppressedMessages": [],
+      "errorCount": 0,
+      "fatalErrorCount": 0,
+      "warningCount": 0,
+      "fixableErrorCount": 0,
+      "fixableWarningCount": 0,
+      "usedDeprecatedRules": []
+    },
+    {
+      "filePath": "C:\\Users\\Valmir Carmo\\Workspace\\estudos\\lovable\\batalhaoke\\src\\components\\ui\\select.tsx",
+      "messages": [],
+      "suppressedMessages": [],
+      "errorCount": 0,
+      "fatalErrorCount": 0,
+      "warningCount": 0,
+      "fixableErrorCount": 0,
+      "fixableWarningCount": 0,
+      "usedDeprecatedRules": []
+    },
+    {
+      "filePath": "C:\\Users\\Valmir Carmo\\Workspace\\estudos\\lovable\\batalhaoke\\src\\components\\ui\\sheet.tsx",
+      "messages": [],
+      "suppressedMessages": [],
+      "errorCount": 0,
+      "fatalErrorCount": 0,
+      "warningCount": 0,
+      "fixableErrorCount": 0,
+      "fixableWarningCount": 0,
+      "usedDeprecatedRules": []
+    },
+    {
+      "filePath": "C:\\Users\\Valmir Carmo\\Workspace\\estudos\\lovable\\batalhaoke\\src\\components\\ui\\sonner.tsx",
+      "messages": [],
+      "suppressedMessages": [],
+      "errorCount": 0,
+      "fatalErrorCount": 0,
+      "warningCount": 0,
+      "fixableErrorCount": 0,
+      "fixableWarningCount": 0,
+      "usedDeprecatedRules": []
+    },
+    {
+      "filePath": "C:\\Users\\Valmir Carmo\\Workspace\\estudos\\lovable\\batalhaoke\\src\\components\\ui\\table.tsx",
+      "messages": [],
+      "suppressedMessages": [],
+      "errorCount": 0,
+      "fatalErrorCount": 0,
+      "warningCount": 0,
+      "fixableErrorCount": 0,
+      "fixableWarningCount": 0,
+      "usedDeprecatedRules": []
+    },
+    {
+      "filePath": "C:\\Users\\Valmir Carmo\\Workspace\\estudos\\lovable\\batalhaoke\\src\\components\\ui\\textarea.tsx",
+      "messages": [],
+      "suppressedMessages": [],
+      "errorCount": 0,
+      "fatalErrorCount": 0,
+      "warningCount": 0,
+      "fixableErrorCount": 0,
+      "fixableWarningCount": 0,
+      "usedDeprecatedRules": []
+    },
+    {
+      "filePath": "C:\\Users\\Valmir Carmo\\Workspace\\estudos\\lovable\\batalhaoke\\src\\routes\\__root.tsx",
+      "messages": [
+        {
+          "ruleId": "no-useless-escape",
+          "severity": 2,
+          "message": "Unnecessary escape character: \\].",
+          "line": 142,
+          "column": 61,
+          "nodeType": "TemplateElement",
+          "messageId": "unnecessaryEscape",
+          "endLine": 142,
+          "endColumn": 62,
+          "suggestions": [
+            {
+              "messageId": "removeEscape",
+              "fix": {
+                "range": [
+                  6368,
+                  6369
+                ],
+                "text": ""
+              },
+              "desc": "Remove the `\\`. This maintains the current functionality."
+            },
+            {
+              "messageId": "escapeBackslash",
+              "fix": {
+                "range": [
+                  6368,
+                  6368
+                ],
+                "text": "\\"
+              },
+              "desc": "Replace the `\\` with `\\\\` to include the actual backslash character."
+            }
+          ]
+        }
+      ],
+      "suppressedMessages": [],
+      "errorCount": 1,
+      "fatalErrorCount": 0,
+      "warningCount": 0,
+      "fixableErrorCount": 0,
+      "fixableWarningCount": 0,
+      "source": "import { QueryClient, QueryClientProvider } from \"@tanstack/react-query\";\nimport type { ErrorComponentProps } from \"@tanstack/react-router\";\nimport {\n  Outlet,\n  Link,\n  createRootRouteWithContext,\n  useRouter,\n  useRouterState,\n  HeadContent,\n  Scripts,\n} from \"@tanstack/react-router\";\nimport { useEffect, type ReactNode } from \"react\";\n\nimport { Toaster } from \"@/components/ui/sonner\";\nimport appCss from \"../styles.css?url\";\nimport { reportLovableError } from \"../lib/lovable-error-reporting\";\n\n// Classic head script: parsed by Chromium 68 before any client modules run.\n// Kept as text so none of its browser globals execute during SSR.\nconst legacyBrowserPolyfills = `(function () {\n  'use strict';\n  if (typeof window === 'undefined') return;\n  if (typeof globalThis === 'undefined') window.globalThis = window;\n  if (typeof window.queueMicrotask !== 'function') {\n    window.queueMicrotask = function (callback) {\n      Promise.resolve().then(callback).catch(function (error) {\n        setTimeout(function () { throw error; }, 0);\n      });\n    };\n  }\n  var MAX_LENGTH = 9007199254740991;\n  function toLength(value) {\n    var number = +value;\n    if (number !== number || number <= 0) return 0;\n    return Math.min(Math.floor(number), MAX_LENGTH);\n  }\n  function receiver(value) {\n    if (value == null) throw new TypeError('Array receiver is null or undefined');\n    return Object(value);\n  }\n  function speciesArray(source) {\n    var constructor;\n    if (Array.isArray(source)) {\n      constructor = source.constructor;\n      if (constructor && (typeof constructor === 'object' || typeof constructor === 'function')) {\n        constructor = constructor[Symbol.species];\n        if (constructor === null) constructor = undefined;\n      }\n    }\n    return constructor === undefined ? [] : new constructor(0);\n  }\n  function flatten(target, source, length, depth, mapper, thisArg, index) {\n    for (var i = 0; i < length; i++) {\n      if (!(i in source)) continue;\n      var element = source[i];\n      if (mapper) element = mapper.call(thisArg, element, i, source);\n      if (depth > 0 && Array.isArray(element)) {\n        index = flatten(target, element, toLength(element.length), depth - 1, null, null, index);\n      } else {\n        if (index >= MAX_LENGTH) throw new TypeError('Flattened array is too large');\n        Object.defineProperty(target, index++, { value: element, writable: true, enumerable: true, configurable: true });\n      }\n    }\n    return index;\n  }\n  if (!Array.prototype.flat) Object.defineProperty(Array.prototype, 'flat', {\n    configurable: true, writable: true,\n    value: function flat() {\n      var source = receiver(this), length = toLength(source.length);\n      var depth = arguments[0] === undefined ? 1 : +arguments[0];\n      depth = depth !== depth ? 0 : (depth < 0 ? Math.ceil(depth) : Math.floor(depth));\n      var target = speciesArray(source);\n      flatten(target, source, length, depth, null, null, 0);\n      return target;\n    }\n  });\n  if (!Array.prototype.flatMap) Object.defineProperty(Array.prototype, 'flatMap', {\n    configurable: true, writable: true,\n    value: function flatMap(callback) {\n      var source = receiver(this), length = toLength(source.length);\n      if (typeof callback !== 'function') throw new TypeError('flatMap callback must be a function');\n      var target = speciesArray(source);\n      flatten(target, source, length, 1, callback, arguments[1], 0);\n      return target;\n    }\n  });\n  if (Array.prototype[Symbol.unscopables]) {\n    Array.prototype[Symbol.unscopables].flat = true;\n    Array.prototype[Symbol.unscopables].flatMap = true;\n  }\n  if (!Array.prototype.at) Object.defineProperty(Array.prototype, 'at', {\n    configurable: true, writable: true,\n    value: function at(index) {\n      var source = receiver(this), length = toLength(source.length);\n      var number = +index;\n      var integer = number !== number || number === 0 ? 0 : (number < 0 ? Math.ceil(number) : Math.floor(number));\n      var actualIndex = integer >= 0 ? integer : length + integer;\n      return actualIndex < 0 || actualIndex >= length ? undefined : source[actualIndex];\n    }\n  });\n  if (!Object.fromEntries) Object.defineProperty(Object, 'fromEntries', {\n    configurable: true, writable: true,\n    value: function fromEntries(iterable) {\n      if (iterable == null || typeof iterable[Symbol.iterator] !== 'function') throw new TypeError('Value is not iterable');\n      var iterator = iterable[Symbol.iterator](), result = {}, step;\n      try {\n        while (true) {\n          step = iterator.next();\n          if (!step || typeof step !== 'object') throw new TypeError('Invalid iterator result');\n          if (step.done) return result;\n          var entry = step.value;\n          if (entry === null || (typeof entry !== 'object' && typeof entry !== 'function')) throw new TypeError('Invalid entry');\n          Object.defineProperty(result, entry[0], { value: entry[1], writable: true, enumerable: true, configurable: true });\n        }\n      } catch (error) {\n        try { if (typeof iterator.return === 'function') iterator.return(); } catch (ignored) {}\n        throw error;\n      }\n    }\n  });\n  if (!Object.hasOwn) Object.defineProperty(Object, 'hasOwn', {\n    configurable: true, writable: true,\n    value: function hasOwn(object, key) {\n      if (object == null) throw new TypeError('Cannot convert undefined or null to object');\n      return Object.prototype.hasOwnProperty.call(object, key);\n    }\n  });\n  if (!String.prototype.replaceAll) Object.defineProperty(String.prototype, 'replaceAll', {\n    configurable: true, writable: true,\n    value: function replaceAll(searchValue, replaceValue) {\n      if (this == null) throw new TypeError('String receiver is null or undefined');\n      var string = String(this);\n      var isRegExp = searchValue instanceof RegExp;\n      if (typeof Symbol !== 'undefined' && Symbol.match && searchValue != null && searchValue[Symbol.match] !== undefined) {\n        isRegExp = !!searchValue[Symbol.match];\n      }\n      if (isRegExp) {\n        if (!searchValue.global) throw new TypeError('String.prototype.replaceAll called with a non-global RegExp argument');\n        return String.prototype.replace.call(string, searchValue, replaceValue);\n      }\n      var searchString = String(searchValue);\n      var escapedSearch = searchString.replace(/[\\\\^$.*+?()[\\]{}|]/g, '\\\\$&');\n      return String.prototype.replace.call(string, new RegExp(escapedSearch, 'g'), replaceValue);\n    }\n  });\n})();`;\n\nfunction NotFoundComponent() {\n  return (\n    <div className=\"flex min-h-screen items-center justify-center bg-background px-4\">\n      <div className=\"max-w-md text-center\">\n        <h1 className=\"font-display text-7xl font-bold text-foreground\">404</h1>\n        <h2 className=\"mt-4 text-xl font-semibold text-foreground\">Página não encontrada</h2>\n        <p className=\"mt-2 text-sm text-muted-foreground\">Esta página não existe ou foi movida.</p>\n        <div className=\"mt-6\">\n          <Link\n            to=\"/\"\n            className=\"inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90\"\n          >\n            Voltar ao início\n          </Link>\n        </div>\n      </div>\n    </div>\n  );\n}\n\nfunction ErrorComponent({ error, reset }: ErrorComponentProps) {\n  console.error(error);\n  const router = useRouter();\n  useEffect(() => {\n    reportLovableError(error, { boundary: \"tanstack_root_error_component\" });\n  }, [error]);\n\n  return (\n    <div className=\"flex min-h-screen items-center justify-center bg-background px-4\">\n      <div className=\"max-w-md text-center\">\n        <h1 className=\"text-xl font-semibold tracking-tight text-foreground\">\n          Não foi possível carregar esta página\n        </h1>\n        <p className=\"mt-2 text-sm text-muted-foreground\">\n          Tente novamente ou volte ao início para continuar.\n        </p>\n        <div className=\"mt-6 flex flex-wrap justify-center gap-2\">\n          <button\n            onClick={() => {\n              router.invalidate();\n              reset();\n            }}\n            className=\"inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90\"\n          >\n            Tentar novamente\n          </button>\n          <a\n            href=\"/\"\n            className=\"inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent\"\n          >\n            Voltar ao início\n          </a>\n        </div>\n      </div>\n    </div>\n  );\n}\n\nexport const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({\n  head: () => ({\n    meta: [\n      { charSet: \"utf-8\" },\n      { name: \"viewport\", content: \"width=device-width, initial-scale=1\" },\n      { name: \"theme-color\", content: \"#08121F\" },\n      { name: \"apple-mobile-web-app-title\", content: \"BatalhaOkê\" },\n    ],\n    scripts: [{ children: legacyBrowserPolyfills }],\n    links: [\n      {\n        rel: \"stylesheet\",\n        href: appCss,\n      },\n      { rel: \"icon\", href: \"/favicon.svg\", type: \"image/svg+xml\" },\n      { rel: \"icon\", href: \"/favicon.ico\", sizes: \"any\" },\n      { rel: \"apple-touch-icon\", href: \"/apple-touch-icon.png\", sizes: \"180x180\" },\n      { rel: \"manifest\", href: \"/manifest.webmanifest\" },\n    ],\n  }),\n  shellComponent: RootShell,\n  component: RootComponent,\n  notFoundComponent: NotFoundComponent,\n  errorComponent: ErrorComponent,\n});\n\nfunction RootShell({ children }: { children: ReactNode }) {\n  const isTvPage = useRouterState({ select: (state) => state.location.pathname === \"/tv\" });\n  return (\n    <html lang=\"pt-BR\" data-tv-page={isTvPage ? \"\" : undefined}>\n      <head>\n        <HeadContent />\n      </head>\n      <body>\n        {children}\n        <Scripts />\n      </body>\n    </html>\n  );\n}\n\nfunction RootComponent() {\n  const { queryClient } = Route.useRouteContext();\n\n  return (\n    <QueryClientProvider client={queryClient}>\n      {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}\n      <Outlet />\n      <Toaster position=\"top-center\" richColors />\n    </QueryClientProvider>\n  );\n}\n",
+      "usedDeprecatedRules": []
+    },
+    {
+      "filePath": "C:\\Users\\Valmir Carmo\\Workspace\\estudos\\lovable\\batalhaoke\\src\\routes\\campeonatos.$id.tsx",
+      "messages": [],
+      "suppressedMessages": [],
+      "errorCount": 0,
+      "fatalErrorCount": 0,
+      "warningCount": 0,
+      "fixableErrorCount": 0,
+      "fixableWarningCount": 0,
+      "usedDeprecatedRules": []
+    },
+    {
+      "filePath": "C:\\Users\\Valmir Carmo\\Workspace\\estudos\\lovable\\batalhaoke\\src\\routes\\campeonatos.tsx",
+      "messages": [],
+      "suppressedMessages": [],
+      "errorCount": 0,
+      "fatalErrorCount": 0,
+      "warningCount": 0,
+      "fixableErrorCount": 0,
+      "fixableWarningCount": 0,
+      "usedDeprecatedRules": []
+    },
+    {
+      "filePath": "C:\\Users\\Valmir Carmo\\Workspace\\estudos\\lovable\\batalhaoke\\src\\routes\\estabelecimento.$venueId.operadores.tsx",
+      "messages": [],
+      "suppressedMessages": [],
+      "errorCount": 0,
+      "fatalErrorCount": 0,
+      "warningCount": 0,
+      "fixableErrorCount": 0,
+      "fixableWarningCount": 0,
+      "usedDeprecatedRules": []
+    },
+    {
+      "filePath": "C:\\Users\\Valmir Carmo\\Workspace\\estudos\\lovable\\batalhaoke\\src\\routes\\financeiro.tsx",
+      "messages": [],
+      "suppressedMessages": [],
+      "errorCount": 0,
+      "fatalErrorCount": 0,
+      "warningCount": 0,
+      "fixableErrorCount": 0,
+      "fixableWarningCount": 0,
+      "usedDeprecatedRules": []
+    },
+    {
+      "filePath": "C:\\Users\\Valmir Carmo\\Workspace\\estudos\\lovable\\batalhaoke\\src\\routes\\index.tsx",
+      "messages": [],
+      "suppressedMessages": [],
+      "errorCount": 0,
+      "fatalErrorCount": 0,
+      "warningCount": 0,
+      "fixableErrorCount": 0,
+      "fixableWarningCount": 0,
+      "usedDeprecatedRules": []
+    },
+    {
+      "filePath": "C:\\Users\\Valmir Carmo\\Workspace\\estudos\\lovable\\batalhaoke\\src\\routes\\inscrever.$id.tsx",
+      "messages": [],
+      "suppressedMessages": [],
+      "errorCount": 0,
+      "fatalErrorCount": 0,
+      "warningCount": 0,
+      "fixableErrorCount": 0,
+      "fixableWarningCount": 0,
+      "usedDeprecatedRules": []
+    },
+    {
+      "filePath": "C:\\Users\\Valmir Carmo\\Workspace\\estudos\\lovable\\batalhaoke\\src\\routes\\login.tsx",
+      "messages": [],
+      "suppressedMessages": [],
+      "errorCount": 0,
+      "fatalErrorCount": 0,
+      "warningCount": 0,
+      "fixableErrorCount": 0,
+      "fixableWarningCount": 0,
+      "usedDeprecatedRules": []
+    },
+    {
+      "filePath": "C:\\Users\\Valmir Carmo\\Workspace\\estudos\\lovable\\batalhaoke\\src\\routes\\qr.$code.tsx",
+      "messages": [],
+      "suppressedMessages": [],
+      "errorCount": 0,
+      "fatalErrorCount": 0,
+      "warningCount": 0,
+      "fixableErrorCount": 0,
+      "fixableWarningCount": 0,
+      "usedDeprecatedRules": []
+    },
+    {
+      "filePath": "C:\\Users\\Valmir Carmo\\Workspace\\estudos\\lovable\\batalhaoke\\src\\routes\\sessao.$id.tsx",
+      "messages": [],
+      "suppressedMessages": [],
+      "errorCount": 0,
+      "fatalErrorCount": 0,
+      "warningCount": 0,
+      "fixableErrorCount": 0,
+      "fixableWarningCount": 0,
+      "usedDeprecatedRules": []
+    },
+    {
+      "filePath": "C:\\Users\\Valmir Carmo\\Workspace\\estudos\\lovable\\batalhaoke\\src\\routes\\superadmin.tsx",
+      "messages": [],
+      "suppressedMessages": [
+        {
+          "ruleId": "@typescript-eslint/no-explicit-any",
+          "severity": 2,
+          "message": "Unexpected any. Specify a different type.",
+          "line": 335,
+          "column": 42,
+          "nodeType": "TSAnyKeyword",
+          "messageId": "unexpectedAny",
+          "endLine": 335,
+          "endColumn": 45,
+          "suggestions": [
+            {
+              "messageId": "suggestUnknown",
+              "fix": {
+                "range": [
+                  13663,
+                  13666
+                ],
+                "text": "unknown"
+              },
+              "desc": "Use `unknown` instead, this will force you to explicitly, and safely assert the type is correct."
+            },
+            {
+              "messageId": "suggestNever",
+              "fix": {
+                "range": [
+                  13663,
+                  13666
+                ],
+                "text": "never"
+              },
+              "desc": "Use `never` instead, this is useful when instantiating generic type parameters that you don't need to know the type of."
+            }
+          ],
+          "suppressions": [
+            {
+              "kind": "directive",
+              "justification": "commercial tables are newer than generated Supabase types."
+            }
+          ]
+        },
+        {
+          "ruleId": "@typescript-eslint/no-explicit-any",
+          "severity": 2,
+          "message": "Unexpected any. Specify a different type.",
+          "line": 423,
+          "column": 42,
+          "nodeType": "TSAnyKeyword",
+          "messageId": "unexpectedAny",
+          "endLine": 423,
+          "endColumn": 45,
+          "suggestions": [
+            {
+              "messageId": "suggestUnknown",
+              "fix": {
+                "range": [
+                  17484,
+                  17487
+                ],
+                "text": "unknown"
+              },
+              "desc": "Use `unknown` instead, this will force you to explicitly, and safely assert the type is correct."
+            },
+            {
+              "messageId": "suggestNever",
+              "fix": {
+                "range": [
+                  17484,
+                  17487
+                ],
+                "text": "never"
+              },
+              "desc": "Use `never` instead, this is useful when instantiating generic type parameters that you don't need to know the type of."
+            }
+          ],
+          "suppressions": [
+            {
+              "kind": "directive",
+              "justification": "commercial tables are newer than generated Supabase types."
+            }
+          ]
+        },
+        {
+          "ruleId": "@typescript-eslint/no-explicit-any",
+          "severity": 2,
+          "message": "Unexpected any. Specify a different type.",
+          "line": 510,
+          "column": 42,
+          "nodeType": "TSAnyKeyword",
+          "messageId": "unexpectedAny",
+          "endLine": 510,
+          "endColumn": 45,
+          "suggestions": [
+            {
+              "messageId": "suggestUnknown",
+              "fix": {
+                "range": [
+                  21199,
+                  21202
+                ],
+                "text": "unknown"
+              },
+              "desc": "Use `unknown` instead, this will force you to explicitly, and safely assert the type is correct."
+            },
+            {
+              "messageId": "suggestNever",
+              "fix": {
+                "range": [
+                  21199,
+                  21202
+                ],
+                "text": "never"
+              },
+              "desc": "Use `never` instead, this is useful when instantiating generic type parameters that you don't need to know the type of."
+            }
+          ],
+          "suppressions": [
+            {
+              "kind": "directive",
+              "justification": "commercial tables are newer than generated Supabase types."
+            }
+          ]
+        },
+        {
+          "ruleId": "@typescript-eslint/no-explicit-any",
+          "severity": 2,
+          "message": "Unexpected any. Specify a different type.",
+          "line": 560,
+          "column": 29,
+          "nodeType": "TSAnyKeyword",
+          "messageId": "unexpectedAny",
+          "endLine": 560,
+          "endColumn": 32,
+          "suggestions": [
+            {
+              "messageId": "suggestUnknown",
+              "fix": {
+                "range": [
+                  23376,
+                  23379
+                ],
+                "text": "unknown"
+              },
+              "desc": "Use `unknown` instead, this will force you to explicitly, and safely assert the type is correct."
+            },
+            {
+              "messageId": "suggestNever",
+              "fix": {
+                "range": [
+                  23376,
+                  23379
+                ],
+                "text": "never"
+              },
+              "desc": "Use `never` instead, this is useful when instantiating generic type parameters that you don't need to know the type of."
+            }
+          ],
+          "suppressions": [
+            {
+              "kind": "directive",
+              "justification": "commercial tables are newer than generated Supabase types."
+            }
+          ]
+        },
+        {
+          "ruleId": "@typescript-eslint/no-explicit-any",
+          "severity": 2,
+          "message": "Unexpected any. Specify a different type.",
+          "line": 561,
+          "column": 64,
+          "nodeType": "TSAnyKeyword",
+          "messageId": "unexpectedAny",
+          "endLine": 561,
+          "endColumn": 67,
+          "suggestions": [
+            {
+              "messageId": "suggestUnknown",
+              "fix": {
+                "range": [
+                  23449,
+                  23452
+                ],
+                "text": "unknown"
+              },
+              "desc": "Use `unknown` instead, this will force you to explicitly, and safely assert the type is correct."
+            },
+            {
+              "messageId": "suggestNever",
+              "fix": {
+                "range": [
+                  23449,
+                  23452
+                ],
+                "text": "never"
+              },
+              "desc": "Use `never` instead, this is useful when instantiating generic type parameters that you don't need to know the type of."
+            }
+          ],
+          "suppressions": [
+            {
+              "kind": "directive",
+              "justification": "commercial tables are newer than generated Supabase types."
+            }
+          ]
+        },
+        {
+          "ruleId": "@typescript-eslint/no-explicit-any",
+          "severity": 2,
+          "message": "Unexpected any. Specify a different type.",
+          "line": 562,
+          "column": 59,
+          "nodeType": "TSAnyKeyword",
+          "messageId": "unexpectedAny",
+          "endLine": 562,
+          "endColumn": 62,
+          "suggestions": [
+            {
+              "messageId": "suggestUnknown",
+              "fix": {
+                "range": [
+                  23539,
+                  23542
+                ],
+                "text": "unknown"
+              },
+              "desc": "Use `unknown` instead, this will force you to explicitly, and safely assert the type is correct."
+            },
+            {
+              "messageId": "suggestNever",
+              "fix": {
+                "range": [
+                  23539,
+                  23542
+                ],
+                "text": "never"
+              },
+              "desc": "Use `never` instead, this is useful when instantiating generic type parameters that you don't need to know the type of."
+            }
+          ],
+          "suppressions": [
+            {
+              "kind": "directive",
+              "justification": "commercial tables are newer than generated Supabase types."
+            }
+          ]
+        },
+        {
+          "ruleId": "@typescript-eslint/no-explicit-any",
+          "severity": 2,
+          "message": "Unexpected any. Specify a different type.",
+          "line": 564,
+          "column": 56,
+          "nodeType": "TSAnyKeyword",
+          "messageId": "unexpectedAny",
+          "endLine": 564,
+          "endColumn": 59,
+          "suggestions": [
+            {
+              "messageId": "suggestUnknown",
+              "fix": {
+                "range": [
+                  23660,
+                  23663
+                ],
+                "text": "unknown"
+              },
+              "desc": "Use `unknown` instead, this will force you to explicitly, and safely assert the type is correct."
+            },
+            {
+              "messageId": "suggestNever",
+              "fix": {
+                "range": [
+                  23660,
+                  23663
+                ],
+                "text": "never"
+              },
+              "desc": "Use `never` instead, this is useful when instantiating generic type parameters that you don't need to know the type of."
+            }
+          ],
+          "suppressions": [
+            {
+              "kind": "directive",
+              "justification": "commercial tables are newer than generated Supabase types."
+            }
+          ]
+        },
+        {
+          "ruleId": "@typescript-eslint/no-explicit-any",
+          "severity": 2,
+          "message": "Unexpected any. Specify a different type.",
+          "line": 567,
+          "column": 25,
+          "nodeType": "TSAnyKeyword",
+          "messageId": "unexpectedAny",
+          "endLine": 567,
+          "endColumn": 28,
+          "suggestions": [
+            {
+              "messageId": "suggestUnknown",
+              "fix": {
+                "range": [
+                  23837,
+                  23840
+                ],
+                "text": "unknown"
+              },
+              "desc": "Use `unknown` instead, this will force you to explicitly, and safely assert the type is correct."
+            },
+            {
+              "messageId": "suggestNever",
+              "fix": {
+                "range": [
+                  23837,
+                  23840
+                ],
+                "text": "never"
+              },
+              "desc": "Use `never` instead, this is useful when instantiating generic type parameters that you don't need to know the type of."
+            }
+          ],
+          "suppressions": [
+            {
+              "kind": "directive",
+              "justification": "commercial tables are newer than generated Supabase types."
+            }
+          ]
+        },
+        {
+          "ruleId": "@typescript-eslint/no-explicit-any",
+          "severity": 2,
+          "message": "Unexpected any. Specify a different type.",
+          "line": 583,
+          "column": 26,
+          "nodeType": "TSAnyKeyword",
+          "messageId": "unexpectedAny",
+          "endLine": 583,
+          "endColumn": 29,
+          "suggestions": [
+            {
+              "messageId": "suggestUnknown",
+              "fix": {
+                "range": [
+                  24735,
+                  24738
+                ],
+                "text": "unknown"
+              },
+              "desc": "Use `unknown` instead, this will force you to explicitly, and safely assert the type is correct."
+            },
+            {
+              "messageId": "suggestNever",
+              "fix": {
+                "range": [
+                  24735,
+                  24738
+                ],
+                "text": "never"
+              },
+              "desc": "Use `never` instead, this is useful when instantiating generic type parameters that you don't need to know the type of."
+            }
+          ],
+          "suppressions": [
+            {
+              "kind": "directive",
+              "justification": "commercial tables are newer than generated Supabase types."
+            }
+          ]
+        },
+        {
+          "ruleId": "@typescript-eslint/no-explicit-any",
+          "severity": 2,
+          "message": "Unexpected any. Specify a different type.",
+          "line": 617,
+          "column": 37,
+          "nodeType": "TSAnyKeyword",
+          "messageId": "unexpectedAny",
+          "endLine": 617,
+          "endColumn": 40,
+          "suggestions": [
+            {
+              "messageId": "suggestUnknown",
+              "fix": {
+                "range": [
+                  26293,
+                  26296
+                ],
+                "text": "unknown"
+              },
+              "desc": "Use `unknown` instead, this will force you to explicitly, and safely assert the type is correct."
+            },
+            {
+              "messageId": "suggestNever",
+              "fix": {
+                "range": [
+                  26293,
+                  26296
+                ],
+                "text": "never"
+              },
+              "desc": "Use `never` instead, this is useful when instantiating generic type parameters that you don't need to know the type of."
+            }
+          ],
+          "suppressions": [
+            {
+              "kind": "directive",
+              "justification": "commercial tables are newer than generated Supabase types."
+            }
+          ]
+        },
+        {
+          "ruleId": "@typescript-eslint/no-explicit-any",
+          "severity": 2,
+          "message": "Unexpected any. Specify a different type.",
+          "line": 618,
+          "column": 34,
+          "nodeType": "TSAnyKeyword",
+          "messageId": "unexpectedAny",
+          "endLine": 618,
+          "endColumn": 37,
+          "suggestions": [
+            {
+              "messageId": "suggestUnknown",
+              "fix": {
+                "range": [
+                  26382,
+                  26385
+                ],
+                "text": "unknown"
+              },
+              "desc": "Use `unknown` instead, this will force you to explicitly, and safely assert the type is correct."
+            },
+            {
+              "messageId": "suggestNever",
+              "fix": {
+                "range": [
+                  26382,
+                  26385
+                ],
+                "text": "never"
+              },
+              "desc": "Use `never` instead, this is useful when instantiating generic type parameters that you don't need to know the type of."
+            }
+          ],
+          "suppressions": [
+            {
+              "kind": "directive",
+              "justification": "commercial tables are newer than generated Supabase types."
+            }
+          ]
+        },
+        {
+          "ruleId": "@typescript-eslint/no-explicit-any",
+          "severity": 2,
+          "message": "Unexpected any. Specify a different type.",
+          "line": 780,
+          "column": 47,
+          "nodeType": "TSAnyKeyword",
+          "messageId": "unexpectedAny",
+          "endLine": 780,
+          "endColumn": 50,
+          "suggestions": [
+            {
+              "messageId": "suggestUnknown",
+              "fix": {
+                "range": [
+                  33759,
+                  33762
+                ],
+                "text": "unknown"
+              },
+              "desc": "Use `unknown` instead, this will force you to explicitly, and safely assert the type is correct."
+            },
+            {
+              "messageId": "suggestNever",
+              "fix": {
+                "range": [
+                  33759,
+                  33762
+                ],
+                "text": "never"
+              },
+              "desc": "Use `never` instead, this is useful when instantiating generic type parameters that you don't need to know the type of."
+            }
+          ],
+          "suppressions": [
+            {
+              "kind": "directive",
+              "justification": "commercial tables are newer than generated Supabase types."
+            }
+          ]
+        },
+        {
+          "ruleId": "@typescript-eslint/no-explicit-any",
+          "severity": 2,
+          "message": "Unexpected any. Specify a different type.",
+          "line": 820,
+          "column": 58,
+          "nodeType": "TSAnyKeyword",
+          "messageId": "unexpectedAny",
+          "endLine": 820,
+          "endColumn": 61,
+          "suggestions": [
+            {
+              "messageId": "suggestUnknown",
+              "fix": {
+                "range": [
+                  35467,
+                  35470
+                ],
+                "text": "unknown"
+              },
+              "desc": "Use `unknown` instead, this will force you to explicitly, and safely assert the type is correct."
+            },
+            {
+              "messageId": "suggestNever",
+              "fix": {
+                "range": [
+                  35467,
+                  35470
+                ],
+                "text": "never"
+              },
+              "desc": "Use `never` instead, this is useful when instantiating generic type parameters that you don't need to know the type of."
+            }
+          ],
+          "suppressions": [
+            {
+              "kind": "directive",
+              "justification": "commercial tables are newer than generated Supabase types."
+            }
+          ]
+        },
+        {
+          "ruleId": "@typescript-eslint/no-explicit-any",
+          "severity": 2,
+          "message": "Unexpected any. Specify a different type.",
+          "line": 836,
+          "column": 10,
+          "nodeType": "TSAnyKeyword",
+          "messageId": "unexpectedAny",
+          "endLine": 836,
+          "endColumn": 13,
+          "suggestions": [
+            {
+              "messageId": "suggestUnknown",
+              "fix": {
+                "range": [
+                  35731,
+                  35734
+                ],
+                "text": "unknown"
+              },
+              "desc": "Use `unknown` instead, this will force you to explicitly, and safely assert the type is correct."
+            },
+            {
+              "messageId": "suggestNever",
+              "fix": {
+                "range": [
+                  35731,
+                  35734
+                ],
+                "text": "never"
+              },
+              "desc": "Use `never` instead, this is useful when instantiating generic type parameters that you don't need to know the type of."
+            }
+          ],
+          "suppressions": [
+            {
+              "kind": "directive",
+              "justification": "commercial tables are newer than generated Supabase types."
+            }
+          ]
+        },
+        {
+          "ruleId": "@typescript-eslint/no-explicit-any",
+          "severity": 2,
+          "message": "Unexpected any. Specify a different type.",
+          "line": 837,
+          "column": 17,
+          "nodeType": "TSAnyKeyword",
+          "messageId": "unexpectedAny",
+          "endLine": 837,
+          "endColumn": 20,
+          "suggestions": [
+            {
+              "messageId": "suggestUnknown",
+              "fix": {
+                "range": [
+                  35754,
+                  35757
+                ],
+                "text": "unknown"
+              },
+              "desc": "Use `unknown` instead, this will force you to explicitly, and safely assert the type is correct."
+            },
+            {
+              "messageId": "suggestNever",
+              "fix": {
+                "range": [
+                  35754,
+                  35757
+                ],
+                "text": "never"
+              },
+              "desc": "Use `never` instead, this is useful when instantiating generic type parameters that you don't need to know the type of."
+            }
+          ],
+          "suppressions": [
+            {
+              "kind": "directive",
+              "justification": "commercial tables are newer than generated Supabase types."
+            }
+          ]
+        }
+      ],
+      "errorCount": 0,
+      "fatalErrorCount": 0,
+      "warningCount": 0,
+      "fixableErrorCount": 0,
+      "fixableWarningCount": 0,
+      "usedDeprecatedRules": []
+    },
+    {
+      "filePath": "C:\\Users\\Valmir Carmo\\Workspace\\estudos\\lovable\\batalhaoke\\src\\routes\\tv.tsx",
+      "messages": [],
+      "suppressedMessages": [],
+      "errorCount": 0,
+      "fatalErrorCount": 0,
+      "warningCount": 0,
+      "fixableErrorCount": 0,
+      "fixableWarningCount": 0,
+      "usedDeprecatedRules": []
+    },
+    {
+      "filePath": "C:\\Users\\Valmir Carmo\\Workspace\\estudos\\lovable\\batalhaoke\\src\\routes\\votar.$code.tsx",
+      "messages": [],
+      "suppressedMessages": [],
+      "errorCount": 0,
+      "fatalErrorCount": 0,
+      "warningCount": 0,
+      "fixableErrorCount": 0,
+      "fixableWarningCount": 0,
+      "usedDeprecatedRules": []
+    }
+  ]
+}

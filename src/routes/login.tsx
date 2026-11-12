@@ -175,10 +175,11 @@ function LoginPage() {
   }
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-background p-6">
-      <div className="w-full max-w-sm space-y-6 rounded-lg border border-border bg-card p-6 text-card-foreground">
+    <main className="pulso-login min-h-screen flex items-center justify-center bg-background p-6">
+      <div className="w-full max-w-md space-y-6 rounded-lg border border-border bg-card p-6 text-card-foreground">
         <div className="space-y-1">
-          <h1 className="text-2xl font-bold">Administração</h1>
+          <p className="font-display text-2xl text-primary">BatalhaOkê</p>
+          <h1 className="font-display text-4xl font-semibold">Administração</h1>
           <p className="text-sm text-muted-foreground">
             Acesso restrito aos operadores autorizados de cada estabelecimento.
           </p>
@@ -238,7 +239,11 @@ function LoginPage() {
             </Button>
           </div>
         ) : (
-          <form onSubmit={onSubmit} className="space-y-4">
+          <form
+            aria-describedby={error ? "login-error" : undefined}
+            onSubmit={onSubmit}
+            className="space-y-4"
+          >
             <div className="space-y-2">
               <Label htmlFor="email">E-mail</Label>
               <Input
@@ -265,7 +270,7 @@ function LoginPage() {
               </div>
             )}
             {error && (
-              <p role="alert" className="text-sm text-destructive">
+              <p id="login-error" role="alert" className="text-sm text-destructive">
                 {error}
               </p>
             )}

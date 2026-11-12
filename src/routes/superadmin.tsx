@@ -104,7 +104,7 @@ function Dashboard() {
   const list = venues.data ?? [];
   const totalLinks = list.reduce((s, v) => s + v.operatorCount, 0);
   return (
-    <main className="mx-auto max-w-4xl space-y-6 p-4 sm:p-8">
+    <main className="pulso-admin mx-auto max-w-7xl space-y-6 p-4 sm:p-8">
       <header className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="flex items-center gap-2 text-2xl font-bold">
           <ShieldCheck className="h-6 w-6 text-primary" /> SuperAdmin
@@ -113,7 +113,16 @@ function Dashboard() {
           <Plus className="h-4 w-4" /> Cadastrar estabelecimento
         </Button>
       </header>
-      <section className="grid grid-cols-2 gap-3">
+      <nav aria-label="Contextos administrativos">
+        <a href="#sa-users">Usuários</a>
+        <a href="#sa-commercial">Gestão comercial</a>
+        <a href="#sa-plans">Planos</a>
+        <a href="#sa-packs">Pacotes e créditos</a>
+        <a href="#sa-accounts">Contas e assinaturas</a>
+        <a href="#sa-events">Eventos e reconciliação</a>
+        <a href="#sa-venues">Estabelecimentos</a>
+      </nav>
+      <section className="grid grid-cols-2 gap-3" id="sa-venues">
         <Stat
           icon={<Building2 className="h-5 w-5" />}
           label="Estabelecimentos"
@@ -137,7 +146,7 @@ function Dashboard() {
           >
             <div className="min-w-0">
               <p className="font-semibold">{v.name}</p>
-              <p className="truncate text-xs text-muted-foreground">
+              <p className="truncate text-sm text-muted-foreground">
                 {v.slug ?? "sem slug"} · {new Date(v.created_at).toLocaleDateString("pt-BR")} ·{" "}
                 {v.operatorCount} operador(es)
                 {v.operatorCount === 0 && (
@@ -209,7 +218,7 @@ function CommercialAdminPanel() {
     }
   }
   return (
-    <section className="space-y-4 rounded-lg border p-4">
+    <section className="space-y-4 rounded-xl border bg-card p-5" id="sa-commercial">
       <header className="flex flex-wrap items-center justify-between gap-2">
         <div>
           <h2 className="text-lg font-semibold">Gestão comercial</h2>
@@ -281,7 +290,9 @@ function CommercialAdminPanel() {
           <div className="grid gap-4 md:grid-cols-2">
             <div>
               <div className="flex items-center justify-between">
-                <h3 className="font-medium">Planos ({data.data.plans.length})</h3>
+                <h3 className="font-semibold" id="sa-plans">
+                  Planos ({data.data.plans.length})
+                </h3>
                 <Button
                   size="sm"
                   variant="outline"
@@ -380,7 +391,9 @@ function CommercialAdminPanel() {
             </div>
             <div>
               <div className="flex items-center justify-between">
-                <h3 className="font-medium">Pacotes de créditos ({data.data.packs.length})</h3>
+                <h3 className="font-semibold" id="sa-packs">
+                  Pacotes de créditos ({data.data.packs.length})
+                </h3>
                 <Button
                   size="sm"
                   variant="outline"
@@ -473,7 +486,9 @@ function CommercialAdminPanel() {
             />
           </div>
           <div>
-            <h3 className="font-medium">Contas e ações comerciais ({data.data.accounts.length})</h3>
+            <h3 className="font-semibold" id="sa-accounts">
+              Contas e ações comerciais ({data.data.accounts.length})
+            </h3>
             <div className="my-2 grid gap-2 sm:grid-cols-6">
               <select
                 aria-label="Tipo de conta"
@@ -748,7 +763,7 @@ function CommercialAdminPanel() {
                   <p>{errMsg(accountDetail.error)}</p>
                 ) : (
                   accountDetail.data && (
-                    <pre className="mt-2 max-h-96 overflow-auto whitespace-pre-wrap text-xs">
+                    <pre className="mt-2 max-h-96 overflow-auto whitespace-pre-wrap text-sm">
                       {JSON.stringify(accountDetail.data, null, 2)}
                     </pre>
                   )
@@ -758,8 +773,10 @@ function CommercialAdminPanel() {
           </div>
           <div className="grid gap-4 md:grid-cols-2">
             <div>
-              <h3 className="font-medium">Eventos MP recentes ({data.data.events.length})</h3>
-              <ul className="mt-2 max-h-48 space-y-1 overflow-auto text-xs">
+              <h3 className="font-semibold" id="sa-events">
+                Eventos MP recentes ({data.data.events.length})
+              </h3>
+              <ul className="mt-2 max-h-48 space-y-1 overflow-auto text-sm">
                 {data.data.events.map((event: any) => (
                   <li
                     className="flex items-center justify-between gap-2 rounded bg-muted p-2"
@@ -824,7 +841,7 @@ function AdminList({
       <h3 className="font-medium">
         {title} ({items.length})
       </h3>
-      <ul className="mt-2 max-h-48 space-y-1 overflow-auto text-xs">
+      <ul className="mt-2 max-h-48 space-y-1 overflow-auto text-sm">
         {items.slice(0, 30).map((x, i) => (
           <li className="rounded bg-muted p-2" key={x.id ?? i}>
             {label(x)}
@@ -883,7 +900,7 @@ function UsersPanel() {
     }
   }
   return (
-    <section className="space-y-3 rounded-lg border p-4">
+    <section className="space-y-3 rounded-xl border bg-card p-5" id="sa-users">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="text-xl font-semibold">Usuários</h2>
         <Button
@@ -931,7 +948,7 @@ function UsersPanel() {
               <div>
                 <p className="font-medium">
                   {u.name || "Sem nome"}{" "}
-                  {u.isSuperadmin && <span className="text-xs text-primary">SuperAdmin</span>}
+                  {u.isSuperadmin && <span className="text-sm text-primary">SuperAdmin</span>}
                 </p>
                 <p className="text-sm text-muted-foreground">
                   {u.email} · {u.emailConfirmed ? "E-mail confirmado" : "Pendente"} ·{" "}
@@ -999,7 +1016,7 @@ function UsersPanel() {
               onChange={(e) => setNewEmail(e.target.value)}
               required
             />
-            <p className="text-xs text-muted-foreground">
+            <p className="text-sm text-muted-foreground">
               A pessoa receberá convite para definir a própria senha.
             </p>
             <Button disabled={busy} className="w-full">

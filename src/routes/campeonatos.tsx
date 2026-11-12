@@ -9,18 +9,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { listOperatorVenues } from "@/lib/venue.functions";
-import {
-  createChampionshipFn,
-  listChampionshipsFn,
-} from "@/lib/championship.functions";
+import { createChampionshipFn, listChampionshipsFn } from "@/lib/championship.functions";
 
 export const Route = createFileRoute("/campeonatos")({
   ssr: false,
   head: () => ({
-    meta: [
-      { title: "Campeonatos — BatalhaOkê" },
-      { name: "robots", content: "noindex" },
-    ],
+    meta: [{ title: "Campeonatos — BatalhaOkê" }, { name: "robots", content: "noindex" }],
   }),
   component: ChampionshipsPage,
 });
@@ -115,7 +109,7 @@ function ChampionshipsIndexPage() {
   }
 
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-3xl flex-col gap-6 px-4 py-6 sm:px-6">
+    <main className="mx-auto flex min-h-dvh w-full max-w-5xl flex-col gap-6 px-4 py-6 sm:px-6">
       <header className="flex items-center gap-3">
         <Link
           to="/"
@@ -131,10 +125,13 @@ function ChampionshipsIndexPage() {
         <Trophy className="size-6 text-primary" aria-hidden />
       </header>
 
-      {venues.isLoading && <p className="text-sm text-muted-foreground">Carregando estabelecimentos…</p>}
+      {venues.isLoading && (
+        <p className="text-sm text-muted-foreground">Carregando estabelecimentos…</p>
+      )}
       {venues.isError && (
         <p role="alert" className="rounded-xl bg-destructive/10 p-4 text-sm text-destructive">
-          Não foi possível carregar seus estabelecimentos. Entre com uma conta de operador autorizada.
+          Não foi possível carregar seus estabelecimentos. Entre com uma conta de operador
+          autorizada.
         </p>
       )}
       {!!venues.data?.length && (
@@ -148,7 +145,9 @@ function ChampionshipsIndexPage() {
           >
             <option value="">Selecione um estabelecimento</option>
             {venues.data.map((venue) => (
-              <option key={venue.id} value={venue.id}>{venue.name}</option>
+              <option key={venue.id} value={venue.id}>
+                {venue.name}
+              </option>
             ))}
           </select>
         </section>
@@ -169,7 +168,9 @@ function ChampionshipsIndexPage() {
               </Button>
             )}
           </div>
-          {championships.isLoading && <p className="text-sm text-muted-foreground">Carregando Campeonatos…</p>}
+          {championships.isLoading && (
+            <p className="text-sm text-muted-foreground">Carregando Campeonatos…</p>
+          )}
           {championships.isError && (
             <p role="alert" className="rounded-xl bg-destructive/10 p-4 text-sm text-destructive">
               {(championships.error as Error).message}
@@ -180,35 +181,53 @@ function ChampionshipsIndexPage() {
               key={championship.id}
               to="/campeonatos/$id"
               params={{ id: championship.id }}
-              className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border bg-card p-4 transition-colors hover:bg-accent/40"
+              className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border bg-card p-4 transition-colors hover:bg-secondary"
             >
               <span className="min-w-0">
                 <span className="block truncate font-semibold">{championship.title}</span>
                 <span className="mt-1 block text-sm text-muted-foreground">
                   Formato {championship.format}
-                  {championship.event_starts_at && ` · ${new Date(championship.event_starts_at).toLocaleString("pt-BR")}`}
+                  {championship.event_starts_at &&
+                    ` · ${new Date(championship.event_starts_at).toLocaleString("pt-BR")}`}
                 </span>
               </span>
-              <span className="rounded-full bg-secondary px-3 py-1 text-xs font-medium">
+              <span className="rounded-full bg-secondary px-3 py-1 text-sm font-medium">
                 {statusLabels[championship.status] ?? championship.status}
               </span>
             </Link>
           ))}
-          {!championships.isLoading && !championships.isError && championships.data?.length === 0 && (
-            <p className="rounded-xl border p-4 text-sm text-muted-foreground">
-              Ainda não há Campeonatos neste estabelecimento.
-            </p>
-          )}
+          {!championships.isLoading &&
+            !championships.isError &&
+            championships.data?.length === 0 && (
+              <p className="rounded-xl border p-4 text-sm text-muted-foreground">
+                Ainda não há Campeonatos neste estabelecimento.
+              </p>
+            )}
           {formOpen && (
-            <form onSubmit={(event) => void createEvent(event)} className="flex flex-col gap-4 rounded-2xl border bg-card p-4 sm:p-5">
+            <form
+              onSubmit={(event) => void createEvent(event)}
+              className="flex flex-col gap-4 rounded-2xl border bg-card p-4 sm:p-5"
+            >
               <h2 className="text-lg font-semibold">Novo Campeonato</h2>
               <div>
                 <Label htmlFor="championship-title">Título</Label>
-                <Input id="championship-title" className="mt-2" maxLength={120} required value={title} onChange={(event) => setTitle(event.target.value)} />
+                <Input
+                  id="championship-title"
+                  className="mt-2"
+                  maxLength={120}
+                  required
+                  value={title}
+                  onChange={(event) => setTitle(event.target.value)}
+                />
               </div>
               <div>
                 <Label htmlFor="championship-format">Formato</Label>
-                <select id="championship-format" className="mt-2 h-10 w-full rounded-md border border-input bg-background px-3" value={format} onChange={(event) => setFormat(Number(event.target.value) as 8 | 12 | 16)}>
+                <select
+                  id="championship-format"
+                  className="mt-2 h-10 w-full rounded-md border border-input bg-background px-3"
+                  value={format}
+                  onChange={(event) => setFormat(Number(event.target.value) as 8 | 12 | 16)}
+                >
                   <option value={8}>8 participantes · quartas diretas</option>
                   <option value={12}>12 participantes · grupos + melhores terceiros</option>
                   <option value={16}>16 participantes · grupos</option>
@@ -217,37 +236,90 @@ function ChampionshipsIndexPage() {
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
                   <Label htmlFor="championship-starts">Data e horário do evento</Label>
-                  <Input id="championship-starts" className="mt-2" type="datetime-local" value={startsAt} onChange={(event) => setStartsAt(event.target.value)} />
+                  <Input
+                    id="championship-starts"
+                    className="mt-2"
+                    type="datetime-local"
+                    value={startsAt}
+                    onChange={(event) => setStartsAt(event.target.value)}
+                  />
                 </div>
                 <div>
                   <Label htmlFor="championship-deadline">Prazo de inscrição</Label>
-                  <Input id="championship-deadline" className="mt-2" type="datetime-local" value={deadline} onChange={(event) => setDeadline(event.target.value)} />
+                  <Input
+                    id="championship-deadline"
+                    className="mt-2"
+                    type="datetime-local"
+                    value={deadline}
+                    onChange={(event) => setDeadline(event.target.value)}
+                  />
                 </div>
               </div>
               <div>
                 <Label htmlFor="championship-location">Local</Label>
-                <Input id="championship-location" className="mt-2" maxLength={200} value={location} onChange={(event) => setLocation(event.target.value)} />
+                <Input
+                  id="championship-location"
+                  className="mt-2"
+                  maxLength={200}
+                  value={location}
+                  onChange={(event) => setLocation(event.target.value)}
+                />
               </div>
               <div>
                 <Label htmlFor="championship-rules">Descrição e regulamento</Label>
-                <Textarea id="championship-rules" className="mt-2 min-h-28" maxLength={5000} value={rules} onChange={(event) => setRules(event.target.value)} />
-                <p className="mt-1 text-xs text-muted-foreground">O schema atual armazena esses textos juntos no campo de regulamento.</p>
+                <Textarea
+                  id="championship-rules"
+                  className="mt-2 min-h-28"
+                  maxLength={5000}
+                  value={rules}
+                  onChange={(event) => setRules(event.target.value)}
+                />
+                <p className="mt-1 text-sm text-muted-foreground">
+                  O schema atual armazena esses textos juntos no campo de regulamento.
+                </p>
               </div>
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
                   <Label htmlFor="championship-prize">Premiação</Label>
-                  <Textarea id="championship-prize" className="mt-2" maxLength={1000} value={prizeInfo} onChange={(event) => setPrizeInfo(event.target.value)} />
+                  <Textarea
+                    id="championship-prize"
+                    className="mt-2"
+                    maxLength={1000}
+                    value={prizeInfo}
+                    onChange={(event) => setPrizeInfo(event.target.value)}
+                  />
                 </div>
                 <div>
                   <Label htmlFor="championship-fee">Informações de cobrança</Label>
-                  <Textarea id="championship-fee" className="mt-2" maxLength={1000} value={feeInfo} onChange={(event) => setFeeInfo(event.target.value)} />
-                  <p className="mt-1 text-xs text-muted-foreground">Informação textual; não há integração de pagamento.</p>
+                  <Textarea
+                    id="championship-fee"
+                    className="mt-2"
+                    maxLength={1000}
+                    value={feeInfo}
+                    onChange={(event) => setFeeInfo(event.target.value)}
+                  />
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Informação textual; não há integração de pagamento.
+                  </p>
                 </div>
               </div>
-              {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
+              {error && (
+                <p role="alert" className="text-sm text-destructive">
+                  {error}
+                </p>
+              )}
               <div className="flex justify-end gap-2">
-                <Button type="button" variant="secondary" disabled={busy} onClick={() => setFormOpen(false)}>Cancelar</Button>
-                <Button type="submit" disabled={busy}>{busy ? "Criando…" : "Criar rascunho"}</Button>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  disabled={busy}
+                  onClick={() => setFormOpen(false)}
+                >
+                  Cancelar
+                </Button>
+                <Button type="submit" disabled={busy}>
+                  {busy ? "Criando…" : "Criar rascunho"}
+                </Button>
               </div>
             </form>
           )}

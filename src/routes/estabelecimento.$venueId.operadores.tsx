@@ -123,7 +123,7 @@ function VenueOperators() {
     );
 
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-xl flex-col gap-6 px-5 py-8">
+    <main className="mx-auto flex min-h-dvh w-full max-w-4xl flex-col gap-6 px-5 py-8">
       <Link
         to="/"
         className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
@@ -201,7 +201,7 @@ function VenueOperators() {
                   {operatorInviteStatusLabels[invite.status]}
                 </Badge>
               </div>
-              <p className="mt-2 text-xs text-muted-foreground">
+              <p className="mt-2 text-sm text-muted-foreground">
                 Enviado: {date(invite.sent_at)} · Expira: {date(invite.expires_at)}
               </p>
               {availableInviteActions(invite.status).length > 0 && (

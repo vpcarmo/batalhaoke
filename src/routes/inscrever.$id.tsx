@@ -66,16 +66,27 @@ function PublicChampionshipRegistrationPage() {
           stageName: stageName || null,
           contactPhone: contactPhone || null,
           contactEmail: contactEmail || null,
-          songs: selectedSongs.map(({ type, order, provider, externalId, title, channelName, thumbnailUrl, duration }) => ({
-            type,
-            order,
-            provider,
-            externalId,
-            title,
-            channelName,
-            thumbnailUrl,
-            duration,
-          })),
+          songs: selectedSongs.map(
+            ({
+              type,
+              order,
+              provider,
+              externalId,
+              title,
+              channelName,
+              thumbnailUrl,
+              duration,
+            }) => ({
+              type,
+              order,
+              provider,
+              externalId,
+              title,
+              channelName,
+              thumbnailUrl,
+              duration,
+            }),
+          ),
         },
       });
       setResult(response.status);
@@ -119,7 +130,8 @@ function PublicChampionshipRegistrationPage() {
         <section className="rounded-2xl border bg-card p-5">
           <h1 className="text-xl font-semibold">Inscrições indisponíveis</h1>
           <p role="alert" className="mt-2 text-sm text-muted-foreground">
-            {(registration.error as Error).message || "Este Campeonato não está aceitando inscrições."}
+            {(registration.error as Error).message ||
+              "Este Campeonato não está aceitando inscrições."}
           </p>
         </section>
       ) : result ? (
@@ -146,7 +158,9 @@ function PublicChampionshipRegistrationPage() {
               </p>
             )}
             {event.event_starts_at && (
-              <p className="mt-3 text-sm">Data: {new Date(event.event_starts_at).toLocaleString("pt-BR")}</p>
+              <p className="mt-3 text-sm">
+                Data: {new Date(event.event_starts_at).toLocaleString("pt-BR")}
+              </p>
             )}
             {event.registration_deadline && (
               <p className="mt-1 text-sm">
@@ -159,26 +173,59 @@ function PublicChampionshipRegistrationPage() {
             {event.fee_info && <p className="mt-1 text-sm">Inscrição: {event.fee_info}</p>}
           </section>
 
-          <form onSubmit={(formEvent) => void submit(formEvent)} className="flex flex-col gap-5">
+          <form
+            aria-describedby={error ? "registration-error" : undefined}
+            onSubmit={(formEvent) => void submit(formEvent)}
+            className="flex flex-col gap-5"
+          >
             <section className="rounded-2xl border bg-card p-5">
               <h2 className="text-lg font-semibold">Seus dados</h2>
               <div className="mt-4 flex flex-col gap-4">
                 <div>
                   <Label htmlFor="entry-name">Nome completo</Label>
-                  <Input id="entry-name" className="mt-2" required maxLength={120} value={name} onChange={(event) => setName(event.target.value)} />
+                  <Input
+                    id="entry-name"
+                    className="mt-2"
+                    required
+                    maxLength={120}
+                    value={name}
+                    onChange={(event) => setName(event.target.value)}
+                  />
                 </div>
                 <div>
                   <Label htmlFor="entry-stage-name">Nome artístico (opcional)</Label>
-                  <Input id="entry-stage-name" className="mt-2" maxLength={120} value={stageName} onChange={(event) => setStageName(event.target.value)} />
+                  <Input
+                    id="entry-stage-name"
+                    className="mt-2"
+                    maxLength={120}
+                    value={stageName}
+                    onChange={(event) => setStageName(event.target.value)}
+                  />
                 </div>
                 <div>
                   <Label htmlFor="entry-phone">Telefone</Label>
-                  <Input id="entry-phone" className="mt-2" type="tel" maxLength={40} value={contactPhone} onChange={(event) => setContactPhone(event.target.value)} />
+                  <Input
+                    id="entry-phone"
+                    className="mt-2"
+                    type="tel"
+                    maxLength={40}
+                    value={contactPhone}
+                    onChange={(event) => setContactPhone(event.target.value)}
+                  />
                 </div>
                 <div>
                   <Label htmlFor="entry-email">E-mail</Label>
-                  <Input id="entry-email" className="mt-2" type="email" maxLength={320} value={contactEmail} onChange={(event) => setContactEmail(event.target.value)} />
-                  <p className="mt-1 text-xs text-muted-foreground">Informe ao menos um contato: telefone ou e-mail.</p>
+                  <Input
+                    id="entry-email"
+                    className="mt-2"
+                    type="email"
+                    maxLength={320}
+                    value={contactEmail}
+                    onChange={(event) => setContactEmail(event.target.value)}
+                  />
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Informe ao menos um contato: telefone ou e-mail.
+                  </p>
                 </div>
               </div>
             </section>
@@ -186,7 +233,8 @@ function PublicChampionshipRegistrationPage() {
             <section className="rounded-2xl border bg-card p-5">
               <h2 className="text-lg font-semibold">Músicas escolhidas</h2>
               <p className="mt-1 text-sm text-muted-foreground">
-                Escolha ao menos uma música principal. Você pode adicionar até quatro principais e duas reservas.
+                Escolha ao menos uma música principal. Você pode adicionar até quatro principais e
+                duas reservas.
               </p>
               <div className="mt-4">
                 <Label htmlFor="song-slot">Posição da música</Label>
@@ -198,12 +246,14 @@ function PublicChampionshipRegistrationPage() {
                 >
                   {[1, 2, 3, 4].map((order) => (
                     <option key={`main-${order}`} value={`main:${order}`}>
-                      Principal {order}{songs[`main:${order}`] ? " · já escolhida" : ""}
+                      Principal {order}
+                      {songs[`main:${order}`] ? " · já escolhida" : ""}
                     </option>
                   ))}
                   {[1, 2].map((order) => (
                     <option key={`reserve-${order}`} value={`reserve:${order}`}>
-                      Reserva {order}{songs[`reserve:${order}`] ? " · já escolhida" : ""}
+                      Reserva {order}
+                      {songs[`reserve:${order}`] ? " · já escolhida" : ""}
                     </option>
                   ))}
                 </select>
@@ -213,24 +263,31 @@ function PublicChampionshipRegistrationPage() {
               </div>
               <div className="mt-4 flex flex-col gap-2">
                 {selectedSongs.map((song) => (
-                  <div key={`${song.type}:${song.order}`} className="flex items-center justify-between gap-3 rounded-lg border p-3">
+                  <div
+                    key={`${song.type}:${song.order}`}
+                    className="flex items-center justify-between gap-3 rounded-lg border p-3"
+                  >
                     <div className="min-w-0">
-                      <p className="text-xs font-semibold uppercase text-muted-foreground">
+                      <p className="text-sm font-semibold uppercase text-muted-foreground">
                         {song.type === "main" ? "Principal" : "Reserva"} {song.order}
                       </p>
                       <p className="truncate text-sm font-medium">{song.title}</p>
-                      <p className="truncate text-xs text-muted-foreground">{song.channelName || "Canal não informado"}</p>
+                      <p className="truncate text-sm text-muted-foreground">
+                        {song.channelName || "Canal não informado"}
+                      </p>
                     </div>
                     <Button
                       type="button"
                       variant="ghost"
                       size="icon"
                       aria-label={`Remover ${song.title}`}
-                      onClick={() => setSongs((current) => {
-                        const next = { ...current };
-                        delete next[`${song.type}:${song.order}`];
-                        return next;
-                      })}
+                      onClick={() =>
+                        setSongs((current) => {
+                          const next = { ...current };
+                          delete next[`${song.type}:${song.order}`];
+                          return next;
+                        })
+                      }
                     >
                       <Trash2 className="size-4" />
                     </Button>
@@ -239,8 +296,20 @@ function PublicChampionshipRegistrationPage() {
               </div>
             </section>
 
-            {error && <p role="alert" className="rounded-lg bg-destructive/10 p-3 text-sm text-destructive">{error}</p>}
-            <Button type="submit" className="h-12" disabled={busy || !selectedSongs.some((song) => song.type === "main")}>
+            {error && (
+              <p
+                id="registration-error"
+                role="alert"
+                className="rounded-lg bg-destructive/10 p-3 text-sm text-destructive"
+              >
+                {error}
+              </p>
+            )}
+            <Button
+              type="submit"
+              className="h-12"
+              disabled={busy || !selectedSongs.some((song) => song.type === "main")}
+            >
               {busy ? "Enviando inscrição…" : "Enviar inscrição"}
             </Button>
           </form>

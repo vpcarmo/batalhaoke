@@ -280,7 +280,7 @@ function SessionPage() {
     );
 
   return (
-    <main className="mx-auto flex w-full max-w-2xl flex-col gap-3 px-4 pb-28 pt-4 sm:gap-5 sm:px-6">
+    <main className="pulso-session mx-auto flex w-full max-w-6xl flex-col gap-3 px-4 pb-28 pt-4 sm:gap-5 sm:px-6">
       <header className="order-0 flex items-center justify-between gap-3">
         <Link
           to="/"
@@ -293,14 +293,14 @@ function SessionPage() {
           <p className="font-display text-2xl leading-none">BatalhaOkê</p>
           <p className="truncate text-sm text-muted-foreground">{session.name}</p>
           {session.venue_id && (
-            <p className="truncate text-xs text-muted-foreground">
+            <p className="truncate text-sm text-muted-foreground">
               Estabelecimento:{" "}
               {venues.data?.find((venue) => venue.id === session.venue_id)?.name ?? "Carregando…"}
             </p>
           )}
         </div>
         <span
-          className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold ${session.status === "active" ? "bg-success/15 text-success" : "bg-muted text-muted-foreground"}`}
+          className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-semibold ${session.status === "active" ? "bg-success/15 text-success" : "bg-muted text-muted-foreground"}`}
         >
           <span
             className={`size-2 rounded-full ${session.status === "active" ? "bg-success animate-pulse" : "bg-muted-foreground"}`}
@@ -313,7 +313,7 @@ function SessionPage() {
         <section aria-labelledby="now" className="order-1 rounded-2xl border bg-card p-4 sm:p-5">
           <h2
             id="now"
-            className="text-xs font-semibold uppercase tracking-widest text-muted-foreground"
+            className="text-sm font-semibold uppercase tracking-widest text-muted-foreground"
           >
             {active ? "Apresentação em andamento" : "Próxima apresentação"}
           </h2>
@@ -366,7 +366,7 @@ function SessionPage() {
         <section aria-labelledby="now" className="order-1 rounded-2xl border bg-card p-4 sm:p-5">
           <h2
             id="now"
-            className="text-xs font-semibold uppercase tracking-widest text-muted-foreground"
+            className="text-sm font-semibold uppercase tracking-widest text-muted-foreground"
           >
             Apresentação em andamento
           </h2>
@@ -404,7 +404,7 @@ function SessionPage() {
         <AccordionItem value="display" className="border-0">
           <AccordionTrigger
             id="display"
-            className="min-h-12 py-3 text-left text-xs font-semibold uppercase tracking-widest text-foreground hover:no-underline"
+            className="min-h-12 py-3 text-left text-sm font-semibold uppercase tracking-widest text-foreground hover:no-underline"
           >
             Exibição pública e configurações
           </AccordionTrigger>
@@ -558,10 +558,10 @@ function SessionPage() {
                     {p.participant_number}
                   </span>
                   <div className="min-w-0 flex-1">
-                    <p className="text-xs text-muted-foreground">Cantor {p.participant_number}</p>
+                    <p className="text-sm text-muted-foreground">Cantor {p.participant_number}</p>
                     <p className="truncate font-semibold">{displayName(p)}</p>
                     {pf?.source && (
-                      <p className="truncate text-xs text-muted-foreground">
+                      <p className="truncate text-sm text-muted-foreground">
                         <Music className="mr-1 inline size-3" />
                         {pf.source.title}
                       </p>
@@ -648,7 +648,7 @@ function SessionPage() {
       )}
 
       {import.meta.env.DEV && (
-        <aside className="order-6 rounded-xl border border-dashed p-3 text-xs text-muted-foreground">
+        <aside className="order-6 rounded-xl border border-dashed p-3 text-sm text-muted-foreground">
           <p className="font-semibold">YouTube API (dev)</p>
           <p>
             Chamadas search.list hoje (sem cache): {stats.data?.todayCalls ?? "…"} · Cota estimada:{" "}
@@ -664,7 +664,7 @@ function SessionPage() {
       )}
 
       {session.status === "active" && (
-        <div className="fixed inset-x-0 bottom-0 z-10 border-t bg-background/90 p-3 backdrop-blur">
+        <div className="fixed inset-x-0 bottom-0 z-10 border-t bg-background p-3">
           <Button
             size="lg"
             className="mx-auto flex h-14 w-full max-w-2xl text-base font-semibold"
@@ -769,7 +769,7 @@ function SessionPage() {
               Escaneie com o celular para votar nas apresentações.
             </p>
             {votingCode && (
-              <p className="w-full break-all rounded-lg bg-secondary px-3 py-2 text-xs">
+              <p className="w-full break-all rounded-lg bg-secondary px-3 py-2 text-sm">
                 {voteUrl(votingCode)}
               </p>
             )}
@@ -827,16 +827,16 @@ function StatusOrAction({
 }) {
   if (pf?.status === "active")
     return (
-      <span className="rounded-full bg-primary/20 px-2.5 py-1 text-xs font-semibold text-primary">
+      <span className="rounded-full bg-primary/20 px-2.5 py-1 text-sm font-semibold text-primary">
         No palco · 👍 {pf.like_count}
       </span>
     );
   if (pf?.status === "queued")
-    return <span className="rounded-full bg-secondary px-2.5 py-1 text-xs">Na fila</span>;
+    return <span className="rounded-full bg-secondary px-2.5 py-1 text-sm">Na fila</span>;
   return (
     <div className="flex shrink-0 flex-col items-end gap-1">
       {pf?.status === "completed" && (
-        <span className="text-xs text-muted-foreground">👍 {pf.like_count} votos</span>
+        <span className="text-sm text-muted-foreground">👍 {pf.like_count} votos</span>
       )}
       <Button
         size="sm"
@@ -1155,7 +1155,7 @@ function SingerMusicSheet({
                     Canal: {selected.channelName ?? "—"}
                   </p>
                   {selected.duration && (
-                    <p className="text-xs text-muted-foreground">{selected.duration}</p>
+                    <p className="text-sm text-muted-foreground">{selected.duration}</p>
                   )}
                 </div>
               </div>

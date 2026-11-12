@@ -1,24 +1,27 @@
 @import "tailwindcss" source(none);
 @source "../src";
 @import "tw-animate-css";
+@import "../public/fonts/fonts.css";
 
 @custom-variant dark (&:is(.dark *));
 
-/*
- * Design system definition.
- *
- * The @theme inline block maps CSS custom properties to Tailwind utility
- * classes (e.g. --color-primary -> bg-primary, text-primary).
- *
- * The :root and .dark blocks define the actual color values using oklch.
- * All colors MUST use oklch format.
- *
- * To add a new semantic color:
- * 1. Add the variable to :root (light value) and .dark (dark value)
- * 2. Register it in @theme inline as --color-<name>: var(--<name>)
- */
+/* Pulso: shared hexadecimal tokens also supported by Chromium 68. */
 
 @theme inline {
+  --text-xs: var(--type-caption);
+  --text-xs--line-height: 16px;
+  --text-sm: var(--type-label);
+  --text-sm--line-height: 20px;
+  --text-base: var(--type-body);
+  --text-base--line-height: 24px;
+  --text-lg: var(--type-body-large);
+  --text-lg--line-height: 28px;
+  --text-2xl: var(--type-section);
+  --text-2xl--line-height: 30px;
+  --text-3xl: var(--type-page);
+  --text-3xl--line-height: 38px;
+  --text-4xl: var(--type-display);
+  --text-4xl--line-height: 44px;
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -46,8 +49,14 @@
   --color-warning: var(--warning);
   --color-info: var(--info);
   --color-gold: var(--gold);
-  --font-display: "Bebas Neue", Impact, sans-serif;
-  --font-sans: "Barlow", system-ui, sans-serif;
+  --color-competitor-a: var(--competitor-a);
+  --color-competitor-b: var(--competitor-b);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-info-foreground: var(--info-foreground);
+  --font-weight-medium: 600;
+  --font-display: "Barlow Condensed", "Arial Narrow", sans-serif;
+  --font-sans: "Source Sans 3", "Pulso Sans Fallback", "Segoe UI", Arial, sans-serif;
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
@@ -74,17 +83,22 @@ html[data-tv-page] body,
 html[data-tv-page] #app {
   min-height: 100%;
 }
-html[data-tv-page] body { margin: 0; }
+html[data-tv-page] body {
+  margin: 0;
+}
 html[data-tv-page] main.tv-screen {
   width: 100%;
   height: 100vh;
   height: 100dvh;
   min-height: 0;
+  padding: 24px;
   padding: clamp(16px, 2.2vw, 36px);
+  gap: 16px;
   gap: clamp(12px, 1.6vh, 22px);
-  overflow: visible;
+  overflow: hidden;
 }
 html[data-tv-page] .tv-brand {
+  flex: 0 0 56px;
   flex: 0 0 clamp(48px, 7vh, 76px);
   min-height: 48px;
   padding-right: 76px;
@@ -97,67 +111,147 @@ html[data-tv-page] .tv-fullscreen {
   place-items: center;
   padding: 16px;
   z-index: 2;
-  background: rgba(255,255,255,.06);
+  background: rgba(255, 255, 255, 0.06);
 }
-html[data-tv-page] .tv-fullscreen:focus-visible { outline: 3px solid var(--ring); outline-offset: 3px; }
-html[data-tv-page] .tv-content { width: 100%; min-width: 0; }
-html[data-tv-page] .tv-playing-inner { width: 100%; height: 100%; grid-template-columns: minmax(0, 3fr) minmax(250px, 1fr); grid-template-rows: minmax(0, 1fr); gap: clamp(20px, 2vw, 40px); }
-html[data-tv-page] .tv-video { grid-column: 1; grid-row: 1; width: 100%; max-width: none; align-self: center; }
-html[data-tv-page] .tv-video > div:first-child { width: 100%; min-width: 0; max-height: calc(100vh - 150px); max-height: calc(100dvh - 150px); }
-html[data-tv-page] .tv-performance-panel { grid-column: 2; grid-row: 1; min-width: 0; overflow-wrap: anywhere; }
-html[data-tv-page] .tv-playback-qr { width: 100%; }
-html[data-tv-page] .tv-playback-qr > div { max-width: min(100%, 240px); padding: clamp(6px, .8vw, 12px); }
-html[data-tv-page] .tv-playback-qr svg { width: min(100%, 220px); height: auto; }
-html[data-tv-page] .tv-audio-prompt { flex: 0 0 auto; min-height: 56px; max-width: 100%; padding: 10px 18px; }
+html[data-tv-page] .tv-fullscreen:focus-visible {
+  outline: 3px solid var(--ring);
+  outline-offset: 3px;
+}
+html[data-tv-page] .tv-content {
+  width: 100%;
+  min-width: 0;
+}
+html[data-tv-page] .tv-playing-inner {
+  width: 100%;
+  height: 100%;
+  grid-template-columns: minmax(0, 3fr) minmax(250px, 1fr);
+  grid-template-rows: minmax(0, 1fr);
+  gap: clamp(20px, 2vw, 40px);
+}
+html[data-tv-page] .tv-video {
+  grid-column: 1;
+  grid-row: 1;
+  width: 100%;
+  max-width: none;
+  align-self: center;
+}
+html[data-tv-page] .tv-video > div:first-child {
+  width: 100%;
+  min-width: 0;
+  max-height: calc(100vh - 150px);
+  max-height: calc(100dvh - 150px);
+}
+html[data-tv-page] .tv-performance-panel {
+  grid-column: 2;
+  grid-row: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+html[data-tv-page] .tv-playback-qr {
+  width: 100%;
+}
+html[data-tv-page] .tv-playback-qr > div {
+  max-width: min(100%, 240px);
+  padding: clamp(6px, 0.8vw, 12px);
+}
+html[data-tv-page] .tv-playback-qr svg {
+  width: min(100%, 220px);
+  height: auto;
+}
+html[data-tv-page] .tv-audio-prompt {
+  flex: 0 0 auto;
+  min-height: 56px;
+  max-width: 100%;
+  padding: 10px 18px;
+}
 @media (max-width: 900px), (max-height: 600px) {
-  html[data-tv-page] .tv-playing-inner { grid-template-columns: minmax(0, 2.2fr) minmax(210px, 1fr); gap: 16px; }
-  html[data-tv-page] .tv-performance-panel { font-size: .9em; }
-  html[data-tv-page] .tv-playback-qr svg { width: min(100%, 170px); }
+  html[data-tv-page] .tv-playing-inner {
+    grid-template-columns: minmax(0, 2.2fr) minmax(210px, 1fr);
+    gap: 16px;
+  }
+  html[data-tv-page] .tv-performance-panel {
+    font-size: 0.9em;
+  }
+  html[data-tv-page] .tv-playback-qr svg {
+    width: min(100%, 170px);
+  }
 }
 
 :root {
-  /* BatalhaOkê "Arena" palette: broadcast navy stage, championship gold as the
-     brand/primary action, electric blue as the challenger/info voice. */
-  --radius: 0.9rem;
-  --background: oklch(0.15 0.03 262);
-  --foreground: oklch(0.97 0.008 85);
-  --card: oklch(0.2 0.035 262);
-  --card-foreground: oklch(0.97 0.008 85);
-  --popover: oklch(0.21 0.035 262);
-  --popover-foreground: oklch(0.97 0.008 85);
-  --primary: oklch(0.83 0.155 82);
-  --primary-foreground: oklch(0.12 0.04 262);
-  --secondary: oklch(0.26 0.04 262);
-  --secondary-foreground: oklch(0.97 0.008 85);
-  --muted: oklch(0.24 0.035 262);
-  --muted-foreground: oklch(0.74 0.025 262);
-  --accent: oklch(0.72 0.15 248);
-  --accent-foreground: oklch(0.15 0.03 262);
-  --destructive: oklch(0.65 0.21 25);
-  --destructive-foreground: oklch(0.98 0 0);
-  --success: oklch(0.78 0.17 152);
-  --warning: oklch(0.8 0.16 62);
-  --info: oklch(0.72 0.15 248);
-  --gold: oklch(0.83 0.155 82);
-  --border: oklch(1 0 0 / 11%);
-  --input: oklch(1 0 0 / 17%);
-  --ring: oklch(0.83 0.155 82);
-  --chart-1: oklch(0.83 0.155 82);
-  --chart-2: oklch(0.72 0.15 248);
-  --chart-3: oklch(0.78 0.17 152);
-  --chart-4: oklch(0.65 0.21 25);
-  --chart-5: oklch(0.7 0.05 262);
-  --sidebar: oklch(0.2 0.035 262);
-  --sidebar-foreground: oklch(0.97 0.008 85);
-  --sidebar-primary: oklch(0.83 0.155 82);
-  --sidebar-primary-foreground: oklch(0.12 0.04 262);
-  --sidebar-accent: oklch(0.26 0.04 262);
-  --sidebar-accent-foreground: oklch(0.97 0.008 85);
-  --sidebar-border: oklch(1 0 0 / 11%);
-  --sidebar-ring: oklch(0.83 0.155 82);
-  /* Two overhead spotlights (warm gold + cool blue) over the navy stage. */
-  --gradient-stage: radial-gradient(70% 55% at 22% -12%, oklch(0.55 0.12 80 / 22%), transparent 62%), radial-gradient(70% 55% at 80% -12%, oklch(0.5 0.15 250 / 26%), transparent 62%), radial-gradient(120% 70% at 50% 110%, oklch(0.24 0.06 262 / 70%), transparent 70%);
-  --shadow-glow: 0 10px 40px -12px oklch(0.83 0.155 82 / 50%);
+  --font-display: "Barlow Condensed", "Arial Narrow", sans-serif;
+  --font-sans: "Source Sans 3", "Pulso Sans Fallback", "Segoe UI", Arial, sans-serif;
+  --radius: 0.75rem;
+  --background: #08121f;
+  --foreground: #f5f8fc;
+  --card: #111e30;
+  --card-foreground: #f5f8fc;
+  --popover: #111e30;
+  --popover-foreground: #f5f8fc;
+  --primary: #45e0cf;
+  --primary-hover: #6debdd;
+  --primary-active: #2dc3b4;
+  --primary-foreground: #07111f;
+  --secondary: #1a2b42;
+  --secondary-foreground: #f5f8fc;
+  --muted: #1a2b42;
+  --muted-foreground: #a8b5c9;
+  --accent: #a78bfa;
+  --accent-foreground: #07111f;
+  --destructive: #ff8b98;
+  --destructive-foreground: #07111f;
+  --success: #69dea5;
+  --success-foreground: #07111f;
+  --warning: #ffd27a;
+  --warning-foreground: #07111f;
+  --info: #7ac7ff;
+  --info-foreground: #07111f;
+  --competitor-a: #7ac7ff;
+  --competitor-b: #e6acff;
+  --gold: #f4d17a;
+  --disabled: #26354a;
+  --border: #40536e;
+  --input: #607593;
+  --ring: #45e0cf;
+  --chart-1: #45e0cf;
+  --chart-2: #a78bfa;
+  --chart-3: #69dea5;
+  --chart-4: #7ac7ff;
+  --chart-5: #f4d17a;
+  --sidebar: #111e30;
+  --sidebar-foreground: #f5f8fc;
+  --sidebar-primary: #45e0cf;
+  --sidebar-primary-foreground: #07111f;
+  --sidebar-accent: #1a2b42;
+  --sidebar-accent-foreground: #f5f8fc;
+  --sidebar-border: #40536e;
+  --sidebar-ring: #45e0cf;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --control-compact: 36px;
+  --control-default: 44px;
+  --control-operational: 52px;
+  --control-vote: 64px;
+  --type-caption: 12px;
+  --type-label: 14px;
+  --type-body: 16px;
+  --type-body-large: 18px;
+  --type-section: 24px;
+  --type-page: 32px;
+  --type-display: 40px;
+  --shadow-card: 0 8px 28px rgba(0, 0, 0, 0.18);
+  --shadow-glow: 0 8px 30px -12px rgba(69, 224, 207, 0.3);
+  --motion-fast: 140ms;
+  --motion-normal: 220ms;
+  --tv-support: 24px;
+  --tv-song: 32px;
+  --tv-participant: 64px;
+  --tv-title: 80px;
+  --tv-score: 112px;
+  --gradient-stage: none;
 }
 
 @layer base {
@@ -176,33 +270,429 @@ html[data-tv-page] .tv-audio-prompt { flex: 0 0 auto; min-height: 56px; max-widt
   }
 }
 
-/* Fallback for browsers without oklch() (LG webOS 5 / Chromium 68). Modern browsers keep the oklch values. */
-@supports not (color: oklch(0 0 0)) {
-  :root {
-    --background: #0b1120; --foreground: #f8f5ee; --card: #131b2e; --card-foreground: #f8f5ee;
-    --popover: #151e32; --popover-foreground: #f8f5ee; --primary: #f2b730; --primary-foreground: #050b18;
-    --secondary: #1e2840; --secondary-foreground: #f8f5ee; --muted: #1a2338; --muted-foreground: #a7b0c4;
-    --accent: #4b9bff; --accent-foreground: #0b1120; --destructive: #ef4c48; --destructive-foreground: #f8f8f8;
-    --success: #3fd38a; --warning: #f5a23a; --info: #4b9bff; --gold: #f2b730;
-    --border: rgba(255,255,255,0.11); --input: rgba(255,255,255,0.17); --ring: #f2b730;
-    --chart-1: #f2b730; --chart-2: #4b9bff; --chart-3: #3fd38a; --chart-4: #ef4c48; --chart-5: #9aa3b8;
-    --sidebar: #131b2e; --sidebar-foreground: #f8f5ee; --sidebar-primary: #f2b730; --sidebar-primary-foreground: #050b18;
-    --sidebar-accent: #1e2840; --sidebar-accent-foreground: #f8f5ee; --sidebar-border: rgba(255,255,255,0.11); --sidebar-ring: #f2b730;
-    --gradient-stage: none; --shadow-glow: 0 10px 40px -12px rgba(242,183,48,0.5);
-  }
-  html, body { background-color: #0b1120; color: #f8f5ee; }
+@utility font-display {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+@utility shadow-glow {
+  box-shadow: var(--shadow-glow);
 }
 
-@utility font-display { font-family: var(--font-display); letter-spacing: 0.02em; }
-@utility shadow-glow { box-shadow: var(--shadow-glow); }
+@font-face {
+  font-family: "Pulso Sans Fallback";
+  src: local("Arial");
+  size-adjust: 93%;
+  ascent-override: 105%;
+  descent-override: 28%;
+  line-gap-override: 0%;
+}
+
+/* Pulso contracts live outside layers as well: legacy TV browsers ignore layers. */
+body {
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1.5;
+  background: #08121f;
+  color: #f5f8fc;
+}
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+}
+:focus-visible {
+  outline: 3px solid #45e0cf;
+  outline-offset: 3px;
+}
+button,
+a,
+input,
+select,
+textarea {
+  -webkit-tap-highlight-color: transparent;
+}
+button:disabled,
+input:disabled,
+select:disabled,
+textarea:disabled {
+  opacity: 1;
+}
+input,
+textarea,
+select {
+  scroll-margin-bottom: 100px;
+}
+input[aria-invalid="true"],
+textarea[aria-invalid="true"] {
+  border-color: var(--destructive);
+}
+input:not([type="checkbox"]):not([type="radio"]),
+select,
+textarea {
+  font-size: 16px;
+}
+select {
+  min-height: 44px;
+  background-color: var(--card);
+  color: var(--foreground);
+}
+html:not([data-tv-page]) main {
+  min-width: 0;
+}
+html:not([data-tv-page]) main > header {
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 24px;
+}
+html:not([data-tv-page]) main h1 {
+  font-family: var(--font-display);
+  font-size: 32px;
+  line-height: 38px;
+  font-weight: 600;
+}
+html:not([data-tv-page]) main h2 {
+  font-family: var(--font-display);
+  font-size: 24px;
+  line-height: 30px;
+  font-weight: 600;
+}
+html:not([data-tv-page]) main .text-xs {
+  font-size: 14px;
+  line-height: 20px;
+}
+html:not([data-tv-page]) main [role="alert"] {
+  padding: 12px 16px;
+  border: 1px solid var(--destructive);
+  border-radius: 8px;
+  background: #111e30;
+  color: var(--destructive);
+}
+html:not([data-tv-page]) main [role="status"] {
+  line-height: 1.5;
+}
+html:not([data-tv-page]) table {
+  font-size: 16px;
+  font-variant-numeric: tabular-nums;
+}
+html:not([data-tv-page]) th {
+  color: var(--muted-foreground);
+  font-weight: 600;
+}
+html:not([data-tv-page]) td,
+html:not([data-tv-page]) th {
+  padding: 12px;
+}
+.pulso-home > * {
+  min-width: 0;
+}
+.pulso-home .pulso-home-header {
+  text-align: left;
+}
+.pulso-home .pulso-home-header > div {
+  margin-left: 0;
+  box-shadow: none;
+}
+html:not([data-tv-page]) .pulso-home-header h1 {
+  font-size: 48px;
+  line-height: 1;
+  font-weight: 700;
+}
+.pulso-session-actions {
+  align-self: start;
+}
+.pulso-session [aria-labelledby="now"] {
+  border-left: 4px solid var(--primary);
+}
+.pulso-session [aria-labelledby="order"] {
+  padding: 20px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+.pulso-login {
+  background: radial-gradient(ellipse at 12% 0, #1a2b42, #08121f 65%);
+}
+.pulso-login > div {
+  border-top: 3px solid var(--accent);
+  box-shadow: var(--shadow-card);
+}
+.pulso-finance {
+  display: flex;
+  flex-direction: column;
+  font-variant-numeric: tabular-nums;
+}
+.pulso-finance > header {
+  order: -3;
+}
+.pulso-finance > .pulso-account {
+  order: -2;
+}
+.pulso-account article:first-child {
+  border-top: 3px solid var(--primary);
+}
+.pulso-account article:last-child {
+  border-top: 3px solid var(--info);
+}
+.pulso-finance button {
+  min-height: 44px;
+  padding: 10px 16px;
+  background: var(--secondary);
+  font-weight: 600;
+  color: var(--foreground);
+}
+.pulso-finance button:hover {
+  border-color: var(--primary);
+}
+.pulso-finance button:focus-visible {
+  outline: 3px solid var(--ring);
+  outline-offset: 3px;
+}
+.pulso-admin {
+  font-variant-numeric: tabular-nums;
+}
+.pulso-admin nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.pulso-admin nav a {
+  min-height: 44px;
+  padding: 8px 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--card);
+}
+.pulso-admin > section > header {
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+}
+.pulso-vote button {
+  min-height: 64px;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+.pulso-vote button:disabled {
+  background: var(--disabled);
+  color: var(--muted-foreground);
+  box-shadow: none;
+}
+.session-qr {
+  background: #fff;
+  padding: 12px;
+  flex-shrink: 0;
+  max-width: 100%;
+}
+.session-qr svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+@media (min-width: 900px) {
+  .pulso-home {
+    grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+  }
+  .pulso-home-header {
+    grid-column: 1 / -1;
+  }
+  .pulso-home .pulso-session-actions {
+    grid-column: 1;
+    grid-row: 2 / span 2;
+  }
+  .pulso-home > section:not(.pulso-session-actions) {
+    grid-column: 2;
+  }
+  .pulso-home > a {
+    margin-left: 0;
+  }
+}
+@media (min-width: 1100px) {
+  .pulso-session {
+    display: grid;
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+    align-items: start;
+  }
+  .pulso-session > header {
+    grid-column: 1 / -1;
+  }
+  .pulso-session > [aria-labelledby="now"] {
+    grid-column: 1;
+  }
+  .pulso-session > [aria-labelledby="order"] {
+    grid-column: 2;
+    grid-row: 2 / span 4;
+  }
+}
+@media (max-width: 480px) {
+  .pulso-home [class*="justify-between"],
+  .pulso-finance [class*="justify-between"] {
+    flex-wrap: wrap;
+  }
+  .pulso-home .shrink-0 {
+    flex-shrink: 1;
+    flex-wrap: wrap;
+  }
+  .pulso-vote .h-40 {
+    height: 128px;
+    flex-direction: column;
+  }
+  .pulso-finance article {
+    overflow-wrap: anywhere;
+  }
+}
+
+/* Broadcast scenery has no presence in the live player layout. */
+.tv-screen {
+  position: relative;
+  isolation: isolate;
+  background: #08121f;
+}
+.pulso-arena-backdrop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+  background: #08121f;
+}
+.pulso-arena-backdrop img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.48;
+}
+.tv-opening-copy {
+  max-width: 1200px;
+  padding: 24px 40px;
+  border-radius: 16px;
+  background: rgba(8, 18, 31, 0.94);
+}
+html[data-tv-page] .tv-content {
+  grid-gap: 24px;
+}
+html[data-tv-page] .tv-performance-panel {
+  padding: 20px;
+  border-left: 3px solid #a78bfa;
+  background: #111e30;
+}
+html[data-tv-page] .tv-performance-panel h1 {
+  font-size: 48px;
+  line-height: 1.06;
+  color: #f5f8fc;
+  overflow-wrap: break-word;
+}
+html[data-tv-page] .tv-performance-panel > p:first-child {
+  color: #a8b5c9;
+  font-size: 20px;
+}
+html[data-tv-page] .tv-performance-panel > p {
+  font-size: 24px;
+  line-height: 32px;
+}
+html[data-tv-page] .tv-performance-panel > p.font-display {
+  font-size: 32px;
+  line-height: 40px;
+}
+html[data-tv-page] .tv-video {
+  background: #08121f;
+}
+html[data-tv-page] .tv-brand {
+  border-bottom: 1px solid #40536e;
+}
+html[data-tv-page] .tv-brand p {
+  font-weight: 700;
+}
+html[data-tv-page] .tv-champion h1,
+html[data-tv-page] .tv-champion > p:first-child {
+  color: #f4d17a;
+}
+html[data-tv-page] .text-competitor-a {
+  color: #7ac7ff;
+}
+html[data-tv-page] .text-competitor-b {
+  color: #e6acff;
+}
+html[data-tv-page] .text-gold {
+  color: #f4d17a;
+}
+html[data-tv-page] .border-gold\/60 {
+  border-color: #f4d17a;
+}
+html[data-tv-page] .tv-opening {
+  grid-gap: 0;
+}
+html[data-tv-page] .tv-opening .tv-brand {
+  justify-content: center;
+  padding-bottom: 16px;
+}
+@media (min-width: 1600px) {
+  html[data-tv-page] .tv-performance-panel h1 {
+    font-size: 64px;
+    line-height: 68px;
+  }
+  html[data-tv-page] .tv-performance-panel > p:first-child {
+    font-size: 24px;
+    line-height: 32px;
+  }
+}
+@media (max-width: 1400px), (max-height: 800px) {
+  html[data-tv-page] .tv-performance-panel {
+    padding: 12px;
+  }
+  html[data-tv-page] .tv-performance-panel h1 {
+    font-size: 40px;
+  }
+  html[data-tv-page] .tv-performance-panel > p {
+    font-size: 18px;
+    line-height: 24px;
+  }
+  html[data-tv-page] .tv-performance-panel > p.font-display {
+    font-size: 24px;
+    line-height: 30px;
+  }
+  html[data-tv-page] .tv-playback-qr svg {
+    width: 150px;
+    height: auto;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
 
 /* Clean print sheet for the voting QR (A4 / table display) */
 @media print {
-  @page { size: A4 portrait; margin: 15mm; }
-  body { background: #fff !important; color: #000 !important; }
-  .no-print { display: none !important; }
-  .print-sheet { min-height: auto; max-width: none; padding: 0; }
-  .print-card { border-color: #000 !important; color: #000 !important; break-inside: avoid; margin-top: 20mm; }
+  @page {
+    size: A4 portrait;
+    margin: 15mm;
+  }
+  body {
+    background: #fff !important;
+    color: #000 !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+  .print-sheet {
+    min-height: auto;
+    max-width: none;
+    padding: 0;
+  }
+  .print-card {
+    border-color: #000 !important;
+    color: #000 !important;
+    break-inside: avoid;
+    margin-top: 20mm;
+  }
 }
 
 /* TV-only legacy presentation. Outside all layers: Chromium 68 ignores @layer.
@@ -210,11 +700,11 @@ html[data-tv-page] .tv-audio-prompt { flex: 0 0 auto; min-height: 56px; max-widt
  * PlaybackPlayer and SessionQr; grid gaps work in Chrome 68, flex gaps do not. */
 @supports not (color: oklch(0 0 0)) {
   html[data-tv-page] {
-    --font-display: "Bebas Neue", Impact, sans-serif;
-    --font-sans: "Barlow", system-ui, sans-serif;
-    --tv-accent-soft: rgba(75, 155, 255, 0.15);
-    --tv-error-soft: rgba(239, 76, 72, 0.1);
-    --tv-error-border: rgba(239, 76, 72, 0.5);
+    --font-display: "Barlow Condensed", "Arial Narrow", sans-serif;
+    --font-sans: "Source Sans 3", "Pulso Sans Fallback", "Segoe UI", Arial, sans-serif;
+    --tv-accent-soft: rgba(167, 139, 250, 0.15);
+    --tv-error-soft: rgba(255, 139, 152, 0.1);
+    --tv-error-border: rgba(255, 139, 152, 0.5);
     --tv-qr-paper: #fff;
     --radius-xl: calc(var(--radius) + 4px);
     --radius-lg: var(--radius);
@@ -236,9 +726,16 @@ html[data-tv-page] .tv-audio-prompt { flex: 0 0 auto; min-height: 56px; max-widt
     border: 0 solid var(--border);
   }
   html[data-tv-page] main h1,
-  html[data-tv-page] main p { margin: 0; font-size: inherit; font-weight: inherit; }
+  html[data-tv-page] main p {
+    margin: 0;
+    font-size: inherit;
+    font-weight: inherit;
+  }
   html[data-tv-page] main svg,
-  html[data-tv-page] main iframe { display: block; vertical-align: middle; }
+  html[data-tv-page] main iframe {
+    display: block;
+    vertical-align: middle;
+  }
   html[data-tv-page] main button {
     font: inherit;
     color: inherit;
@@ -246,112 +743,541 @@ html[data-tv-page] .tv-audio-prompt { flex: 0 0 auto; min-height: 56px; max-widt
     padding: 0;
     cursor: pointer;
   }
-  html[data-tv-page] main.min-h-dvh { min-height: 100vh; min-height: 100dvh; }
+  html[data-tv-page] main.min-h-dvh {
+    min-height: 100vh;
+    min-height: 100dvh;
+  }
   html[data-tv-page] main .grid,
-  html[data-tv-page] main.grid { display: grid; }
+  html[data-tv-page] main.grid {
+    display: grid;
+  }
   html[data-tv-page] main .flex,
-  html[data-tv-page] main.flex { display: flex; }
-  html[data-tv-page] main .inline-flex { display: inline-flex; }
-  html[data-tv-page] main .inline-block { display: inline-block; }
+  html[data-tv-page] main.flex {
+    display: flex;
+  }
+  html[data-tv-page] main .inline-flex {
+    display: inline-flex;
+  }
+  html[data-tv-page] main .inline-block {
+    display: inline-block;
+  }
   html[data-tv-page] main.flex-col,
-  html[data-tv-page] main .flex-col { flex-direction: column; }
-  html[data-tv-page] main .flex-1 { flex: 1 1 0%; }
-  html[data-tv-page] main .items-center { align-items: center; }
-  html[data-tv-page] main .justify-center { justify-content: center; }
-  html[data-tv-page] main .justify-between { justify-content: space-between; }
+  html[data-tv-page] main .flex-col {
+    flex-direction: column;
+  }
+  html[data-tv-page] main .flex-1 {
+    flex: 1 1 0%;
+  }
+  html[data-tv-page] main .items-center {
+    align-items: center;
+  }
+  html[data-tv-page] main .justify-center {
+    justify-content: center;
+  }
+  html[data-tv-page] main .justify-between {
+    justify-content: space-between;
+  }
   html[data-tv-page] main.place-items-center,
-  html[data-tv-page] main .place-items-center { align-items: center; justify-items: center; }
+  html[data-tv-page] main .place-items-center {
+    align-items: center;
+    justify-items: center;
+  }
   html[data-tv-page] main.text-center,
-  html[data-tv-page] main .text-center { text-align: center; }
-  html[data-tv-page] main.gap-6 > * + * { margin-top: 1.5rem; }
-  html[data-tv-page] main .grid.gap-8 { grid-gap: 2rem; }
+  html[data-tv-page] main .text-center {
+    text-align: center;
+  }
+  html[data-tv-page] main.gap-6 > * + * {
+    margin-top: 1.5rem;
+  }
+  html[data-tv-page] main .grid.gap-8 {
+    grid-gap: 2rem;
+  }
   html[data-tv-page] main .flex.gap-3:not(.flex-col) > * + *,
-  html[data-tv-page] main .inline-flex.gap-3 > * + * { margin-left: 0.75rem; }
-  html[data-tv-page] main .flex.flex-col.gap-3 > * + * { margin-top: 0.75rem; }
-  html[data-tv-page] main .flex.gap-2 > * + * { margin-left: 0.5rem; }
-  html[data-tv-page] main.p-5 { padding: 1.25rem; }
-  html[data-tv-page] main.p-8 { padding: 2rem; }
-  html[data-tv-page] main .p-3 { padding: 0.75rem; }
-  html[data-tv-page] main .px-5 { padding-left: 1.25rem; padding-right: 1.25rem; }
-  html[data-tv-page] main .px-6 { padding-left: 1.5rem; padding-right: 1.5rem; }
-  html[data-tv-page] main .py-2 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
-  html[data-tv-page] main .py-3 { padding-top: 0.75rem; padding-bottom: 0.75rem; }
-  html[data-tv-page] main .mt-2 { margin-top: 0.5rem; }
-  html[data-tv-page] main .mt-4 { margin-top: 1rem; }
-  html[data-tv-page] main .mt-6 { margin-top: 1.5rem; }
-  html[data-tv-page] main .mx-auto { margin-left: auto; margin-right: auto; }
-  html[data-tv-page] main .font-display { font-family: var(--font-display); letter-spacing: 0.02em; }
-  html[data-tv-page] main .font-semibold { font-weight: 600; }
-  html[data-tv-page] main .uppercase { text-transform: uppercase; }
-  html[data-tv-page] main .tracking-widest { letter-spacing: 0.1em; }
-  html[data-tv-page] main .text-xs { font-size: 0.75rem; line-height: 1rem; }
-  html[data-tv-page] main .text-sm { font-size: 0.875rem; line-height: 1.25rem; }
-  html[data-tv-page] main .text-lg { font-size: 1.125rem; line-height: 1.75rem; }
-  html[data-tv-page] main .text-xl { font-size: 1.25rem; line-height: 1.75rem; }
-  html[data-tv-page] main .text-2xl { font-size: 1.5rem; line-height: 2rem; }
-  html[data-tv-page] main .text-3xl { font-size: 1.875rem; line-height: 2.25rem; }
-  html[data-tv-page] main .text-4xl { font-size: 2.25rem; line-height: 2.5rem; }
-  html[data-tv-page] main .text-5xl { font-size: 3rem; line-height: 1; }
-  html[data-tv-page] main .text-6xl { font-size: 3.75rem; line-height: 1; }
-  html[data-tv-page] main .leading-none { line-height: 1; }
-  html[data-tv-page] main .leading-tight { line-height: 1.25; }
-  html[data-tv-page] main .text-primary { color: var(--primary); }
-  html[data-tv-page] main .text-muted-foreground { color: var(--muted-foreground); }
-  html[data-tv-page] main .text-accent { color: var(--accent); }
-  html[data-tv-page] main .text-destructive { color: var(--destructive); }
-  html[data-tv-page] main .bg-muted { background-color: var(--muted); }
-  html[data-tv-page] main .bg-white { background-color: var(--tv-qr-paper); }
-  html[data-tv-page] main .bg-accent { background-color: var(--accent); }
-  html[data-tv-page] main .bg-accent\/15 { background-color: var(--tv-accent-soft); }
-  html[data-tv-page] main .bg-destructive\/10 { background-color: var(--tv-error-soft); }
-  html[data-tv-page] main .border { border-width: 1px; }
-  html[data-tv-page] main .border-destructive\/50 { border-color: var(--tv-error-border); }
-  html[data-tv-page] main .rounded-full { border-radius: 9999px; }
-  html[data-tv-page] main .rounded-xl { border-radius: var(--radius-xl); }
-  html[data-tv-page] main .rounded-lg { border-radius: var(--radius-lg); }
-  html[data-tv-page] main .size-3 { width: 0.75rem; height: 0.75rem; flex-shrink: 0; }
-  html[data-tv-page] main .size-8 { width: 2rem; height: 2rem; flex-shrink: 0; }
-  html[data-tv-page] main .w-full { width: 100%; }
-  html[data-tv-page] main .min-w-\[280px\] { min-width: 280px; }
-  html[data-tv-page] main .overflow-hidden { overflow: hidden; }
-  html[data-tv-page] main .relative { position: relative; }
+  html[data-tv-page] main .inline-flex.gap-3 > * + * {
+    margin-left: 0.75rem;
+  }
+  html[data-tv-page] main .flex.flex-col.gap-3 > * + * {
+    margin-top: 0.75rem;
+  }
+  html[data-tv-page] main .flex.gap-2 > * + * {
+    margin-left: 0.5rem;
+  }
+  html[data-tv-page] main.p-5 {
+    padding: 1.25rem;
+  }
+  html[data-tv-page] main.p-8 {
+    padding: 2rem;
+  }
+  html[data-tv-page] main .p-3 {
+    padding: 0.75rem;
+  }
+  html[data-tv-page] main .px-5 {
+    padding-left: 1.25rem;
+    padding-right: 1.25rem;
+  }
+  html[data-tv-page] main .px-6 {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+  html[data-tv-page] main .py-2 {
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+  }
+  html[data-tv-page] main .py-3 {
+    padding-top: 0.75rem;
+    padding-bottom: 0.75rem;
+  }
+  html[data-tv-page] main .mt-2 {
+    margin-top: 0.5rem;
+  }
+  html[data-tv-page] main .mt-4 {
+    margin-top: 1rem;
+  }
+  html[data-tv-page] main .mt-6 {
+    margin-top: 1.5rem;
+  }
+  html[data-tv-page] main .mx-auto {
+    margin-left: auto;
+    margin-right: auto;
+  }
+  html[data-tv-page] main .font-display {
+    font-family: var(--font-display);
+    letter-spacing: 0.02em;
+  }
+  html[data-tv-page] main .font-semibold {
+    font-weight: 600;
+  }
+  html[data-tv-page] main .uppercase {
+    text-transform: uppercase;
+  }
+  html[data-tv-page] main .tracking-widest {
+    letter-spacing: 0.1em;
+  }
+  html[data-tv-page] main .text-xs {
+    font-size: 0.75rem;
+    line-height: 1rem;
+  }
+  html[data-tv-page] main .text-sm {
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+  }
+  html[data-tv-page] main .text-lg {
+    font-size: 1.125rem;
+    line-height: 1.75rem;
+  }
+  html[data-tv-page] main .text-xl {
+    font-size: 1.25rem;
+    line-height: 1.75rem;
+  }
+  html[data-tv-page] main .text-2xl {
+    font-size: 1.5rem;
+    line-height: 2rem;
+  }
+  html[data-tv-page] main .text-3xl {
+    font-size: 1.875rem;
+    line-height: 2.25rem;
+  }
+  html[data-tv-page] main .text-4xl {
+    font-size: 2.25rem;
+    line-height: 2.5rem;
+  }
+  html[data-tv-page] main .text-5xl {
+    font-size: 3rem;
+    line-height: 1;
+  }
+  html[data-tv-page] main .text-6xl {
+    font-size: 3.75rem;
+    line-height: 1;
+  }
+  html[data-tv-page] main .leading-none {
+    line-height: 1;
+  }
+  html[data-tv-page] main .leading-tight {
+    line-height: 1.25;
+  }
+  html[data-tv-page] main .text-primary {
+    color: var(--primary);
+  }
+  html[data-tv-page] main .text-muted-foreground {
+    color: var(--muted-foreground);
+  }
+  html[data-tv-page] main .text-accent {
+    color: var(--accent);
+  }
+  html[data-tv-page] main .text-destructive {
+    color: var(--destructive);
+  }
+  html[data-tv-page] main .bg-muted {
+    background-color: var(--muted);
+  }
+  html[data-tv-page] main .bg-white {
+    background-color: var(--tv-qr-paper);
+  }
+  html[data-tv-page] main .bg-accent {
+    background-color: var(--accent);
+  }
+  html[data-tv-page] main .bg-accent\/15 {
+    background-color: var(--tv-accent-soft);
+  }
+  html[data-tv-page] main .bg-destructive\/10 {
+    background-color: var(--tv-error-soft);
+  }
+  html[data-tv-page] main .border {
+    border-width: 1px;
+  }
+  html[data-tv-page] main .border-destructive\/50 {
+    border-color: var(--tv-error-border);
+  }
+  html[data-tv-page] main .rounded-full {
+    border-radius: 9999px;
+  }
+  html[data-tv-page] main .rounded-xl {
+    border-radius: var(--radius-xl);
+  }
+  html[data-tv-page] main .rounded-lg {
+    border-radius: var(--radius-lg);
+  }
+  html[data-tv-page] main .size-3 {
+    width: 0.75rem;
+    height: 0.75rem;
+    flex-shrink: 0;
+  }
+  html[data-tv-page] main .size-8 {
+    width: 2rem;
+    height: 2rem;
+    flex-shrink: 0;
+  }
+  html[data-tv-page] main .w-full {
+    width: 100%;
+  }
+  html[data-tv-page] main .min-w-\[280px\] {
+    min-width: 280px;
+  }
+  html[data-tv-page] main .overflow-hidden {
+    overflow: hidden;
+  }
+  html[data-tv-page] main .relative {
+    position: relative;
+  }
   /* PlaybackPlayer already has an inline aspect-ratio; Chrome 68 needs height. */
-  html[data-tv-page] main .relative.min-w-\[280px\] { height: 0; padding-top: 56.25%; }
-  html[data-tv-page] main .absolute { position: absolute; }
-  html[data-tv-page] main .inset-0 { top: 0; right: 0; bottom: 0; left: 0; }
-  html[data-tv-page] main .absolute.inset-0 iframe { width: 100%; height: 100%; }
-  html[data-tv-page] main button:focus { outline: 2px solid var(--ring); outline-offset: 2px; }
-  html[data-tv-page] main .animate-pulse { animation: tv-legacy-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
-  html[data-tv-page] main .animate-in { animation: tv-legacy-enter 700ms ease; }
-  @keyframes tv-legacy-pulse { 50% { opacity: 0.5; } }
-  @keyframes tv-legacy-enter { from { opacity: 0; transform: translateX(-1rem); } to { opacity: 1; transform: translateX(0); } }
+  html[data-tv-page] main .relative.min-w-\[280px\] {
+    height: 0;
+    padding-top: 56.25%;
+  }
+  html[data-tv-page] main .absolute {
+    position: absolute;
+  }
+  html[data-tv-page] main .inset-0 {
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+  }
+  html[data-tv-page] main .absolute.inset-0 iframe {
+    width: 100%;
+    height: 100%;
+  }
+  html[data-tv-page] main button:focus {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+  html[data-tv-page] main .animate-pulse {
+    animation: tv-legacy-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+  html[data-tv-page] main .animate-in {
+    animation: tv-legacy-enter 700ms ease;
+  }
+  @keyframes tv-legacy-pulse {
+    50% {
+      opacity: 0.5;
+    }
+  }
+  @keyframes tv-legacy-enter {
+    from {
+      opacity: 0;
+      transform: translateX(-1rem);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
   @media (min-width: 640px) {
-    html[data-tv-page] main.sm\:p-8 { padding: 2rem; }
-    html[data-tv-page] main .sm\:text-7xl { font-size: 4.5rem; line-height: 1; }
-    html[data-tv-page] main .sm\:text-4xl { font-size: 2.25rem; line-height: 2.5rem; }
-    html[data-tv-page] main .sm\:text-4xl.leading-tight { line-height: 1.25; }
+    html[data-tv-page] main.sm\:p-8 {
+      padding: 2rem;
+    }
+    html[data-tv-page] main .sm\:text-7xl {
+      font-size: 4.5rem;
+      line-height: 1;
+    }
+    html[data-tv-page] main .sm\:text-4xl {
+      font-size: 2.25rem;
+      line-height: 2.5rem;
+    }
+    html[data-tv-page] main .sm\:text-4xl.leading-tight {
+      line-height: 1.25;
+    }
   }
   @media (min-width: 1024px) {
-    html[data-tv-page] main.lg\:p-12 { padding: 3rem; }
-    html[data-tv-page] main .lg\:justify-start { justify-content: flex-start; }
-    html[data-tv-page] main .lg\:size-10 { width: 2.5rem; height: 2.5rem; }
-    html[data-tv-page] main .lg\:text-left { text-align: left; }
-    html[data-tv-page] main .lg\:grid-cols-\[minmax\(0\,1fr\)_auto\] { grid-template-columns: minmax(0, 1fr) auto; }
-    html[data-tv-page] main .lg\:grid-cols-\[minmax\(0\,1fr\)_minmax\(0\,2fr\)\] { grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); }
-    html[data-tv-page] main .lg\:text-2xl { font-size: 1.5rem; line-height: 2rem; }
-    html[data-tv-page] main .lg\:text-3xl { font-size: 1.875rem; line-height: 2.25rem; }
-    html[data-tv-page] main .lg\:text-4xl { font-size: 2.25rem; line-height: 2.5rem; }
-    html[data-tv-page] main .lg\:text-5xl { font-size: 3rem; line-height: 1; }
-    html[data-tv-page] main .lg\:text-6xl { font-size: 3.75rem; line-height: 1; }
-    html[data-tv-page] main .lg\:text-6xl.leading-tight { line-height: 1.25; }
-    html[data-tv-page] main .lg\:text-7xl { font-size: 4.5rem; line-height: 1; }
-    html[data-tv-page] main .lg\:text-8xl { font-size: 6rem; line-height: 1; }
+    html[data-tv-page] main.lg\:p-12 {
+      padding: 3rem;
+    }
+    html[data-tv-page] main .lg\:justify-start {
+      justify-content: flex-start;
+    }
+    html[data-tv-page] main .lg\:size-10 {
+      width: 2.5rem;
+      height: 2.5rem;
+    }
+    html[data-tv-page] main .lg\:text-left {
+      text-align: left;
+    }
+    html[data-tv-page] main .lg\:grid-cols-\[minmax\(0\,1fr\)_auto\] {
+      grid-template-columns: minmax(0, 1fr) auto;
+    }
+    html[data-tv-page] main .lg\:grid-cols-\[minmax\(0\,1fr\)_minmax\(0\,2fr\)\] {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+    }
+    html[data-tv-page] main .lg\:text-2xl {
+      font-size: 1.5rem;
+      line-height: 2rem;
+    }
+    html[data-tv-page] main .lg\:text-3xl {
+      font-size: 1.875rem;
+      line-height: 2.25rem;
+    }
+    html[data-tv-page] main .lg\:text-4xl {
+      font-size: 2.25rem;
+      line-height: 2.5rem;
+    }
+    html[data-tv-page] main .lg\:text-5xl {
+      font-size: 3rem;
+      line-height: 1;
+    }
+    html[data-tv-page] main .lg\:text-6xl {
+      font-size: 3.75rem;
+      line-height: 1;
+    }
+    html[data-tv-page] main .lg\:text-6xl.leading-tight {
+      line-height: 1.25;
+    }
+    html[data-tv-page] main .lg\:text-7xl {
+      font-size: 4.5rem;
+      line-height: 1;
+    }
+    html[data-tv-page] main .lg\:text-8xl {
+      font-size: 6rem;
+      line-height: 1;
+    }
   }
   @media (min-width: 1280px) {
-    html[data-tv-page] main .xl\:text-9xl { font-size: 8rem; line-height: 1; }
+    html[data-tv-page] main .xl\:text-9xl {
+      font-size: 8rem;
+      line-height: 1;
+    }
   }
   @media (prefers-reduced-motion: reduce) {
     html[data-tv-page] main .animate-pulse,
-    html[data-tv-page] main .animate-in { animation: none; }
+    html[data-tv-page] main .animate-in {
+      animation: none;
+    }
+  }
+}
+
+/* Final broadcast sizing also takes precedence over legacy utility emulation. */
+html[data-tv-page] main h1.tv-opening-title {
+  font: 700 80px/84px var(--font-display);
+  margin: 24px 0;
+}
+html[data-tv-page] main p.tv-eyebrow {
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-size: 24px;
+  line-height: 32px;
+  font-weight: 600;
+  color: #a78bfa;
+  margin-top: 40px;
+}
+html[data-tv-page] main p.tv-opening-subtitle {
+  font-size: 32px;
+  line-height: 40px;
+}
+html[data-tv-page] main p.tv-opening-invite {
+  font-size: 24px;
+  line-height: 32px;
+  color: #45e0cf;
+  margin-top: 32px;
+  font-weight: 600;
+}
+html[data-tv-page] main p.tv-opening-status {
+  font-size: 20px;
+  line-height: 28px;
+  color: #a8b5c9;
+  margin-top: 24px;
+}
+html[data-tv-page] .tv-x1-arena {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-gap: 16px;
+  padding: 20px;
+  align-content: center;
+}
+html[data-tv-page] .tv-x1-arena > article:first-child {
+  grid-column: 1 / -1;
+}
+html[data-tv-page] .tv-x1-arena > article {
+  min-width: 0;
+  padding: 16px;
+}
+html[data-tv-page] .tv-x1-arena h1 {
+  font: 700 64px/68px var(--font-display);
+  overflow-wrap: break-word;
+}
+html[data-tv-page] .tv-x1-arena .font-display:not(h1) {
+  font-size: 32px;
+  line-height: 36px;
+}
+html[data-tv-page] .tv-x1-arena p:not(.font-display) {
+  font-size: 20px;
+  line-height: 28px;
+}
+html[data-tv-page] .tv-vote-countdown {
+  font-size: 112px;
+  line-height: 112px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+html[data-tv-page] .tv-content > section {
+  min-width: 0;
+  background: rgba(8, 18, 31, 0.94);
+}
+html[data-tv-page] .tv-content > aside {
+  max-width: 360px;
+}
+html[data-tv-page] .tv-content > aside > p {
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: #08121f;
+}
+html[data-tv-page] .tv-x1-arena > article {
+  background: #111e30;
+}
+html[data-tv-page] .tv-content > aside .session-qr {
+  width: 100%;
+  max-width: 324px;
+}
+html[data-tv-page] .tv-championship {
+  margin-top: 0;
+}
+html[data-tv-page] .tv-championship > p:first-child {
+  color: #a78bfa;
+}
+.pulso-championship > section:first-of-type {
+  border-top: 3px solid var(--accent);
+}
+.pulso-championship h3 {
+  font-size: 18px;
+  line-height: 28px;
+  font-weight: 600;
+}
+.pulso-championship [class*="rounded-xl"] > h3 {
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 8px;
+  color: var(--info);
+}
+.pulso-admin [id] {
+  scroll-margin-top: 24px;
+}
+.pulso-vote h1,
+.pulso-vote h2 {
+  overflow-wrap: anywhere;
+}
+html:not([data-tv-page]) .pulso-vote h2 {
+  font-size: 40px;
+  line-height: 44px;
+  font-weight: 700;
+}
+@media (max-width: 1400px), (max-height: 800px) {
+  html[data-tv-page] main h1.tv-opening-title {
+    font-size: 64px;
+    line-height: 68px;
+  }
+  html[data-tv-page] main p.tv-eyebrow {
+    margin-top: 24px;
+    font-size: 20px;
+    line-height: 28px;
+  }
+  html[data-tv-page] main p.tv-opening-invite {
+    margin-top: 20px;
+  }
+  html[data-tv-page] .tv-x1-arena {
+    padding: 12px;
+    grid-gap: 12px;
+  }
+  html[data-tv-page] .tv-x1-arena > article {
+    padding: 12px;
+  }
+  html[data-tv-page] .tv-x1-arena h1 {
+    font-size: 48px;
+    line-height: 52px;
+  }
+  html[data-tv-page] .tv-x1-arena .font-display:not(h1) {
+    font-size: 26px;
+    line-height: 30px;
+  }
+  html[data-tv-page] .tv-x1-arena p:not(.font-display) {
+    font-size: 18px;
+    line-height: 24px;
+  }
+  html[data-tv-page] .tv-x1-arena .mt-3 {
+    margin-top: 8px;
+  }
+  html[data-tv-page] .tv-content > aside {
+    max-width: 280px;
+  }
+  html[data-tv-page] .tv-content > aside .session-qr {
+    max-width: 264px;
+  }
+  html[data-tv-page] .tv-content > aside > p {
+    font-size: 24px;
+    line-height: 30px;
+  }
+}
+@supports not (color: oklch(0 0 0)) {
+  html[data-tv-page] .tv-screen > .tv-content {
+    margin-top: 16px;
+  }
+  html[data-tv-page] .tv-audio-prompt {
+    margin-top: 12px;
+  }
+  html[data-tv-page] .tv-performance-panel h1 {
+    font-weight: 700;
+  }
+  html[data-tv-page] .tv-content > aside .session-qr {
+    padding: 12px;
+  }
+}
+
+html[data-tv-page] .tv-content h1 {
+  font-weight: 700;
+}
+html[data-tv-page] .tv-video {
+  max-width: calc((100vh - 280px) * 1.7777778);
+  max-width: calc((100dvh - 280px) * 1.7777778);
+  justify-self: center;
+}
+html[data-tv-page] main[data-audio-ready="true"] .tv-video {
+  max-width: calc((100vh - 200px) * 1.7777778);
+  max-width: calc((100dvh - 200px) * 1.7777778);
+}
+html[data-tv-page] .tv-content [data-long-name="true"] {
+  font-size: 40px;
+  line-height: 44px;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 1400px), (max-height: 800px) {
+  html[data-tv-page] .tv-content [data-long-name="true"] {
+    font-size: 28px;
+    line-height: 32px;
   }
 }

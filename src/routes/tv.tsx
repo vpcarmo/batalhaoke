@@ -1,3 +1,4 @@
+import { ArenaBackdrop } from "@/components/karaoke/ArenaBackdrop";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -413,14 +414,16 @@ function TvPage() {
 
   if (!sessionId) {
     return (
-      <main className="grid min-h-dvh place-items-center p-8 text-center">
-        <div>
+      <main className="tv-screen tv-opening grid min-h-dvh place-items-center p-8 text-center">
+        <ArenaBackdrop state="waiting" />
+        <div className="tv-opening-copy">
           {brand}
-          {tvIdentity}
-          <p className="mt-6 text-2xl text-muted-foreground lg:text-4xl">
-            {paired
-              ? "Aguardando início da sessão neste estabelecimento"
-              : "Aguardando início da sessão"}
+          <p className="tv-eyebrow">Competição em transmissão</p>
+          <h1 className="tv-opening-title">Sua voz entra na disputa.</h1>
+          <p className="tv-opening-subtitle">O público decide o campeão.</p>
+          <p className="tv-opening-invite">Quem vai encarar a batalha?</p>
+          <p className="tv-opening-status">
+            Aguardando início da sessão{paired ? " neste estabelecimento" : ""}
           </p>
         </div>
       </main>
@@ -457,9 +460,24 @@ function TvPage() {
     isChampionshipVoting;
 
   return (
-    <main className="tv-screen flex min-h-dvh flex-col gap-3 p-3 sm:gap-4 sm:p-5 lg:p-6">
+    <main
+      data-audio-ready={audioEnabled}
+      data-scene={active?.source ? "live" : directVoteMatch || showX1Arena ? "duel" : "waiting"}
+      className="tv-screen flex min-h-dvh flex-col gap-3 p-3 sm:gap-4 sm:p-5 lg:p-6"
+    >
       {brand}
-      {tvIdentity}
+      <ArenaBackdrop
+        state={
+          active?.source
+            ? null
+            : championship?.status === "completed" ||
+                (x1State?.currentChampion && !x1State.currentMatch)
+              ? "victory"
+              : directVoteMatch || showX1Arena
+                ? "duel"
+                : "waiting"
+        }
+      />
       {live.error && (
         <p role="alert" className="text-center text-xl text-destructive">
           Conexão perdida com o servidor.
@@ -472,9 +490,12 @@ function TvPage() {
           <div className="tv-playing-inner grid min-h-0 min-w-0 grid-cols-1 items-center gap-2 lg:grid-cols-[minmax(0,3fr)_minmax(250px,1fr)]">
             <section className="tv-performance-panel order-2 text-center animate-in fade-in duration-500 lg:text-left">
               <p className="text-sm text-muted-foreground lg:text-base">
-                Cantor {active.participant.participant_number}
+                Participante {active.participant.participant_number}
               </p>
-              <h1 className="mt-1 truncate font-display text-3xl leading-tight text-primary sm:text-4xl lg:text-5xl">
+              <h1
+                data-long-name={displayName(active.participant).length > 32}
+                className="mt-1 break-words font-display text-3xl leading-tight text-primary sm:text-4xl lg:text-5xl"
+              >
                 {displayName(active.participant)}
               </h1>
               <p className="mt-1 line-clamp-2 font-display text-lg uppercase leading-tight sm:text-xl lg:text-2xl">
@@ -559,10 +580,10 @@ function TvPage() {
             {completedPerformances.length === 0 ? (
               <div>
                 <h1 className="font-display text-5xl leading-none text-primary sm:text-6xl lg:text-8xl">
-                  A noite está começando!
+                  Sua voz entra na disputa.
                 </h1>
                 <p className="mt-5 text-2xl text-muted-foreground lg:text-3xl">
-                  Escaneie o QR Code, participe e prepare-se para a próxima apresentação.
+                  O público decide o campeão. Quem vai encarar a batalha?
                 </p>
               </div>
             ) : (
@@ -744,6 +765,7 @@ function ChampionshipTvDetails({
       performance?.participant?.participant_number ?? Math.min(completed + 1, entries.length);
     return (
       <div className="mt-6 space-y-2 text-lg text-muted-foreground lg:text-2xl">
+        <p className="font-display text-3xl text-foreground">{championship.title}</p>
         <p className="font-display text-2xl text-primary lg:text-3xl">
           Fase de grupos{currentEntry?.groupLetter ? ` · Grupo ${currentEntry.groupLetter}` : ""}
         </p>
@@ -784,7 +806,8 @@ function ChampionshipTvDetails({
   const winner = entry(match.winnerEntryId);
 
   return (
-    <section className="mt-6 rounded-2xl border border-primary/40 bg-card/70 p-5 text-center lg:p-7">
+    <section className="tv-championship mt-6 rounded-2xl border border-accent/60 bg-card p-5 text-center lg:p-7">
+      <p className="font-display text-3xl text-foreground">{championship.title}</p>
       <p className="text-base font-bold uppercase tracking-[0.18em] text-muted-foreground lg:text-xl">
         {stageTitle(match.stage)} · Confronto {match.matchNumber}
       </p>
@@ -796,7 +819,9 @@ function ChampionshipTvDetails({
             </span>
           ) : (
             <div key={candidate?.id ?? index} className="min-w-0">
-              <p className="break-words font-display text-3xl text-primary lg:text-5xl">
+              <p
+                className={`break-words font-display text-3xl lg:text-5xl ${index === 0 ? "text-competitor-a" : "text-competitor-b"}`}
+              >
                 {index === 0 ? "A · " : "B · "}
                 {candidate?.displayName ?? "Aguardando"}
               </p>
@@ -812,7 +837,7 @@ function ChampionshipTvDetails({
         )}
       </div>
       {winner ? (
-        <p className="mt-5 font-display text-3xl text-accent lg:text-4xl">
+        <p className="mt-5 font-display text-3xl text-gold lg:text-4xl">
           {match.resultSource === "operator"
             ? `Vencedor homologado pelo operador: ${winner.displayName}`
             : match.status === "wo"
@@ -902,13 +927,16 @@ function X1Arena({
       : null;
 
   return (
-    <section className="flex flex-col justify-center gap-5 rounded-2xl border border-primary/40 bg-card/70 p-5 sm:p-7 lg:gap-6 lg:p-8">
+    <section className="tv-x1-arena flex flex-col justify-center gap-5 rounded-2xl border border-accent/40 bg-card/70 p-5 sm:p-7 lg:gap-6 lg:p-8">
       {state.currentChampion ? (
-        <article className="rounded-2xl border border-accent/60 bg-accent/10 p-5 text-center sm:p-7">
+        <article className="tv-champion rounded-2xl border border-gold/60 bg-card p-5 text-center sm:p-7">
           <p className="text-lg font-bold uppercase tracking-[0.18em] text-accent lg:text-2xl">
             👑 Rei da mesa
           </p>
-          <h1 className="mt-2 break-words font-display text-6xl leading-none text-primary sm:text-7xl lg:text-8xl">
+          <h1
+            data-long-name={displayName(state.currentChampion).length > 32}
+            className="mt-2 break-words font-display text-6xl leading-none text-primary sm:text-7xl lg:text-8xl"
+          >
             {displayName(state.currentChampion)}
           </h1>
           <p className="mt-3 text-xl font-semibold lg:text-2xl">
@@ -943,7 +971,7 @@ function X1Arena({
           <div className="mt-3 grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2">
             <div className="min-w-0">
               {lastA && (
-                <p className="truncate font-display text-3xl text-primary sm:text-4xl lg:text-5xl">
+                <p className="break-words font-display text-3xl  sm:text-4xl lg:text-5xl text-competitor-a">
                   {displayName(lastA)}
                 </p>
               )}
@@ -952,7 +980,7 @@ function X1Arena({
             <span className="font-display text-2xl text-muted-foreground lg:text-3xl">×</span>
             <div className="min-w-0">
               {lastB && (
-                <p className="truncate font-display text-3xl text-primary sm:text-4xl lg:text-5xl">
+                <p className="break-words font-display text-3xl  sm:text-4xl lg:text-5xl text-competitor-b">
                   {displayName(lastB)}
                 </p>
               )}
@@ -960,7 +988,7 @@ function X1Arena({
             </div>
           </div>
           {winner && (
-            <p className="mt-3 text-xl font-bold text-accent lg:text-2xl">
+            <p className="mt-3 text-xl font-bold text-gold lg:text-2xl">
               🏆 {displayName(winner)} avançou
             </p>
           )}
@@ -976,7 +1004,7 @@ function X1Arena({
             <div className="mt-3 grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2">
               <div className="min-w-0">
                 {nextA && (
-                  <p className="truncate font-display text-3xl sm:text-4xl lg:text-5xl">
+                  <p className="break-words font-display text-3xl sm:text-4xl lg:text-5xl text-competitor-a">
                     {displayName(nextA)}
                   </p>
                 )}
@@ -987,7 +1015,7 @@ function X1Arena({
               <span className="font-display text-2xl text-accent lg:text-3xl">VS</span>
               <div className="min-w-0">
                 {nextB && (
-                  <p className="truncate font-display text-3xl sm:text-4xl lg:text-5xl">
+                  <p className="break-words font-display text-3xl sm:text-4xl lg:text-5xl text-competitor-b">
                     {displayName(nextB)}
                   </p>
                 )}
@@ -1049,17 +1077,27 @@ function X1DirectVoteTv({ match, participants }: { match: Match; participants: P
   const isOpen = open && remaining > 0;
   return (
     <section className="flex flex-col justify-center gap-6 rounded-2xl border border-primary/40 bg-card/70 p-6 text-center lg:p-10">
-      <h1 className="font-display text-6xl leading-none text-primary lg:text-8xl">
+      <h1 className="font-display text-6xl leading-none text-foreground lg:text-8xl">
         QUEM VOCÊ PREFERE?
       </h1>
       <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-4">
-        <p className="break-words font-display text-5xl lg:text-7xl">{a ? displayName(a) : "—"}</p>
+        <p
+          data-long-name={!!a && displayName(a).length > 32}
+          className="break-words font-display text-5xl text-competitor-a lg:text-7xl"
+        >
+          {a ? displayName(a) : "—"}
+        </p>
         <span className="font-display text-5xl text-accent">×</span>
-        <p className="break-words font-display text-5xl lg:text-7xl">{b ? displayName(b) : "—"}</p>
+        <p
+          data-long-name={!!b && displayName(b).length > 32}
+          className="break-words font-display text-5xl text-competitor-b lg:text-7xl"
+        >
+          {b ? displayName(b) : "—"}
+        </p>
       </div>
       {isOpen ? (
         <>
-          <p className="font-display text-8xl text-primary" aria-live="polite">
+          <p className="tv-vote-countdown font-display text-8xl text-primary" aria-live="polite">
             {remaining}
           </p>
           <p className="text-2xl text-muted-foreground lg:text-3xl">
