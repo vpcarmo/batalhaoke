@@ -1,0 +1,36 @@
+{
+  "captures": 36,
+  "resolutions": [
+    "320x568",
+    "568x320",
+    "768x1024",
+    "1280x720",
+    "2560x1080",
+    "3840x2160"
+  ],
+  "horizontalOverflow": 0,
+  "overlaps": 0,
+  "pageScroll": 0,
+  "sceneMismatches": 0,
+  "qrRatioFailures": 0,
+  "playerRatioFailures": 0,
+  "titleCharacters": 147,
+  "internalScrolling": [
+    {
+      "state": "long-song",
+      "w": 320,
+      "h": 568
+    },
+    {
+      "state": "long-song",
+      "w": 568,
+      "h": 320
+    },
+    {
+      "state": "long-song",
+      "w": 1280,
+      "h": 720
+    }
+  ],
+  "playerNodeStable": true
+}

@@ -1,0 +1,38 @@
+{
+  "typescript": {
+    "exitCode": 0
+  },
+  "tests": {
+    "exitCode": 0
+  },
+  "build": {
+    "exitCode": 0
+  },
+  "eslint": {
+    "exitCode": 0
+  },
+  "format": {
+    "exitCode": 0
+  },
+  "diffCheck": {
+    "exitCode": 0
+  },
+  "player": {
+    "jsxUnchanged": true,
+    "ancestorsUnchanged": true,
+    "ancestors": [
+      "section",
+      "div",
+      "div",
+      "main"
+    ],
+    "fileUnchanged": true
+  },
+  "changedTrackedFiles": [
+    "src/components/karaoke/ArenaBackdrop.tsx",
+    "src/routes/tv.tsx",
+    "src/styles.css"
+  ],
+  "protectedFilesUntouched": true,
+  "tvHooksUnchanged": true
+}

@@ -1,0 +1,176 @@
+[
+  {
+    "state": "live",
+    "w": 320,
+    "h": 568,
+    "file": "live-320x568.png",
+    "scene": "live",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": true,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 320,
+      "height": 568
+    },
+    "player": {
+      "x": 8,
+      "y": 60.1875,
+      "width": 304,
+      "height": 171
+    },
+    "panel": {
+      "x": 8,
+      "y": 361.1875,
+      "width": 304,
+      "height": 173.4375
+    },
+    "bodyText": "BatalhaOkê\n\nParticipante 1\n\nMARIANA COSTA\n\nUMA CANÇÃO PARA TODA A PLATEIA\n\nAPRESENTAÇÃO EM ANDAMENTO\n\n👍 24 votos\n\nEscaneie para v"
+  },
+  {
+    "state": "long-live",
+    "w": 320,
+    "h": 568,
+    "file": "long-live-320x568.png",
+    "scene": "live",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": true,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 320,
+      "height": 568
+    },
+    "player": {
+      "x": 8,
+      "y": 60.1875,
+      "width": 304,
+      "height": 171
+    },
+    "panel": {
+      "x": 8,
+      "y": 361.1875,
+      "width": 304,
+      "height": 227.171875
+    },
+    "bodyText": "BatalhaOkê\n\nParticipante 1\n\nMARIA APARECIDA DE ALBUQUERQUE E VASCONCELOS\n\nUMA CANÇÃO PARA TODA A PLATEIA\n\nAPRESENTAÇÃO EM ANDAMENT"
+  },
+  {
+    "state": "live",
+    "w": 568,
+    "h": 320,
+    "file": "live-568x320.png",
+    "scene": "live",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": true,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 568,
+      "height": 320
+    },
+    "player": {
+      "x": 68.015625,
+      "y": 52,
+      "width": 213.328125,
+      "height": 119.984375
+    },
+    "panel": {
+      "x": 345.171875,
+      "y": 66.828125,
+      "width": 208.640625,
+      "height": 228.3125
+    },
+    "bodyText": "BatalhaOkê\n\nParticipante 1\n\nMARIANA COSTA\n\nUMA CANÇÃO PARA TODA A PLATEIA\n\nAPRESENTAÇÃO EM ANDAMENTO\n\n👍 24 votos\n\nEscaneie para v"
+  },
+  {
+    "state": "long-live",
+    "w": 568,
+    "h": 320,
+    "file": "long-live-568x320.png",
+    "scene": "live",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": true,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 568,
+      "height": 320
+    },
+    "player": {
+      "x": 68.015625,
+      "y": 63.28125,
+      "width": 213.328125,
+      "height": 119.984375
+    },
+    "panel": {
+      "x": 345.171875,
+      "y": 52,
+      "width": 208.640625,
+      "height": 280.5625
+    },
+    "bodyText": "BatalhaOkê\n\nParticipante 1\n\nMARIA APARECIDA DE ALBUQUERQUE E VASCONCELOS\n\nUMA CANÇÃO PARA TODA A PLATEIA\n\nAPRESENTAÇÃO EM ANDAMENT"
+  },
+  {
+    "state": "live",
+    "w": 800,
+    "h": 360,
+    "file": "live-800x360.png",
+    "scene": "live",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": true,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 800,
+      "height": 360
+    },
+    "player": {
+      "x": 105.046875,
+      "y": 52,
+      "width": 284.4375,
+      "height": 159.984375
+    },
+    "panel": {
+      "x": 484.53125,
+      "y": 84.328125,
+      "width": 295.46875,
+      "height": 213.3125
+    },
+    "bodyText": "BatalhaOkê\n\nParticipante 1\n\nMARIANA COSTA\n\nUMA CANÇÃO PARA TODA A PLATEIA\n\nAPRESENTAÇÃO EM ANDAMENTO\n\n👍 24 votos\n\nEscaneie para v"
+  },
+  {
+    "state": "long-live",
+    "w": 800,
+    "h": 360,
+    "file": "long-live-800x360.png",
+    "scene": "live",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": true,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 800,
+      "height": 360
+    },
+    "player": {
+      "x": 105.046875,
+      "y": 52,
+      "width": 284.4375,
+      "height": 159.984375
+    },
+    "panel": {
+      "x": 484.53125,
+      "y": 70.796875,
+      "width": 295.46875,
+      "height": 240.375
+    },
+    "bodyText": "BatalhaOkê\n\nParticipante 1\n\nMARIA APARECIDA DE ALBUQUERQUE E VASCONCELOS\n\nUMA CANÇÃO PARA TODA A PLATEIA\n\nAPRESENTAÇÃO EM ANDAMENT"
+  }
+]

@@ -459,25 +459,23 @@ function TvPage() {
     isChampionshipWaiting ||
     isChampionshipVoting;
 
+  // Presentation only: the live provider always takes precedence over scenery.
+  const arenaScene = active?.source
+    ? null
+    : championship?.status === "completed" || (x1State?.currentChampion && !x1State.currentMatch)
+      ? "victory"
+      : directVoteMatch || showX1Arena || isChampionshipVoting
+        ? "duel"
+        : "waiting";
+
   return (
     <main
       data-audio-ready={audioEnabled}
-      data-scene={active?.source ? "live" : directVoteMatch || showX1Arena ? "duel" : "waiting"}
+      data-scene={arenaScene ?? "live"}
       className="tv-screen flex min-h-dvh flex-col gap-3 p-3 sm:gap-4 sm:p-5 lg:p-6"
     >
       {brand}
-      <ArenaBackdrop
-        state={
-          active?.source
-            ? null
-            : championship?.status === "completed" ||
-                (x1State?.currentChampion && !x1State.currentMatch)
-              ? "victory"
-              : directVoteMatch || showX1Arena
-                ? "duel"
-                : "waiting"
-        }
-      />
+      <ArenaBackdrop state={arenaScene} />
       {live.error && (
         <p role="alert" className="text-center text-xl text-destructive">
           Conexão perdida com o servidor.
@@ -1076,11 +1074,11 @@ function X1DirectVoteTv({ match, participants }: { match: Match; participants: P
   const b = participants.find((p) => p.id === match.participant_b_id);
   const isOpen = open && remaining > 0;
   return (
-    <section className="flex flex-col justify-center gap-6 rounded-2xl border border-primary/40 bg-card/70 p-6 text-center lg:p-10">
+    <section className="tv-direct-vote flex flex-col justify-center gap-6 rounded-2xl border border-primary/40 bg-card/70 p-6 text-center lg:p-10">
       <h1 className="font-display text-6xl leading-none text-foreground lg:text-8xl">
         QUEM VOCÊ PREFERE?
       </h1>
-      <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-4">
+      <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-4">
         <p
           data-long-name={!!a && displayName(a).length > 32}
           className="break-words font-display text-5xl text-competitor-a lg:text-7xl"

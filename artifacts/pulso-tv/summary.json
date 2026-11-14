@@ -1,0 +1,88 @@
+{
+  "captures": 168,
+  "resolutions": 14,
+  "horizontalOverflow": 0,
+  "overlap": 0,
+  "sceneMismatches": 0,
+  "playerRatioFailures": 0,
+  "verticalScroll": [
+    {
+      "state": "live",
+      "w": 320,
+      "h": 568
+    },
+    {
+      "state": "long-live",
+      "w": 320,
+      "h": 568
+    },
+    {
+      "state": "live",
+      "w": 568,
+      "h": 320
+    },
+    {
+      "state": "long-live",
+      "w": 568,
+      "h": 320
+    },
+    {
+      "state": "live",
+      "w": 800,
+      "h": 360
+    },
+    {
+      "state": "long-live",
+      "w": 800,
+      "h": 360
+    }
+  ],
+  "checks": [
+    {
+      "playerNodeStableAcrossBreakpoints": true
+    },
+    {
+      "transitions": [
+        {
+          "state": "waiting",
+          "scene": "waiting",
+          "image": "/images/brand/pulso-arena-waiting.jpg"
+        },
+        {
+          "state": "vote",
+          "scene": "duel",
+          "image": "/images/brand/pulso-arena-duel.jpg"
+        },
+        {
+          "state": "victory",
+          "scene": "victory",
+          "image": "/images/brand/pulso-arena-victory.jpg"
+        },
+        {
+          "state": "live",
+          "scene": "live",
+          "image": null
+        },
+        {
+          "state": "waiting",
+          "scene": "waiting",
+          "image": "/images/brand/pulso-arena-waiting.jpg"
+        }
+      ]
+    },
+    {
+      "failure": "webp",
+      "image": {
+        "img": true,
+        "src": "http://127.0.0.1:8080/images/brand/pulso-arena-waiting.jpg",
+        "complete": true
+      }
+    },
+    {
+      "failure": "all",
+      "image": {
+        "img": false
+      }
+    }
+  ]
+}

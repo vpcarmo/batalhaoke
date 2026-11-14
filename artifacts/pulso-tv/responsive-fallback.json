@@ -1,0 +1,96 @@
+[
+  {
+    "state": "waiting",
+    "w": 1280,
+    "h": 720,
+    "file": "waiting-1280x720.png",
+    "scene": "waiting",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 1280,
+      "height": 720
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-waiting.webp",
+    "bodyText": "BatalhaOkê\n\nSua voz entra na disputa.\n\nO público decide o campeão. Quem vai encarar a batalha?\n\n0 apresentações realizadas · 0 vot"
+  },
+  {
+    "playerNodeStableAcrossBreakpoints": true
+  },
+  {
+    "transitions": [
+      {
+        "state": "waiting",
+        "scene": "waiting",
+        "image": "/images/brand/pulso-arena-waiting.jpg"
+      },
+      {
+        "state": "vote",
+        "scene": "duel",
+        "image": "/images/brand/pulso-arena-duel.jpg"
+      },
+      {
+        "state": "victory",
+        "scene": "victory",
+        "image": "/images/brand/pulso-arena-victory.jpg"
+      },
+      {
+        "state": "live",
+        "scene": "live",
+        "image": null
+      },
+      {
+        "state": "waiting",
+        "scene": "waiting",
+        "image": "/images/brand/pulso-arena-waiting.jpg"
+      }
+    ]
+  },
+  {
+    "failure": "webp",
+    "image": {
+      "img": true,
+      "src": "http://127.0.0.1:8080/images/brand/pulso-arena-waiting.jpg",
+      "complete": true
+    },
+    "qr": {
+      "width": 196,
+      "height": 196,
+      "paths": [
+        {
+          "fill": "#FFFFFF",
+          "length": 14
+        },
+        {
+          "fill": "#000000",
+          "length": 2929
+        }
+      ]
+    }
+  },
+  {
+    "failure": "all",
+    "image": {
+      "img": false
+    },
+    "qr": {
+      "width": 196,
+      "height": 196,
+      "paths": [
+        {
+          "fill": "#FFFFFF",
+          "length": 14
+        },
+        {
+          "fill": "#000000",
+          "length": 2929
+        }
+      ]
+    }
+  }
+]

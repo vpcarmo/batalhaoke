@@ -1,0 +1,10 @@
+{
+  "invites": {
+    "exitCode": 1,
+    "missingDatabaseConfiguration": true
+  },
+  "commercial": {
+    "exitCode": 1,
+    "missingDatabaseConfiguration": true
+  }
+}

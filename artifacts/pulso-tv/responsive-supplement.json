@@ -1,0 +1,875 @@
+[
+  {
+    "state": "long-vote",
+    "w": 320,
+    "h": 568,
+    "file": "long-vote-320x568.png",
+    "scene": "duel",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 320,
+      "height": 568
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-duel.webp",
+    "bodyText": "BatalhaOkê\n\nQUEM VOCÊ PREFERE?\n\nMARIA APARECIDA DE ALBUQUERQUE E VASCONCELOS\n\n×\n\nJOÃO GUILHERME DE OLIVEIRA E ALBUQUERQUE\n\n60\n\nEsc",
+    "pageScrollY": false,
+    "qrRect": {
+      "width": 80,
+      "height": 80
+    }
+  },
+  {
+    "state": "long-song",
+    "w": 320,
+    "h": 568,
+    "file": "long-song-320x568.png",
+    "scene": "live",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": true,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 320,
+      "height": 568
+    },
+    "player": {
+      "x": 8,
+      "y": 60.1875,
+      "width": 304,
+      "height": 171
+    },
+    "panel": {
+      "x": 8,
+      "y": 361.1875,
+      "width": 304,
+      "height": 233.4375
+    },
+    "bodyText": "BatalhaOkê\n\nParticipante 1\n\nMARIANA COSTA\n\nUMA CANÇÃO COM UM TÍTULO MUITO EXTENSO PARA CONFERIR A LEITURA COMPLETA DA MÚSICA SEM E",
+    "pageScrollY": false,
+    "title": "Uma canção com um título muito extenso para conferir a leitura completa da música sem esconder palavras importantes nem cobrir o vídeo ou o QR Code",
+    "qrRect": {
+      "width": 88,
+      "height": 88
+    }
+  },
+  {
+    "state": "championship-waiting",
+    "w": 320,
+    "h": 568,
+    "file": "championship-waiting-320x568.png",
+    "scene": "waiting",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 320,
+      "height": 568
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-waiting.webp",
+    "bodyText": "BatalhaOkê\n\nCampeonato de vozes\n\nFase de grupos\n\nAguardando a próxima apresentação.\n\nProgresso: 0 de 3 apresentações concluídas\n\nE",
+    "pageScrollY": false,
+    "qrRect": {
+      "width": 80,
+      "height": 80
+    }
+  },
+  {
+    "state": "tv-disabled",
+    "w": 320,
+    "h": 568,
+    "file": "tv-disabled-320x568.png",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 320,
+      "height": 568
+    },
+    "player": null,
+    "panel": null,
+    "bodyText": "BatalhaOkê\n\nEsta TV foi desabilitada. Peça ajuda ao operador.\n\nDesvincular e parear novamente",
+    "pageScrollY": false,
+    "qrRect": null
+  },
+  {
+    "state": "session-disabled",
+    "w": 320,
+    "h": 568,
+    "file": "session-disabled-320x568.png",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 320,
+      "height": 568
+    },
+    "player": null,
+    "panel": null,
+    "bodyText": "BatalhaOkê\n\nTV PAREADA\n\nEstabelecimento\n\nLocal de teste\n\nDispositivo\n\nTV de teste\n\nTela da TV desativada para esta sessão.",
+    "pageScrollY": false,
+    "qrRect": null
+  },
+  {
+    "state": "pairing-error",
+    "w": 320,
+    "h": 568,
+    "file": "pairing-error-320x568.png",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 320,
+      "height": 568
+    },
+    "player": null,
+    "panel": null,
+    "bodyText": "BatalhaOkê\n\nEsta TV ainda não está configurada.\n\nNão foi possível preparar o pareamento. Recarregue a tela.",
+    "pageScrollY": false,
+    "qrRect": null
+  },
+  {
+    "state": "long-vote",
+    "w": 568,
+    "h": 320,
+    "file": "long-vote-568x320.png",
+    "scene": "duel",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 568,
+      "height": 320
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-duel.webp",
+    "bodyText": "BatalhaOkê\n\nQUEM VOCÊ PREFERE?\n\nMARIA APARECIDA DE ALBUQUERQUE E VASCONCELOS\n\n×\n\nJOÃO GUILHERME DE OLIVEIRA E ALBUQUERQUE\n\n60\n\nEsc",
+    "pageScrollY": false,
+    "qrRect": {
+      "width": 96,
+      "height": 96
+    }
+  },
+  {
+    "state": "long-song",
+    "w": 568,
+    "h": 320,
+    "file": "long-song-568x320.png",
+    "scene": "live",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": true,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 568,
+      "height": 320
+    },
+    "player": {
+      "x": 68.015625,
+      "y": 67.15625,
+      "width": 213.328125,
+      "height": 119.984375
+    },
+    "panel": {
+      "x": 345.171875,
+      "y": 52,
+      "width": 208.640625,
+      "height": 288.3125
+    },
+    "bodyText": "BatalhaOkê\n\nParticipante 1\n\nMARIANA COSTA\n\nUMA CANÇÃO COM UM TÍTULO MUITO EXTENSO PARA CONFERIR A LEITURA COMPLETA DA MÚSICA SEM E",
+    "pageScrollY": false,
+    "title": "Uma canção com um título muito extenso para conferir a leitura completa da música sem esconder palavras importantes nem cobrir o vídeo ou o QR Code",
+    "qrRect": {
+      "width": 68,
+      "height": 68
+    }
+  },
+  {
+    "state": "championship-waiting",
+    "w": 568,
+    "h": 320,
+    "file": "championship-waiting-568x320.png",
+    "scene": "waiting",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 568,
+      "height": 320
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-waiting.webp",
+    "bodyText": "BatalhaOkê\n\nCampeonato de vozes\n\nFase de grupos\n\nAguardando a próxima apresentação.\n\nProgresso: 0 de 3 apresentações concluídas\n\nE",
+    "pageScrollY": false,
+    "qrRect": {
+      "width": 96,
+      "height": 96
+    }
+  },
+  {
+    "state": "tv-disabled",
+    "w": 568,
+    "h": 320,
+    "file": "tv-disabled-568x320.png",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 568,
+      "height": 320
+    },
+    "player": null,
+    "panel": null,
+    "bodyText": "BatalhaOkê\n\nEsta TV foi desabilitada. Peça ajuda ao operador.\n\nDesvincular e parear novamente",
+    "pageScrollY": false,
+    "qrRect": null
+  },
+  {
+    "state": "session-disabled",
+    "w": 568,
+    "h": 320,
+    "file": "session-disabled-568x320.png",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 568,
+      "height": 320
+    },
+    "player": null,
+    "panel": null,
+    "bodyText": "BatalhaOkê\n\nTV PAREADA\n\nEstabelecimento\n\nLocal de teste\n\nDispositivo\n\nTV de teste\n\nTela da TV desativada para esta sessão.",
+    "pageScrollY": false,
+    "qrRect": null
+  },
+  {
+    "state": "pairing-error",
+    "w": 568,
+    "h": 320,
+    "file": "pairing-error-568x320.png",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 568,
+      "height": 320
+    },
+    "player": null,
+    "panel": null,
+    "bodyText": "BatalhaOkê\n\nEsta TV ainda não está configurada.\n\nNão foi possível preparar o pareamento. Recarregue a tela.",
+    "pageScrollY": false,
+    "qrRect": null
+  },
+  {
+    "state": "long-vote",
+    "w": 768,
+    "h": 1024,
+    "file": "long-vote-768x1024.png",
+    "scene": "duel",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 768,
+      "height": 1024
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-duel.webp",
+    "bodyText": "BatalhaOkê\n\nQUEM VOCÊ PREFERE?\n\nMARIA APARECIDA DE ALBUQUERQUE E VASCONCELOS\n\n×\n\nJOÃO GUILHERME DE OLIVEIRA E ALBUQUERQUE\n\n60\n\nEsc",
+    "pageScrollY": false,
+    "qrRect": {
+      "width": 144.953125,
+      "height": 144.953125
+    }
+  },
+  {
+    "state": "long-song",
+    "w": 768,
+    "h": 1024,
+    "file": "long-song-768x1024.png",
+    "scene": "live",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 768,
+      "height": 1024
+    },
+    "player": {
+      "x": 19.1875,
+      "y": 324.703125,
+      "width": 490.609375,
+      "height": 275.953125
+    },
+    "panel": {
+      "x": 525.796875,
+      "y": 128.296875,
+      "width": 223.015625,
+      "height": 766.78125
+    },
+    "bodyText": "BatalhaOkê\n\nParticipante 1\n\nMARIANA COSTA\n\nUMA CANÇÃO COM UM TÍTULO MUITO EXTENSO PARA CONFERIR A LEITURA COMPLETA DA MÚSICA SEM E",
+    "pageScrollY": false,
+    "title": "Uma canção com um título muito extenso para conferir a leitura completa da música sem esconder palavras importantes nem cobrir o vídeo ou o QR Code",
+    "qrRect": {
+      "width": 157.71875,
+      "height": 157.71875
+    }
+  },
+  {
+    "state": "championship-waiting",
+    "w": 768,
+    "h": 1024,
+    "file": "championship-waiting-768x1024.png",
+    "scene": "waiting",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 768,
+      "height": 1024
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-waiting.webp",
+    "bodyText": "BatalhaOkê\n\nCampeonato de vozes\n\nFase de grupos\n\nAguardando a próxima apresentação.\n\nProgresso: 0 de 3 apresentações concluídas\n\nE",
+    "pageScrollY": false,
+    "qrRect": {
+      "width": 144.953125,
+      "height": 144.953125
+    }
+  },
+  {
+    "state": "tv-disabled",
+    "w": 768,
+    "h": 1024,
+    "file": "tv-disabled-768x1024.png",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 768,
+      "height": 1024
+    },
+    "player": null,
+    "panel": null,
+    "bodyText": "BatalhaOkê\n\nEsta TV foi desabilitada. Peça ajuda ao operador.\n\nDesvincular e parear novamente",
+    "pageScrollY": false,
+    "qrRect": null
+  },
+  {
+    "state": "session-disabled",
+    "w": 768,
+    "h": 1024,
+    "file": "session-disabled-768x1024.png",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 768,
+      "height": 1024
+    },
+    "player": null,
+    "panel": null,
+    "bodyText": "BatalhaOkê\n\nTV PAREADA\n\nEstabelecimento\n\nLocal de teste\n\nDispositivo\n\nTV de teste\n\nTela da TV desativada para esta sessão.",
+    "pageScrollY": false,
+    "qrRect": null
+  },
+  {
+    "state": "pairing-error",
+    "w": 768,
+    "h": 1024,
+    "file": "pairing-error-768x1024.png",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 768,
+      "height": 1024
+    },
+    "player": null,
+    "panel": null,
+    "bodyText": "BatalhaOkê\n\nEsta TV ainda não está configurada.\n\nNão foi possível preparar o pareamento. Recarregue a tela.",
+    "pageScrollY": false,
+    "qrRect": null
+  },
+  {
+    "state": "long-vote",
+    "w": 1280,
+    "h": 720,
+    "file": "long-vote-1280x720.png",
+    "scene": "duel",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 1280,
+      "height": 720
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-duel.webp",
+    "bodyText": "BatalhaOkê\n\nQUEM VOCÊ PREFERE?\n\nMARIA APARECIDA DE ALBUQUERQUE E VASCONCELOS\n\n×\n\nJOÃO GUILHERME DE OLIVEIRA E ALBUQUERQUE\n\n60\n\nEsc",
+    "pageScrollY": false,
+    "qrRect": {
+      "width": 196,
+      "height": 196
+    }
+  },
+  {
+    "state": "long-song",
+    "w": 1280,
+    "h": 720,
+    "file": "long-song-1280x720.png",
+    "scene": "live",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": true,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 1280,
+      "height": 720
+    },
+    "player": {
+      "x": 87.28125,
+      "y": 137.203125,
+      "width": 782.21875,
+      "height": 439.984375
+    },
+    "panel": {
+      "x": 950.390625,
+      "y": 79,
+      "width": 297.609375,
+      "height": 634.390625
+    },
+    "bodyText": "BatalhaOkê\n\nParticipante 1\n\nMARIANA COSTA\n\nUMA CANÇÃO COM UM TÍTULO MUITO EXTENSO PARA CONFERIR A LEITURA COMPLETA DA MÚSICA SEM E",
+    "pageScrollY": false,
+    "title": "Uma canção com um título muito extenso para conferir a leitura completa da música sem esconder palavras importantes nem cobrir o vídeo ou o QR Code",
+    "qrRect": {
+      "width": 149.53125,
+      "height": 149.53125
+    }
+  },
+  {
+    "state": "championship-waiting",
+    "w": 1280,
+    "h": 720,
+    "file": "championship-waiting-1280x720.png",
+    "scene": "waiting",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 1280,
+      "height": 720
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-waiting.webp",
+    "bodyText": "BatalhaOkê\n\nCampeonato de vozes\n\nFase de grupos\n\nAguardando a próxima apresentação.\n\nProgresso: 0 de 3 apresentações concluídas\n\nE",
+    "pageScrollY": false,
+    "qrRect": {
+      "width": 196,
+      "height": 196
+    }
+  },
+  {
+    "state": "tv-disabled",
+    "w": 1280,
+    "h": 720,
+    "file": "tv-disabled-1280x720.png",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 1280,
+      "height": 720
+    },
+    "player": null,
+    "panel": null,
+    "bodyText": "BatalhaOkê\n\nEsta TV foi desabilitada. Peça ajuda ao operador.\n\nDesvincular e parear novamente",
+    "pageScrollY": false,
+    "qrRect": null
+  },
+  {
+    "state": "session-disabled",
+    "w": 1280,
+    "h": 720,
+    "file": "session-disabled-1280x720.png",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 1280,
+      "height": 720
+    },
+    "player": null,
+    "panel": null,
+    "bodyText": "BatalhaOkê\n\nTV PAREADA\n\nEstabelecimento\n\nLocal de teste\n\nDispositivo\n\nTV de teste\n\nTela da TV desativada para esta sessão.",
+    "pageScrollY": false,
+    "qrRect": null
+  },
+  {
+    "state": "pairing-error",
+    "w": 1280,
+    "h": 720,
+    "file": "pairing-error-1280x720.png",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 1280,
+      "height": 720
+    },
+    "player": null,
+    "panel": null,
+    "bodyText": "BatalhaOkê\n\nEsta TV ainda não está configurada.\n\nNão foi possível preparar o pareamento. Recarregue a tela.",
+    "pageScrollY": false,
+    "qrRect": null
+  },
+  {
+    "state": "long-vote",
+    "w": 2560,
+    "h": 1080,
+    "file": "long-vote-2560x1080.png",
+    "scene": "duel",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 2560,
+      "height": 1080
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-duel.webp",
+    "bodyText": "BatalhaOkê\n\nQUEM VOCÊ PREFERE?\n\nMARIA APARECIDA DE ALBUQUERQUE E VASCONCELOS\n\n×\n\nJOÃO GUILHERME DE OLIVEIRA E ALBUQUERQUE\n\n60\n\nEsc",
+    "pageScrollY": false,
+    "qrRect": {
+      "width": 276,
+      "height": 276
+    }
+  },
+  {
+    "state": "long-song",
+    "w": 2560,
+    "h": 1080,
+    "file": "long-song-2560x1080.png",
+    "scene": "live",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 2560,
+      "height": 1080
+    },
+    "player": {
+      "x": 249.890625,
+      "y": 109.5,
+      "width": 1422.21875,
+      "height": 799.984375
+    },
+    "panel": {
+      "x": 1898,
+      "y": 243.328125,
+      "width": 598,
+      "height": 610.328125
+    },
+    "bodyText": "BatalhaOkê\n\nParticipante 1\n\nMARIANA COSTA\n\nUMA CANÇÃO COM UM TÍTULO MUITO EXTENSO PARA CONFERIR A LEITURA COMPLETA DA MÚSICA SEM E",
+    "pageScrollY": false,
+    "title": "Uma canção com um título muito extenso para conferir a leitura completa da música sem esconder palavras importantes nem cobrir o vídeo ou o QR Code",
+    "qrRect": {
+      "width": 216,
+      "height": 216
+    }
+  },
+  {
+    "state": "championship-waiting",
+    "w": 2560,
+    "h": 1080,
+    "file": "championship-waiting-2560x1080.png",
+    "scene": "waiting",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 2560,
+      "height": 1080
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-waiting.webp",
+    "bodyText": "BatalhaOkê\n\nCampeonato de vozes\n\nFase de grupos\n\nAguardando a próxima apresentação.\n\nProgresso: 0 de 3 apresentações concluídas\n\nE",
+    "pageScrollY": false,
+    "qrRect": {
+      "width": 276,
+      "height": 276
+    }
+  },
+  {
+    "state": "tv-disabled",
+    "w": 2560,
+    "h": 1080,
+    "file": "tv-disabled-2560x1080.png",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 2560,
+      "height": 1080
+    },
+    "player": null,
+    "panel": null,
+    "bodyText": "BatalhaOkê\n\nEsta TV foi desabilitada. Peça ajuda ao operador.\n\nDesvincular e parear novamente",
+    "pageScrollY": false,
+    "qrRect": null
+  },
+  {
+    "state": "session-disabled",
+    "w": 2560,
+    "h": 1080,
+    "file": "session-disabled-2560x1080.png",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 2560,
+      "height": 1080
+    },
+    "player": null,
+    "panel": null,
+    "bodyText": "BatalhaOkê\n\nTV PAREADA\n\nEstabelecimento\n\nLocal de teste\n\nDispositivo\n\nTV de teste\n\nTela da TV desativada para esta sessão.",
+    "pageScrollY": false,
+    "qrRect": null
+  },
+  {
+    "state": "pairing-error",
+    "w": 2560,
+    "h": 1080,
+    "file": "pairing-error-2560x1080.png",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 2560,
+      "height": 1080
+    },
+    "player": null,
+    "panel": null,
+    "bodyText": "BatalhaOkê\n\nEsta TV ainda não está configurada.\n\nNão foi possível preparar o pareamento. Recarregue a tela.",
+    "pageScrollY": false,
+    "qrRect": null
+  },
+  {
+    "state": "long-vote",
+    "w": 3840,
+    "h": 2160,
+    "file": "long-vote-3840x2160.png",
+    "scene": "duel",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 3840,
+      "height": 2160
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-duel.webp",
+    "bodyText": "BatalhaOkê\n\nQUEM VOCÊ PREFERE?\n\nMARIA APARECIDA DE ALBUQUERQUE E VASCONCELOS\n\n×\n\nJOÃO GUILHERME DE OLIVEIRA E ALBUQUERQUE\n\n60\n\nEsc",
+    "pageScrollY": false,
+    "qrRect": {
+      "width": 552,
+      "height": 552
+    }
+  },
+  {
+    "state": "long-song",
+    "w": 3840,
+    "h": 2160,
+    "file": "long-song-3840x2160.png",
+    "scene": "live",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 3840,
+      "height": 2160
+    },
+    "player": {
+      "x": 96,
+      "y": 266.375,
+      "width": 2676,
+      "height": 1505.25
+    },
+    "panel": {
+      "x": 2852,
+      "y": 426.65625,
+      "width": 892,
+      "height": 1340.671875
+    },
+    "bodyText": "BatalhaOkê\n\nParticipante 1\n\nMARIANA COSTA\n\nUMA CANÇÃO COM UM TÍTULO MUITO EXTENSO PARA CONFERIR A LEITURA COMPLETA DA MÚSICA SEM E",
+    "pageScrollY": false,
+    "title": "Uma canção com um título muito extenso para conferir a leitura completa da música sem esconder palavras importantes nem cobrir o vídeo ou o QR Code",
+    "qrRect": {
+      "width": 432,
+      "height": 432
+    }
+  },
+  {
+    "state": "championship-waiting",
+    "w": 3840,
+    "h": 2160,
+    "file": "championship-waiting-3840x2160.png",
+    "scene": "waiting",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 3840,
+      "height": 2160
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-waiting.webp",
+    "bodyText": "BatalhaOkê\n\nCampeonato de vozes\n\nFase de grupos\n\nAguardando a próxima apresentação.\n\nProgresso: 0 de 3 apresentações concluídas\n\nE",
+    "pageScrollY": false,
+    "qrRect": {
+      "width": 552,
+      "height": 552
+    }
+  },
+  {
+    "state": "tv-disabled",
+    "w": 3840,
+    "h": 2160,
+    "file": "tv-disabled-3840x2160.png",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 3840,
+      "height": 2160
+    },
+    "player": null,
+    "panel": null,
+    "bodyText": "BatalhaOkê\n\nEsta TV foi desabilitada. Peça ajuda ao operador.\n\nDesvincular e parear novamente",
+    "pageScrollY": false,
+    "qrRect": null
+  },
+  {
+    "state": "session-disabled",
+    "w": 3840,
+    "h": 2160,
+    "file": "session-disabled-3840x2160.png",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 3840,
+      "height": 2160
+    },
+    "player": null,
+    "panel": null,
+    "bodyText": "BatalhaOkê\n\nTV PAREADA\n\nEstabelecimento\n\nLocal de teste\n\nDispositivo\n\nTV de teste\n\nTela da TV desativada para esta sessão.",
+    "pageScrollY": false,
+    "qrRect": null
+  },
+  {
+    "state": "pairing-error",
+    "w": 3840,
+    "h": 2160,
+    "file": "pairing-error-3840x2160.png",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 3840,
+      "height": 2160
+    },
+    "player": null,
+    "panel": null,
+    "bodyText": "BatalhaOkê\n\nEsta TV ainda não está configurada.\n\nNão foi possível preparar o pareamento. Recarregue a tela.",
+    "pageScrollY": false,
+    "qrRect": null
+  },
+  {
+    "playerNodeStableAcrossBreakpoints": true
+  }
+]

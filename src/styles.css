@@ -1281,3 +1281,660 @@ html[data-tv-page] .tv-content [data-long-name="true"] {
     line-height: 32px;
   }
 }
+
+/* Pulso TV: full-bleed stage, safe content, and a stable player DOM.
+   Plain values precede clamp/dvh for older TV browsers. No layer or filter. */
+html[data-tv-page] main.tv-screen {
+  padding: 18px 2.5%;
+  padding: clamp(10px, 2.5vh, 40px) 2.5%;
+  overflow: auto;
+}
+.pulso-arena-backdrop img {
+  display: block;
+  opacity: 1;
+  object-position: 50% 50%;
+}
+.pulso-arena-backdrop::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(8, 18, 31, 0.4),
+    transparent 28%,
+    transparent 75%,
+    rgba(8, 18, 31, 0.55)
+  );
+}
+html[data-tv-page] .tv-opening-copy {
+  width: 90%;
+  max-width: 1200px;
+  padding: 24px;
+  background: radial-gradient(
+    ellipse,
+    rgba(8, 18, 31, 0.88),
+    rgba(8, 18, 31, 0.45) 65%,
+    transparent
+  );
+}
+html[data-tv-page] .tv-brand {
+  flex: 0 0 auto;
+  min-height: 44px;
+  padding: 0 56px 8px 0;
+  border-bottom-color: rgba(168, 181, 201, 0.25);
+}
+html[data-tv-page] .tv-brand > p {
+  font-size: 32px;
+  line-height: 1.1;
+}
+html[data-tv-page] .tv-fullscreen {
+  min-width: 44px;
+  min-height: 44px;
+  padding: 10px;
+}
+html[data-tv-page] .tv-fullscreen svg {
+  width: 24px;
+  height: 24px;
+}
+html[data-tv-page] .tv-content {
+  grid-gap: 20px;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: center;
+}
+html[data-tv-page] .tv-content > section,
+html[data-tv-page] .tv-content > div:not(.tv-playing-inner) {
+  min-width: 0;
+  padding: 18px;
+  background: rgba(8, 18, 31, 0.72);
+  border-radius: 16px;
+}
+html[data-tv-page] .tv-content > section {
+  max-width: 1200px;
+  width: 100%;
+  justify-self: center;
+}
+html[data-tv-page] .tv-content:has(> aside) {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+/* The class is also the legacy fallback for browsers without :has(). */
+html[data-tv-page] .tv-content.lg\:grid-cols-\[minmax\(0\,1fr\)_auto\] {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+html[data-tv-page] .tv-content > aside {
+  width: 220px;
+  max-width: 22vw;
+  justify-self: center;
+}
+html[data-tv-page] .session-qr {
+  box-sizing: border-box;
+  max-width: 100%;
+}
+html[data-tv-page] .session-qr svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+html[data-tv-page] .tv-x1-arena > article {
+  background: rgba(8, 18, 31, 0.65);
+}
+html[data-tv-page] .tv-content h1,
+html[data-tv-page] .tv-content h2 {
+  overflow-wrap: break-word;
+  overflow-wrap: anywhere;
+}
+html[data-tv-page] .tv-content h1,
+html[data-tv-page] .tv-content h2,
+html[data-tv-page] .tv-x1-arena h1 {
+  font-size: 48px;
+  font-size: clamp(24px, 4.2vw, 64px);
+  line-height: 1.06;
+}
+html[data-tv-page] .tv-content p {
+  overflow-wrap: break-word;
+}
+html[data-tv-page] .tv-audio-prompt {
+  background: #111e30;
+  font-size: 16px;
+  line-height: 1.3;
+  min-height: 44px;
+}
+html[data-tv-page] .tv-video > div:first-child {
+  max-height: none;
+}
+html[data-tv-page] .tv-performance-panel {
+  background: #111e30;
+}
+@media (min-width: 1800px) and (min-height: 900px) {
+  html[data-tv-page] .tv-content > aside {
+    width: 300px;
+  }
+  html[data-tv-page] .tv-brand > p {
+    font-size: 48px;
+  }
+}
+@media (max-width: 767px) and (orientation: portrait) {
+  html[data-tv-page] .tv-content,
+  html[data-tv-page] .tv-content.lg\:grid-cols-\[minmax\(0\,1fr\)_auto\] {
+    grid-template-columns: minmax(0, 1fr);
+    grid-gap: 12px;
+  }
+  html[data-tv-page] .tv-content > aside {
+    width: 148px;
+    max-width: 100%;
+  }
+  html[data-tv-page] .tv-content > aside > p {
+    font-size: 16px;
+    line-height: 1.2;
+    padding: 4px;
+  }
+  html[data-tv-page] .tv-content > section {
+    padding: 12px;
+  }
+  html[data-tv-page] .tv-x1-arena {
+    grid-template-columns: minmax(0, 1fr);
+    grid-gap: 8px;
+  }
+  html[data-tv-page] .tv-x1-arena > article {
+    padding: 8px;
+  }
+  html[data-tv-page] .tv-x1-arena .font-display:not(h1) {
+    font-size: 22px;
+    line-height: 1.1;
+  }
+  html[data-tv-page] .tv-x1-arena p:not(.font-display) {
+    font-size: 14px;
+    line-height: 1.25;
+  }
+  html[data-tv-page] .tv-playing-inner {
+    height: auto;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto auto;
+    grid-gap: 12px;
+  }
+  html[data-tv-page] .tv-video {
+    grid-column: 1;
+    grid-row: 1;
+    max-width: none;
+  }
+  html[data-tv-page] .tv-performance-panel {
+    grid-column: 1;
+    grid-row: 2;
+    padding: 10px;
+  }
+  html[data-tv-page] .tv-performance-panel h1 {
+    font-size: 26px;
+    line-height: 1.1;
+  }
+  html[data-tv-page] .tv-performance-panel > p,
+  html[data-tv-page] .tv-performance-panel > p.font-display {
+    font-size: 16px;
+    line-height: 1.25;
+  }
+  html[data-tv-page] .tv-playback-qr {
+    margin-top: 8px;
+    display: grid;
+    grid-template-columns: 108px minmax(0, 1fr);
+    grid-gap: 10px;
+  }
+  html[data-tv-page] .tv-playback-qr > div {
+    padding: 6px;
+  }
+  html[data-tv-page] .tv-playback-qr p {
+    font-size: 16px;
+    line-height: 1.2;
+  }
+  html[data-tv-page] .tv-opening-copy {
+    width: 100%;
+    padding: 16px 8px;
+  }
+  html[data-tv-page] main h1.tv-opening-title {
+    font-size: 40px;
+    line-height: 1.05;
+    margin: 18px 0;
+  }
+  html[data-tv-page] main p.tv-opening-subtitle {
+    font-size: 24px;
+    line-height: 1.2;
+  }
+  html[data-tv-page] main p.tv-eyebrow,
+  html[data-tv-page] main p.tv-opening-invite {
+    font-size: 18px;
+    line-height: 1.25;
+    margin-top: 16px;
+  }
+  html[data-tv-page] main p.tv-opening-status {
+    font-size: 16px;
+    line-height: 1.25;
+    margin-top: 16px;
+  }
+  html[data-tv-page] .tv-vote-countdown {
+    font-size: 64px;
+    line-height: 1;
+  }
+  html[data-tv-page] .tv-content [data-long-name="true"] {
+    font-size: 24px;
+    line-height: 1.1;
+  }
+  html[data-tv-page] .tv-content > section > p {
+    font-size: 18px;
+    line-height: 1.25;
+  }
+}
+@media (max-height: 600px) and (orientation: landscape) {
+  html[data-tv-page] main.tv-screen {
+    padding: 8px 2.5%;
+    gap: 8px;
+  }
+  html[data-tv-page] .tv-brand {
+    min-height: 36px;
+    padding-bottom: 4px;
+  }
+  html[data-tv-page] .tv-brand > p {
+    font-size: 26px;
+  }
+  html[data-tv-page] .tv-brand > svg {
+    width: 24px;
+    height: 24px;
+  }
+  html[data-tv-page] .tv-content {
+    grid-gap: 12px;
+  }
+  html[data-tv-page] .tv-content > aside {
+    width: 120px;
+    max-width: 22vw;
+  }
+  html[data-tv-page] .tv-content > aside > p {
+    font-size: 14px;
+    line-height: 1.1;
+    padding: 4px;
+  }
+  html[data-tv-page] .tv-content > section {
+    padding: 8px;
+    gap: 8px;
+  }
+  html[data-tv-page] .tv-x1-arena {
+    grid-gap: 6px;
+  }
+  html[data-tv-page] .tv-x1-arena > article {
+    padding: 6px;
+  }
+  html[data-tv-page] .tv-x1-arena h1,
+  html[data-tv-page] .tv-content [data-long-name="true"] {
+    font-size: 24px;
+    line-height: 1.05;
+  }
+  html[data-tv-page] .tv-x1-arena .font-display:not(h1) {
+    font-size: 20px;
+    line-height: 1.05;
+  }
+  html[data-tv-page] .tv-x1-arena p:not(.font-display) {
+    font-size: 12px;
+    line-height: 1.2;
+  }
+  html[data-tv-page] .tv-content > section > p {
+    font-size: 16px;
+    line-height: 1.15;
+  }
+  html[data-tv-page] .tv-vote-countdown {
+    font-size: 48px;
+    line-height: 1;
+  }
+  html[data-tv-page] .tv-audio-prompt {
+    min-height: 32px;
+    font-size: 12px;
+    padding: 6px;
+  }
+  html[data-tv-page] .tv-playing-inner {
+    grid-template-columns: minmax(0, 1fr) minmax(140px, 0.65fr);
+    grid-gap: 10px;
+  }
+  html[data-tv-page] .tv-performance-panel {
+    padding: 6px;
+  }
+  html[data-tv-page] .tv-performance-panel h1 {
+    font-size: 22px;
+    line-height: 1.05;
+  }
+  html[data-tv-page] .tv-performance-panel > p,
+  html[data-tv-page] .tv-performance-panel > p.font-display {
+    font-size: 12px;
+    line-height: 1.15;
+    margin-top: 4px;
+  }
+  html[data-tv-page] .tv-playback-qr {
+    display: grid;
+    grid-template-columns: 76px minmax(0, 1fr);
+    grid-gap: 6px;
+    margin-top: 4px;
+  }
+  html[data-tv-page] .tv-playback-qr > div {
+    padding: 4px;
+  }
+  html[data-tv-page] .tv-playback-qr p {
+    font-size: 12px;
+    line-height: 1.1;
+  }
+  html[data-tv-page] .tv-video,
+  html[data-tv-page] main[data-audio-ready="true"] .tv-video {
+    max-width: calc((100vh - 160px) * 1.7777778);
+  }
+  html[data-tv-page] .tv-video .min-w-\[280px\] {
+    min-width: 0;
+  }
+  html[data-tv-page] .tv-opening-copy {
+    padding: 8px 16px;
+  }
+  html[data-tv-page] main h1.tv-opening-title {
+    font-size: 36px;
+    line-height: 1.05;
+    margin: 8px 0;
+  }
+  html[data-tv-page] main p.tv-eyebrow,
+  html[data-tv-page] main p.tv-opening-invite,
+  html[data-tv-page] main p.tv-opening-status {
+    font-size: 14px;
+    line-height: 1.2;
+    margin-top: 8px;
+  }
+  html[data-tv-page] main p.tv-opening-subtitle {
+    font-size: 20px;
+    line-height: 1.2;
+  }
+}
+
+/* Keep the full information panel inside the live safe area at 720p. */
+html[data-tv-page] .tv-playback-qr > .session-qr {
+  width: 170px;
+}
+html[data-tv-page] .tv-performance-panel h1 {
+  font-size: 40px;
+  line-height: 1.06;
+}
+html[data-tv-page] .tv-performance-panel > p {
+  font-size: 18px;
+  line-height: 1.25;
+}
+html[data-tv-page] .tv-performance-panel > p.font-display {
+  font-size: 24px;
+  line-height: 1.25;
+}
+@media (min-width: 1800px) and (min-height: 900px) {
+  html[data-tv-page] .tv-playback-qr > .session-qr {
+    width: 240px;
+  }
+  html[data-tv-page] .tv-performance-panel h1 {
+    font-size: 64px;
+  }
+}
+@media (max-width: 767px) and (orientation: portrait) {
+  html[data-tv-page] .tv-playback-qr > .session-qr {
+    width: 108px;
+  }
+  html[data-tv-page] .tv-performance-panel h1 {
+    font-size: 26px;
+  }
+  html[data-tv-page] .tv-performance-panel > p,
+  html[data-tv-page] .tv-performance-panel > p.font-display {
+    font-size: 16px;
+  }
+}
+@media (max-height: 600px) and (orientation: landscape) {
+  html[data-tv-page] .tv-playback-qr > .session-qr {
+    width: 76px;
+  }
+  html[data-tv-page] .tv-performance-panel h1 {
+    font-size: 22px;
+  }
+  html[data-tv-page] .tv-performance-panel > p,
+  html[data-tv-page] .tv-performance-panel > p.font-display {
+    font-size: 12px;
+  }
+}
+
+/* Intrinsic content height prevents centering oversized content across the
+   brand or the audio button. Exceptional messages may scroll, never overlap. */
+html[data-tv-page] .tv-content {
+  min-height: min-content;
+}
+html[data-tv-page] .tv-playing-inner {
+  height: auto;
+}
+html[data-tv-page] .tv-content > .tv-direct-vote > .tv-vote-countdown {
+  font-size: 96px;
+  line-height: 1;
+}
+@media (max-width: 767px) and (orientation: portrait) {
+  html[data-tv-page] .tv-direct-vote {
+    gap: 10px;
+  }
+  html[data-tv-page] .tv-direct-vote > div {
+    gap: 8px;
+  }
+  html[data-tv-page] .tv-direct-vote > div .font-display {
+    font-size: 24px;
+    line-height: 1.05;
+  }
+  html[data-tv-page] .tv-content > .tv-direct-vote > .tv-vote-countdown {
+    font-size: 56px;
+  }
+  html[data-tv-page] .tv-performance-panel {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 96px;
+    grid-gap: 6px;
+    text-align: left;
+  }
+  html[data-tv-page] .tv-performance-panel > * {
+    grid-column: 1;
+    margin: 0;
+  }
+  html[data-tv-page] .tv-performance-panel h1 {
+    font-size: 24px;
+  }
+  html[data-tv-page] .tv-performance-panel > p {
+    font-size: 14px;
+  }
+  html[data-tv-page] .tv-performance-panel > p.uppercase {
+    font-size: 12px;
+  }
+  html[data-tv-page] .tv-performance-panel > .tv-playback-qr {
+    grid-column: 2;
+    grid-row: 1 / span 6;
+    display: flex;
+    flex-direction: column;
+    width: 96px;
+    align-self: center;
+  }
+  html[data-tv-page] .tv-playback-qr > .session-qr {
+    width: 96px;
+    padding: 4px;
+  }
+  html[data-tv-page] .tv-playback-qr > p {
+    font-size: 14px;
+  }
+  html[data-tv-page] .tv-performance-panel > div:not(.tv-playback-qr) {
+    grid-column: 1 / -1;
+  }
+}
+@media (max-width: 350px) and (orientation: portrait) {
+  html[data-tv-page] .tv-content > aside {
+    width: 120px;
+  }
+  html[data-tv-page] .tv-content > aside > p {
+    font-size: 14px;
+  }
+}
+@media (max-height: 600px) and (orientation: landscape) {
+  html[data-tv-page] .tv-direct-vote > div .font-display {
+    font-size: 24px;
+    line-height: 1.05;
+  }
+  html[data-tv-page] .tv-direct-vote > div {
+    gap: 6px;
+  }
+  html[data-tv-page] .tv-content > .tv-direct-vote > .tv-vote-countdown {
+    font-size: 48px;
+  }
+}
+
+html[data-tv-page] .tv-performance-panel > p.font-display {
+  display: block;
+  -webkit-line-clamp: unset;
+  overflow: visible;
+}
+@media (max-height: 650px) and (orientation: portrait) {
+  html[data-tv-page] main.tv-screen {
+    padding-top: 8px;
+    padding-bottom: 8px;
+    gap: 8px;
+  }
+  html[data-tv-page] .tv-content {
+    grid-gap: 8px;
+  }
+  html[data-tv-page] .tv-content > section {
+    padding: 8px;
+    gap: 8px;
+  }
+  html[data-tv-page] .tv-content article {
+    padding: 8px;
+  }
+  html[data-tv-page] .tv-content article p {
+    margin-top: 6px;
+    font-size: 14px;
+    line-height: 1.15;
+  }
+  html[data-tv-page] .tv-content article .font-display:not(h1):not(h2) {
+    font-size: 20px;
+    line-height: 1.1;
+  }
+  html[data-tv-page] .tv-content article h1,
+  html[data-tv-page] .tv-content article h2 {
+    margin-top: 6px;
+  }
+  html[data-tv-page] .tv-content article .mt-4 {
+    margin-top: 6px;
+  }
+  html[data-tv-page] .tv-content > section > p {
+    font-size: 14px;
+    line-height: 1.2;
+  }
+  html[data-tv-page] .tv-content > aside {
+    width: 104px;
+    gap: 4px;
+  }
+  html[data-tv-page] .tv-content > aside > p {
+    margin: 0;
+  }
+  html[data-tv-page] .tv-audio-prompt {
+    font-size: 14px;
+    padding: 8px;
+  }
+  html[data-tv-page] .tv-championship > div {
+    margin-top: 8px;
+  }
+  html[data-tv-page] .tv-championship > div .font-display {
+    font-size: 24px;
+    line-height: 1.1;
+  }
+  html[data-tv-page] .tv-championship > div p {
+    font-size: 14px;
+    line-height: 1.2;
+    margin-top: 4px;
+  }
+}
+@media (max-height: 600px) and (orientation: landscape) {
+  html[data-tv-page] .tv-content > section {
+    gap: 6px;
+  }
+  html[data-tv-page] .tv-content article {
+    padding: 6px;
+  }
+  html[data-tv-page] .tv-content article p {
+    margin-top: 4px;
+    font-size: 12px;
+    line-height: 1.15;
+  }
+  html[data-tv-page] .tv-content article .font-display:not(h1):not(h2) {
+    font-size: 18px;
+    line-height: 1.05;
+  }
+  html[data-tv-page] .tv-content article .mt-4,
+  html[data-tv-page] .tv-content article .mt-3 {
+    margin-top: 4px;
+  }
+  html[data-tv-page] .tv-content article h1,
+  html[data-tv-page] .tv-content article h2 {
+    margin-top: 4px;
+    font-size: 24px;
+  }
+  html[data-tv-page] .tv-championship > div {
+    margin-top: 6px;
+  }
+  html[data-tv-page] .tv-championship > div .font-display {
+    font-size: 20px;
+    line-height: 1.05;
+  }
+  html[data-tv-page] .tv-championship > div p {
+    font-size: 12px;
+    line-height: 1.15;
+    margin-top: 4px;
+  }
+  html[data-tv-page] .tv-championship > p {
+    margin-top: 6px;
+  }
+  html[data-tv-page] .tv-championship > p:first-child {
+    margin-top: 0;
+  }
+}
+
+@media (max-height: 650px) and (orientation: portrait) {
+  html[data-tv-page] .tv-content > aside {
+    width: 200px;
+  }
+  html[data-tv-page] .tv-content > aside .session-qr {
+    width: 104px;
+  }
+  html[data-tv-page] .tv-x1-arena {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+  html[data-tv-page] .tv-x1-arena > article:last-child:nth-child(2) {
+    grid-column: 1 / -1;
+  }
+  html[data-tv-page] .tv-x1-arena > article:not(:first-child) .font-display {
+    font-size: 16px;
+    overflow-wrap: anywhere;
+  }
+  html[data-tv-page] .tv-x1-arena > article:not(:first-child) p:not(.font-display) {
+    font-size: 12px;
+  }
+}
+@media (max-height: 600px) and (orientation: landscape) {
+  html[data-tv-page] .tv-video,
+  html[data-tv-page] main[data-audio-ready="true"] .tv-video {
+    max-width: calc((100vh - 200px) * 1.7777778);
+  }
+}
+
+/* Large UHD viewports keep the same readable broadcast scale as Full HD.
+   CSS zoom is supported by legacy Chromium; transform is the fallback.
+   Scaling is confined to presentation and never replaces the player node. */
+@media (min-width: 3000px) and (min-height: 1500px) {
+  html[data-tv-page] main,
+  html[data-tv-page] main.tv-screen {
+    width: 100%;
+    height: 50vh;
+    height: 50dvh;
+    min-height: 0;
+    zoom: 2;
+  }
+  @supports not (zoom: 2) {
+    html[data-tv-page] main,
+    html[data-tv-page] main.tv-screen {
+      width: 50%;
+      transform: scale(2);
+      transform-origin: top left;
+    }
+  }
+}

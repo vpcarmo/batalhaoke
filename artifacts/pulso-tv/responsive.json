@@ -1,0 +1,3618 @@
+[
+  {
+    "state": "opening",
+    "w": 320,
+    "h": 568,
+    "file": "opening-320x568.png",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 320,
+      "height": 568
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-waiting.webp",
+    "bodyText": "BatalhaOkê\n\nCOMPETIÇÃO EM TRANSMISSÃO\n\nSua voz entra na disputa.\n\nO público decide o campeão.\n\nQuem vai encarar a batalha?\n\nAguard"
+  },
+  {
+    "state": "pairing",
+    "w": 320,
+    "h": 568,
+    "file": "pairing-320x568.png",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 320,
+      "height": 568
+    },
+    "player": null,
+    "panel": null,
+    "bodyText": "BatalhaOkê\n\nEsta TV ainda não está configurada.\n\nCódigo de pareamento\n\nABC123\n\nInforme este código ao operador para vincular esta "
+  },
+  {
+    "state": "waiting",
+    "w": 320,
+    "h": 568,
+    "file": "waiting-320x568.png",
+    "scene": "waiting",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 320,
+      "height": 568
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-waiting.webp",
+    "bodyText": "BatalhaOkê\n\nSua voz entra na disputa.\n\nO público decide o campeão. Quem vai encarar a batalha?\n\n0 apresentações realizadas · 0 vot"
+  },
+  {
+    "state": "interval",
+    "w": 320,
+    "h": 568,
+    "file": "interval-320x568.png",
+    "scene": "waiting",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 320,
+      "height": 568
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-waiting.webp",
+    "bodyText": "BatalhaOkê\n\nÚLTIMA APRESENTAÇÃO\n\nMARIANA COSTA\n\nUma canção para toda a plateia\n\n24 votos 👍\n\nPrimeiro destaque da noite · líder at"
+  },
+  {
+    "state": "preparation",
+    "w": 320,
+    "h": 568,
+    "file": "preparation-320x568.png",
+    "scene": "duel",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 320,
+      "height": 568
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-duel.webp",
+    "bodyText": "BatalhaOkê\n\n⚔ ARENA X1\n\nA disputa vai começar\n\nPreparando o primeiro duelo\n\nPRIMEIRO DUELO\n\nMARIANA COSTA × RAFAEL SANTOS\n\nPrepara"
+  },
+  {
+    "state": "duel",
+    "w": 320,
+    "h": 568,
+    "file": "duel-320x568.png",
+    "scene": "duel",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 320,
+      "height": 568
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-duel.webp",
+    "bodyText": "BatalhaOkê\n\n⚔ ARENA X1\n\nA disputa vai começar\n\nPreparando o primeiro duelo\n\nPRÓXIMO DUELO\n\nMARIANA COSTA\n\nAguardando música\n\nVS\n\nR"
+  },
+  {
+    "state": "vote",
+    "w": 320,
+    "h": 568,
+    "file": "vote-320x568.png",
+    "scene": "duel",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 320,
+      "height": 568
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-duel.webp",
+    "bodyText": "BatalhaOkê\n\nQUEM VOCÊ PREFERE?\n\nMARIANA COSTA\n\n×\n\nRAFAEL SANTOS\n\n60\n\nEscaneie o QR Code e vote pelo celular!\n\nEscaneie para votar "
+  },
+  {
+    "state": "victory",
+    "w": 320,
+    "h": 568,
+    "file": "victory-320x568.png",
+    "scene": "victory",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 320,
+      "height": 568
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-victory.webp",
+    "bodyText": "BatalhaOkê\n\n👑 REI DA MESA\n\nMARIANA COSTA\n\n1 vitória consecutiva\n\nÚLTIMO DUELO\n\nMARIANA COSTA\n\n+22\n\n×\n\nRAFAEL SANTOS\n\n🏆 MARIANA C"
+  },
+  {
+    "state": "championship-vote",
+    "w": 320,
+    "h": 568,
+    "file": "championship-vote-320x568.png",
+    "scene": "duel",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 320,
+      "height": 568
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-duel.webp",
+    "bodyText": "BatalhaOkê\n\nCampeonato de vozes\n\nFINAL · CONFRONTO 1\n\nA · Mariana Costa\n\nApresentação pendente\n\n24 votos\n\n×\n\nB · Rafael Santos\n\nAp"
+  },
+  {
+    "state": "championship-victory",
+    "w": 320,
+    "h": 568,
+    "file": "championship-victory-320x568.png",
+    "scene": "victory",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 320,
+      "height": 568
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-victory.webp",
+    "bodyText": "BatalhaOkê\n\nCampeonato de vozes\n\nFINAL · CONFRONTO 1\n\nA · Mariana Costa\n\nApresentação pendente\n\n24 votos\n\n×\n\nB · Rafael Santos\n\nAp"
+  },
+  {
+    "state": "live",
+    "w": 320,
+    "h": 568,
+    "file": "live-320x568.png",
+    "scene": "live",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": true,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 320,
+      "height": 568
+    },
+    "player": {
+      "x": 8,
+      "y": 60.1875,
+      "width": 304,
+      "height": 171
+    },
+    "panel": {
+      "x": 8,
+      "y": 361.1875,
+      "width": 304,
+      "height": 173.4375
+    },
+    "bodyText": "BatalhaOkê\n\nParticipante 1\n\nMARIANA COSTA\n\nUMA CANÇÃO PARA TODA A PLATEIA\n\nAPRESENTAÇÃO EM ANDAMENTO\n\n👍 24 votos\n\nEscaneie para v"
+  },
+  {
+    "state": "long-live",
+    "w": 320,
+    "h": 568,
+    "file": "long-live-320x568.png",
+    "scene": "live",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": true,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 320,
+      "height": 568
+    },
+    "player": {
+      "x": 8,
+      "y": 60.1875,
+      "width": 304,
+      "height": 171
+    },
+    "panel": {
+      "x": 8,
+      "y": 361.1875,
+      "width": 304,
+      "height": 227.171875
+    },
+    "bodyText": "BatalhaOkê\n\nParticipante 1\n\nMARIA APARECIDA DE ALBUQUERQUE E VASCONCELOS\n\nUMA CANÇÃO PARA TODA A PLATEIA\n\nAPRESENTAÇÃO EM ANDAMENT"
+  },
+  {
+    "state": "opening",
+    "w": 360,
+    "h": 800,
+    "file": "opening-360x800.png",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 360,
+      "height": 800
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-waiting.webp",
+    "bodyText": "BatalhaOkê\n\nCOMPETIÇÃO EM TRANSMISSÃO\n\nSua voz entra na disputa.\n\nO público decide o campeão.\n\nQuem vai encarar a batalha?\n\nAguard"
+  },
+  {
+    "state": "pairing",
+    "w": 360,
+    "h": 800,
+    "file": "pairing-360x800.png",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 360,
+      "height": 800
+    },
+    "player": null,
+    "panel": null,
+    "bodyText": "BatalhaOkê\n\nEsta TV ainda não está configurada.\n\nCódigo de pareamento\n\nABC123\n\nInforme este código ao operador para vincular esta "
+  },
+  {
+    "state": "waiting",
+    "w": 360,
+    "h": 800,
+    "file": "waiting-360x800.png",
+    "scene": "waiting",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 360,
+      "height": 800
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-waiting.webp",
+    "bodyText": "BatalhaOkê\n\nSua voz entra na disputa.\n\nO público decide o campeão. Quem vai encarar a batalha?\n\n0 apresentações realizadas · 0 vot"
+  },
+  {
+    "state": "interval",
+    "w": 360,
+    "h": 800,
+    "file": "interval-360x800.png",
+    "scene": "waiting",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 360,
+      "height": 800
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-waiting.webp",
+    "bodyText": "BatalhaOkê\n\nÚLTIMA APRESENTAÇÃO\n\nMARIANA COSTA\n\nUma canção para toda a plateia\n\n24 votos 👍\n\nPrimeiro destaque da noite · líder at"
+  },
+  {
+    "state": "preparation",
+    "w": 360,
+    "h": 800,
+    "file": "preparation-360x800.png",
+    "scene": "duel",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 360,
+      "height": 800
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-duel.webp",
+    "bodyText": "BatalhaOkê\n\n⚔ ARENA X1\n\nA disputa vai começar\n\nPreparando o primeiro duelo\n\nPRIMEIRO DUELO\n\nMARIANA COSTA × RAFAEL SANTOS\n\nPrepara"
+  },
+  {
+    "state": "duel",
+    "w": 360,
+    "h": 800,
+    "file": "duel-360x800.png",
+    "scene": "duel",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 360,
+      "height": 800
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-duel.webp",
+    "bodyText": "BatalhaOkê\n\n⚔ ARENA X1\n\nA disputa vai começar\n\nPreparando o primeiro duelo\n\nPRÓXIMO DUELO\n\nMARIANA COSTA\n\nAguardando música\n\nVS\n\nR"
+  },
+  {
+    "state": "vote",
+    "w": 360,
+    "h": 800,
+    "file": "vote-360x800.png",
+    "scene": "duel",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 360,
+      "height": 800
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-duel.webp",
+    "bodyText": "BatalhaOkê\n\nQUEM VOCÊ PREFERE?\n\nMARIANA COSTA\n\n×\n\nRAFAEL SANTOS\n\n60\n\nEscaneie o QR Code e vote pelo celular!\n\nEscaneie para votar "
+  },
+  {
+    "state": "victory",
+    "w": 360,
+    "h": 800,
+    "file": "victory-360x800.png",
+    "scene": "victory",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 360,
+      "height": 800
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-victory.webp",
+    "bodyText": "BatalhaOkê\n\n👑 REI DA MESA\n\nMARIANA COSTA\n\n1 vitória consecutiva\n\nÚLTIMO DUELO\n\nMARIANA COSTA\n\n+22\n\n×\n\nRAFAEL SANTOS\n\n🏆 MARIANA C"
+  },
+  {
+    "state": "championship-vote",
+    "w": 360,
+    "h": 800,
+    "file": "championship-vote-360x800.png",
+    "scene": "duel",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 360,
+      "height": 800
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-duel.webp",
+    "bodyText": "BatalhaOkê\n\nCampeonato de vozes\n\nFINAL · CONFRONTO 1\n\nA · Mariana Costa\n\nApresentação pendente\n\n24 votos\n\n×\n\nB · Rafael Santos\n\nAp"
+  },
+  {
+    "state": "championship-victory",
+    "w": 360,
+    "h": 800,
+    "file": "championship-victory-360x800.png",
+    "scene": "victory",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 360,
+      "height": 800
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-victory.webp",
+    "bodyText": "BatalhaOkê\n\nCampeonato de vozes\n\nFINAL · CONFRONTO 1\n\nA · Mariana Costa\n\nApresentação pendente\n\n24 votos\n\n×\n\nB · Rafael Santos\n\nAp"
+  },
+  {
+    "state": "live",
+    "w": 360,
+    "h": 800,
+    "file": "live-360x800.png",
+    "scene": "live",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 360,
+      "height": 800
+    },
+    "player": {
+      "x": 9,
+      "y": 151.390625,
+      "width": 342,
+      "height": 192.375
+    },
+    "panel": {
+      "x": 9,
+      "y": 453.765625,
+      "width": 342,
+      "height": 173.4375
+    },
+    "bodyText": "BatalhaOkê\n\nParticipante 1\n\nMARIANA COSTA\n\nUMA CANÇÃO PARA TODA A PLATEIA\n\nAPRESENTAÇÃO EM ANDAMENTO\n\n👍 24 votos\n\nEscaneie para v"
+  },
+  {
+    "state": "long-live",
+    "w": 360,
+    "h": 800,
+    "file": "long-live-360x800.png",
+    "scene": "live",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 360,
+      "height": 800
+    },
+    "player": {
+      "x": 9,
+      "y": 124.515625,
+      "width": 342,
+      "height": 192.375
+    },
+    "panel": {
+      "x": 9,
+      "y": 426.890625,
+      "width": 342,
+      "height": 227.171875
+    },
+    "bodyText": "BatalhaOkê\n\nParticipante 1\n\nMARIA APARECIDA DE ALBUQUERQUE E VASCONCELOS\n\nUMA CANÇÃO PARA TODA A PLATEIA\n\nAPRESENTAÇÃO EM ANDAMENT"
+  },
+  {
+    "state": "opening",
+    "w": 390,
+    "h": 844,
+    "file": "opening-390x844.png",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 390,
+      "height": 844
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-waiting.webp",
+    "bodyText": "BatalhaOkê\n\nCOMPETIÇÃO EM TRANSMISSÃO\n\nSua voz entra na disputa.\n\nO público decide o campeão.\n\nQuem vai encarar a batalha?\n\nAguard"
+  },
+  {
+    "state": "pairing",
+    "w": 390,
+    "h": 844,
+    "file": "pairing-390x844.png",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 390,
+      "height": 844
+    },
+    "player": null,
+    "panel": null,
+    "bodyText": "BatalhaOkê\n\nEsta TV ainda não está configurada.\n\nCódigo de pareamento\n\nABC123\n\nInforme este código ao operador para vincular esta "
+  },
+  {
+    "state": "waiting",
+    "w": 390,
+    "h": 844,
+    "file": "waiting-390x844.png",
+    "scene": "waiting",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 390,
+      "height": 844
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-waiting.webp",
+    "bodyText": "BatalhaOkê\n\nSua voz entra na disputa.\n\nO público decide o campeão. Quem vai encarar a batalha?\n\n0 apresentações realizadas · 0 vot"
+  },
+  {
+    "state": "interval",
+    "w": 390,
+    "h": 844,
+    "file": "interval-390x844.png",
+    "scene": "waiting",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 390,
+      "height": 844
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-waiting.webp",
+    "bodyText": "BatalhaOkê\n\nÚLTIMA APRESENTAÇÃO\n\nMARIANA COSTA\n\nUma canção para toda a plateia\n\n24 votos 👍\n\nPrimeiro destaque da noite · líder at"
+  },
+  {
+    "state": "preparation",
+    "w": 390,
+    "h": 844,
+    "file": "preparation-390x844.png",
+    "scene": "duel",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 390,
+      "height": 844
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-duel.webp",
+    "bodyText": "BatalhaOkê\n\n⚔ ARENA X1\n\nA disputa vai começar\n\nPreparando o primeiro duelo\n\nPRIMEIRO DUELO\n\nMARIANA COSTA × RAFAEL SANTOS\n\nPrepara"
+  },
+  {
+    "state": "duel",
+    "w": 390,
+    "h": 844,
+    "file": "duel-390x844.png",
+    "scene": "duel",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 390,
+      "height": 844
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-duel.webp",
+    "bodyText": "BatalhaOkê\n\n⚔ ARENA X1\n\nA disputa vai começar\n\nPreparando o primeiro duelo\n\nPRÓXIMO DUELO\n\nMARIANA COSTA\n\nAguardando música\n\nVS\n\nR"
+  },
+  {
+    "state": "vote",
+    "w": 390,
+    "h": 844,
+    "file": "vote-390x844.png",
+    "scene": "duel",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 390,
+      "height": 844
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-duel.webp",
+    "bodyText": "BatalhaOkê\n\nQUEM VOCÊ PREFERE?\n\nMARIANA COSTA\n\n×\n\nRAFAEL SANTOS\n\n60\n\nEscaneie o QR Code e vote pelo celular!\n\nEscaneie para votar "
+  },
+  {
+    "state": "victory",
+    "w": 390,
+    "h": 844,
+    "file": "victory-390x844.png",
+    "scene": "victory",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 390,
+      "height": 844
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-victory.webp",
+    "bodyText": "BatalhaOkê\n\n👑 REI DA MESA\n\nMARIANA COSTA\n\n1 vitória consecutiva\n\nÚLTIMO DUELO\n\nMARIANA COSTA\n\n+22\n\n×\n\nRAFAEL SANTOS\n\n🏆 MARIANA C"
+  },
+  {
+    "state": "championship-vote",
+    "w": 390,
+    "h": 844,
+    "file": "championship-vote-390x844.png",
+    "scene": "duel",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 390,
+      "height": 844
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-duel.webp",
+    "bodyText": "BatalhaOkê\n\nCampeonato de vozes\n\nFINAL · CONFRONTO 1\n\nA · Mariana Costa\n\nApresentação pendente\n\n24 votos\n\n×\n\nB · Rafael Santos\n\nAp"
+  },
+  {
+    "state": "championship-victory",
+    "w": 390,
+    "h": 844,
+    "file": "championship-victory-390x844.png",
+    "scene": "victory",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 390,
+      "height": 844
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-victory.webp",
+    "bodyText": "BatalhaOkê\n\nCampeonato de vozes\n\nFINAL · CONFRONTO 1\n\nA · Mariana Costa\n\nApresentação pendente\n\n24 votos\n\n×\n\nB · Rafael Santos\n\nAp"
+  },
+  {
+    "state": "live",
+    "w": 390,
+    "h": 844,
+    "file": "live-390x844.png",
+    "scene": "live",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 390,
+      "height": 844
+    },
+    "player": {
+      "x": 9.75,
+      "y": 172.296875,
+      "width": 370.5,
+      "height": 208.40625
+    },
+    "panel": {
+      "x": 9.75,
+      "y": 490.703125,
+      "width": 370.5,
+      "height": 159.59375
+    },
+    "bodyText": "BatalhaOkê\n\nParticipante 1\n\nMARIANA COSTA\n\nUMA CANÇÃO PARA TODA A PLATEIA\n\nAPRESENTAÇÃO EM ANDAMENTO\n\n👍 24 votos\n\nEscaneie para v"
+  },
+  {
+    "state": "long-live",
+    "w": 390,
+    "h": 844,
+    "file": "long-live-390x844.png",
+    "scene": "live",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 390,
+      "height": 844
+    },
+    "player": {
+      "x": 9.75,
+      "y": 146,
+      "width": 370.5,
+      "height": 208.40625
+    },
+    "panel": {
+      "x": 9.75,
+      "y": 464.40625,
+      "width": 370.5,
+      "height": 212.171875
+    },
+    "bodyText": "BatalhaOkê\n\nParticipante 1\n\nMARIA APARECIDA DE ALBUQUERQUE E VASCONCELOS\n\nUMA CANÇÃO PARA TODA A PLATEIA\n\nAPRESENTAÇÃO EM ANDAMENT"
+  },
+  {
+    "state": "opening",
+    "w": 430,
+    "h": 932,
+    "file": "opening-430x932.png",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 430,
+      "height": 932
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-waiting.webp",
+    "bodyText": "BatalhaOkê\n\nCOMPETIÇÃO EM TRANSMISSÃO\n\nSua voz entra na disputa.\n\nO público decide o campeão.\n\nQuem vai encarar a batalha?\n\nAguard"
+  },
+  {
+    "state": "pairing",
+    "w": 430,
+    "h": 932,
+    "file": "pairing-430x932.png",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 430,
+      "height": 932
+    },
+    "player": null,
+    "panel": null,
+    "bodyText": "BatalhaOkê\n\nEsta TV ainda não está configurada.\n\nCódigo de pareamento\n\nABC123\n\nInforme este código ao operador para vincular esta "
+  },
+  {
+    "state": "waiting",
+    "w": 430,
+    "h": 932,
+    "file": "waiting-430x932.png",
+    "scene": "waiting",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 430,
+      "height": 932
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-waiting.webp",
+    "bodyText": "BatalhaOkê\n\nSua voz entra na disputa.\n\nO público decide o campeão. Quem vai encarar a batalha?\n\n0 apresentações realizadas · 0 vot"
+  },
+  {
+    "state": "interval",
+    "w": 430,
+    "h": 932,
+    "file": "interval-430x932.png",
+    "scene": "waiting",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 430,
+      "height": 932
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-waiting.webp",
+    "bodyText": "BatalhaOkê\n\nÚLTIMA APRESENTAÇÃO\n\nMARIANA COSTA\n\nUma canção para toda a plateia\n\n24 votos 👍\n\nPrimeiro destaque da noite · líder at"
+  },
+  {
+    "state": "preparation",
+    "w": 430,
+    "h": 932,
+    "file": "preparation-430x932.png",
+    "scene": "duel",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 430,
+      "height": 932
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-duel.webp",
+    "bodyText": "BatalhaOkê\n\n⚔ ARENA X1\n\nA disputa vai começar\n\nPreparando o primeiro duelo\n\nPRIMEIRO DUELO\n\nMARIANA COSTA × RAFAEL SANTOS\n\nPrepara"
+  },
+  {
+    "state": "duel",
+    "w": 430,
+    "h": 932,
+    "file": "duel-430x932.png",
+    "scene": "duel",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 430,
+      "height": 932
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-duel.webp",
+    "bodyText": "BatalhaOkê\n\n⚔ ARENA X1\n\nA disputa vai começar\n\nPreparando o primeiro duelo\n\nPRÓXIMO DUELO\n\nMARIANA COSTA\n\nAguardando música\n\nVS\n\nR"
+  },
+  {
+    "state": "vote",
+    "w": 430,
+    "h": 932,
+    "file": "vote-430x932.png",
+    "scene": "duel",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 430,
+      "height": 932
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-duel.webp",
+    "bodyText": "BatalhaOkê\n\nQUEM VOCÊ PREFERE?\n\nMARIANA COSTA\n\n×\n\nRAFAEL SANTOS\n\n60\n\nEscaneie o QR Code e vote pelo celular!\n\nEscaneie para votar "
+  },
+  {
+    "state": "victory",
+    "w": 430,
+    "h": 932,
+    "file": "victory-430x932.png",
+    "scene": "victory",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 430,
+      "height": 932
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-victory.webp",
+    "bodyText": "BatalhaOkê\n\n👑 REI DA MESA\n\nMARIANA COSTA\n\n1 vitória consecutiva\n\nÚLTIMO DUELO\n\nMARIANA COSTA\n\n+22\n\n×\n\nRAFAEL SANTOS\n\n🏆 MARIANA C"
+  },
+  {
+    "state": "championship-vote",
+    "w": 430,
+    "h": 932,
+    "file": "championship-vote-430x932.png",
+    "scene": "duel",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 430,
+      "height": 932
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-duel.webp",
+    "bodyText": "BatalhaOkê\n\nCampeonato de vozes\n\nFINAL · CONFRONTO 1\n\nA · Mariana Costa\n\nApresentação pendente\n\n24 votos\n\n×\n\nB · Rafael Santos\n\nAp"
+  },
+  {
+    "state": "championship-victory",
+    "w": 430,
+    "h": 932,
+    "file": "championship-victory-430x932.png",
+    "scene": "victory",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 430,
+      "height": 932
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-victory.webp",
+    "bodyText": "BatalhaOkê\n\nCampeonato de vozes\n\nFINAL · CONFRONTO 1\n\nA · Mariana Costa\n\nApresentação pendente\n\n24 votos\n\n×\n\nB · Rafael Santos\n\nAp"
+  },
+  {
+    "state": "live",
+    "w": 430,
+    "h": 932,
+    "file": "live-430x932.png",
+    "scene": "live",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 430,
+      "height": 932
+    },
+    "player": {
+      "x": 10.75,
+      "y": 205.609375,
+      "width": 408.5,
+      "height": 229.78125
+    },
+    "panel": {
+      "x": 10.75,
+      "y": 545.390625,
+      "width": 408.5,
+      "height": 159.59375
+    },
+    "bodyText": "BatalhaOkê\n\nParticipante 1\n\nMARIANA COSTA\n\nUMA CANÇÃO PARA TODA A PLATEIA\n\nAPRESENTAÇÃO EM ANDAMENTO\n\n👍 24 votos\n\nEscaneie para v"
+  },
+  {
+    "state": "long-live",
+    "w": 430,
+    "h": 932,
+    "file": "long-live-430x932.png",
+    "scene": "live",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 430,
+      "height": 932
+    },
+    "player": {
+      "x": 10.75,
+      "y": 192.515625,
+      "width": 408.5,
+      "height": 229.78125
+    },
+    "panel": {
+      "x": 10.75,
+      "y": 532.296875,
+      "width": 408.5,
+      "height": 185.78125
+    },
+    "bodyText": "BatalhaOkê\n\nParticipante 1\n\nMARIA APARECIDA DE ALBUQUERQUE E VASCONCELOS\n\nUMA CANÇÃO PARA TODA A PLATEIA\n\nAPRESENTAÇÃO EM ANDAMENT"
+  },
+  {
+    "state": "opening",
+    "w": 568,
+    "h": 320,
+    "file": "opening-568x320.png",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 568,
+      "height": 320
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-waiting.webp",
+    "bodyText": "BatalhaOkê\n\nCOMPETIÇÃO EM TRANSMISSÃO\n\nSua voz entra na disputa.\n\nO público decide o campeão.\n\nQuem vai encarar a batalha?\n\nAguard"
+  },
+  {
+    "state": "pairing",
+    "w": 568,
+    "h": 320,
+    "file": "pairing-568x320.png",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 568,
+      "height": 322
+    },
+    "player": null,
+    "panel": null,
+    "bodyText": "BatalhaOkê\n\nEsta TV ainda não está configurada.\n\nCódigo de pareamento\n\nABC123\n\nInforme este código ao operador para vincular esta "
+  },
+  {
+    "state": "waiting",
+    "w": 568,
+    "h": 320,
+    "file": "waiting-568x320.png",
+    "scene": "waiting",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 568,
+      "height": 320
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-waiting.webp",
+    "bodyText": "BatalhaOkê\n\nSua voz entra na disputa.\n\nO público decide o campeão. Quem vai encarar a batalha?\n\n0 apresentações realizadas · 0 vot"
+  },
+  {
+    "state": "interval",
+    "w": 568,
+    "h": 320,
+    "file": "interval-568x320.png",
+    "scene": "waiting",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 568,
+      "height": 320
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-waiting.webp",
+    "bodyText": "BatalhaOkê\n\nÚLTIMA APRESENTAÇÃO\n\nMARIANA COSTA\n\nUma canção para toda a plateia\n\n24 votos 👍\n\nPrimeiro destaque da noite · líder at"
+  },
+  {
+    "state": "preparation",
+    "w": 568,
+    "h": 320,
+    "file": "preparation-568x320.png",
+    "scene": "duel",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 568,
+      "height": 320
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-duel.webp",
+    "bodyText": "BatalhaOkê\n\n⚔ ARENA X1\n\nA disputa vai começar\n\nPreparando o primeiro duelo\n\nPRIMEIRO DUELO\n\nMARIANA COSTA × RAFAEL SANTOS\n\nPrepara"
+  },
+  {
+    "state": "duel",
+    "w": 568,
+    "h": 320,
+    "file": "duel-568x320.png",
+    "scene": "duel",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 568,
+      "height": 320
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-duel.webp",
+    "bodyText": "BatalhaOkê\n\n⚔ ARENA X1\n\nA disputa vai começar\n\nPreparando o primeiro duelo\n\nPRÓXIMO DUELO\n\nMARIANA COSTA\n\nAguardando música\n\nVS\n\nR"
+  },
+  {
+    "state": "vote",
+    "w": 568,
+    "h": 320,
+    "file": "vote-568x320.png",
+    "scene": "duel",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 568,
+      "height": 320
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-duel.webp",
+    "bodyText": "BatalhaOkê\n\nQUEM VOCÊ PREFERE?\n\nMARIANA COSTA\n\n×\n\nRAFAEL SANTOS\n\n60\n\nEscaneie o QR Code e vote pelo celular!\n\nEscaneie para votar "
+  },
+  {
+    "state": "victory",
+    "w": 568,
+    "h": 320,
+    "file": "victory-568x320.png",
+    "scene": "victory",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 568,
+      "height": 320
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-victory.webp",
+    "bodyText": "BatalhaOkê\n\n👑 REI DA MESA\n\nMARIANA COSTA\n\n1 vitória consecutiva\n\nÚLTIMO DUELO\n\nMARIANA COSTA\n\n+22\n\n×\n\nRAFAEL SANTOS\n\n🏆 MARIANA C"
+  },
+  {
+    "state": "championship-vote",
+    "w": 568,
+    "h": 320,
+    "file": "championship-vote-568x320.png",
+    "scene": "duel",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 568,
+      "height": 320
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-duel.webp",
+    "bodyText": "BatalhaOkê\n\nCampeonato de vozes\n\nFINAL · CONFRONTO 1\n\nA · Mariana Costa\n\nApresentação pendente\n\n24 votos\n\n×\n\nB · Rafael Santos\n\nAp"
+  },
+  {
+    "state": "championship-victory",
+    "w": 568,
+    "h": 320,
+    "file": "championship-victory-568x320.png",
+    "scene": "victory",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 568,
+      "height": 320
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-victory.webp",
+    "bodyText": "BatalhaOkê\n\nCampeonato de vozes\n\nFINAL · CONFRONTO 1\n\nA · Mariana Costa\n\nApresentação pendente\n\n24 votos\n\n×\n\nB · Rafael Santos\n\nAp"
+  },
+  {
+    "state": "live",
+    "w": 568,
+    "h": 320,
+    "file": "live-568x320.png",
+    "scene": "live",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": true,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 568,
+      "height": 320
+    },
+    "player": {
+      "x": 68.015625,
+      "y": 52,
+      "width": 213.328125,
+      "height": 119.984375
+    },
+    "panel": {
+      "x": 345.171875,
+      "y": 66.828125,
+      "width": 208.640625,
+      "height": 228.3125
+    },
+    "bodyText": "BatalhaOkê\n\nParticipante 1\n\nMARIANA COSTA\n\nUMA CANÇÃO PARA TODA A PLATEIA\n\nAPRESENTAÇÃO EM ANDAMENTO\n\n👍 24 votos\n\nEscaneie para v"
+  },
+  {
+    "state": "long-live",
+    "w": 568,
+    "h": 320,
+    "file": "long-live-568x320.png",
+    "scene": "live",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": true,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 568,
+      "height": 320
+    },
+    "player": {
+      "x": 68.015625,
+      "y": 63.28125,
+      "width": 213.328125,
+      "height": 119.984375
+    },
+    "panel": {
+      "x": 345.171875,
+      "y": 52,
+      "width": 208.640625,
+      "height": 280.5625
+    },
+    "bodyText": "BatalhaOkê\n\nParticipante 1\n\nMARIA APARECIDA DE ALBUQUERQUE E VASCONCELOS\n\nUMA CANÇÃO PARA TODA A PLATEIA\n\nAPRESENTAÇÃO EM ANDAMENT"
+  },
+  {
+    "state": "opening",
+    "w": 800,
+    "h": 360,
+    "file": "opening-800x360.png",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 800,
+      "height": 360
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-waiting.webp",
+    "bodyText": "BatalhaOkê\n\nCOMPETIÇÃO EM TRANSMISSÃO\n\nSua voz entra na disputa.\n\nO público decide o campeão.\n\nQuem vai encarar a batalha?\n\nAguard"
+  },
+  {
+    "state": "pairing",
+    "w": 800,
+    "h": 360,
+    "file": "pairing-800x360.png",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 800,
+      "height": 360
+    },
+    "player": null,
+    "panel": null,
+    "bodyText": "BatalhaOkê\n\nEsta TV ainda não está configurada.\n\nCódigo de pareamento\n\nABC123\n\nInforme este código ao operador para vincular esta "
+  },
+  {
+    "state": "waiting",
+    "w": 800,
+    "h": 360,
+    "file": "waiting-800x360.png",
+    "scene": "waiting",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 800,
+      "height": 360
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-waiting.webp",
+    "bodyText": "BatalhaOkê\n\nSua voz entra na disputa.\n\nO público decide o campeão. Quem vai encarar a batalha?\n\n0 apresentações realizadas · 0 vot"
+  },
+  {
+    "state": "interval",
+    "w": 800,
+    "h": 360,
+    "file": "interval-800x360.png",
+    "scene": "waiting",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 800,
+      "height": 360
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-waiting.webp",
+    "bodyText": "BatalhaOkê\n\nÚLTIMA APRESENTAÇÃO\n\nMARIANA COSTA\n\nUma canção para toda a plateia\n\n24 votos 👍\n\nPrimeiro destaque da noite · líder at"
+  },
+  {
+    "state": "preparation",
+    "w": 800,
+    "h": 360,
+    "file": "preparation-800x360.png",
+    "scene": "duel",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 800,
+      "height": 360
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-duel.webp",
+    "bodyText": "BatalhaOkê\n\n⚔ ARENA X1\n\nA disputa vai começar\n\nPreparando o primeiro duelo\n\nPRIMEIRO DUELO\n\nMARIANA COSTA × RAFAEL SANTOS\n\nPrepara"
+  },
+  {
+    "state": "duel",
+    "w": 800,
+    "h": 360,
+    "file": "duel-800x360.png",
+    "scene": "duel",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 800,
+      "height": 360
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-duel.webp",
+    "bodyText": "BatalhaOkê\n\n⚔ ARENA X1\n\nA disputa vai começar\n\nPreparando o primeiro duelo\n\nPRÓXIMO DUELO\n\nMARIANA COSTA\n\nAguardando música\n\nVS\n\nR"
+  },
+  {
+    "state": "vote",
+    "w": 800,
+    "h": 360,
+    "file": "vote-800x360.png",
+    "scene": "duel",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 800,
+      "height": 360
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-duel.webp",
+    "bodyText": "BatalhaOkê\n\nQUEM VOCÊ PREFERE?\n\nMARIANA COSTA\n\n×\n\nRAFAEL SANTOS\n\n60\n\nEscaneie o QR Code e vote pelo celular!\n\nEscaneie para votar "
+  },
+  {
+    "state": "victory",
+    "w": 800,
+    "h": 360,
+    "file": "victory-800x360.png",
+    "scene": "victory",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 800,
+      "height": 360
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-victory.webp",
+    "bodyText": "BatalhaOkê\n\n👑 REI DA MESA\n\nMARIANA COSTA\n\n1 vitória consecutiva\n\nÚLTIMO DUELO\n\nMARIANA COSTA\n\n+22\n\n×\n\nRAFAEL SANTOS\n\n🏆 MARIANA C"
+  },
+  {
+    "state": "championship-vote",
+    "w": 800,
+    "h": 360,
+    "file": "championship-vote-800x360.png",
+    "scene": "duel",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 800,
+      "height": 360
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-duel.webp",
+    "bodyText": "BatalhaOkê\n\nCampeonato de vozes\n\nFINAL · CONFRONTO 1\n\nA · Mariana Costa\n\nApresentação pendente\n\n24 votos\n\n×\n\nB · Rafael Santos\n\nAp"
+  },
+  {
+    "state": "championship-victory",
+    "w": 800,
+    "h": 360,
+    "file": "championship-victory-800x360.png",
+    "scene": "victory",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 800,
+      "height": 360
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-victory.webp",
+    "bodyText": "BatalhaOkê\n\nCampeonato de vozes\n\nFINAL · CONFRONTO 1\n\nA · Mariana Costa\n\nApresentação pendente\n\n24 votos\n\n×\n\nB · Rafael Santos\n\nAp"
+  },
+  {
+    "state": "live",
+    "w": 800,
+    "h": 360,
+    "file": "live-800x360.png",
+    "scene": "live",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": true,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 800,
+      "height": 360
+    },
+    "player": {
+      "x": 105.046875,
+      "y": 52,
+      "width": 284.4375,
+      "height": 159.984375
+    },
+    "panel": {
+      "x": 484.53125,
+      "y": 84.328125,
+      "width": 295.46875,
+      "height": 213.3125
+    },
+    "bodyText": "BatalhaOkê\n\nParticipante 1\n\nMARIANA COSTA\n\nUMA CANÇÃO PARA TODA A PLATEIA\n\nAPRESENTAÇÃO EM ANDAMENTO\n\n👍 24 votos\n\nEscaneie para v"
+  },
+  {
+    "state": "long-live",
+    "w": 800,
+    "h": 360,
+    "file": "long-live-800x360.png",
+    "scene": "live",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": true,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 800,
+      "height": 360
+    },
+    "player": {
+      "x": 105.046875,
+      "y": 52,
+      "width": 284.4375,
+      "height": 159.984375
+    },
+    "panel": {
+      "x": 484.53125,
+      "y": 70.796875,
+      "width": 295.46875,
+      "height": 240.375
+    },
+    "bodyText": "BatalhaOkê\n\nParticipante 1\n\nMARIA APARECIDA DE ALBUQUERQUE E VASCONCELOS\n\nUMA CANÇÃO PARA TODA A PLATEIA\n\nAPRESENTAÇÃO EM ANDAMENT"
+  },
+  {
+    "state": "opening",
+    "w": 844,
+    "h": 390,
+    "file": "opening-844x390.png",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 844,
+      "height": 390
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-waiting.webp",
+    "bodyText": "BatalhaOkê\n\nCOMPETIÇÃO EM TRANSMISSÃO\n\nSua voz entra na disputa.\n\nO público decide o campeão.\n\nQuem vai encarar a batalha?\n\nAguard"
+  },
+  {
+    "state": "pairing",
+    "w": 844,
+    "h": 390,
+    "file": "pairing-844x390.png",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 844,
+      "height": 390
+    },
+    "player": null,
+    "panel": null,
+    "bodyText": "BatalhaOkê\n\nEsta TV ainda não está configurada.\n\nCódigo de pareamento\n\nABC123\n\nInforme este código ao operador para vincular esta "
+  },
+  {
+    "state": "waiting",
+    "w": 844,
+    "h": 390,
+    "file": "waiting-844x390.png",
+    "scene": "waiting",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 844,
+      "height": 390
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-waiting.webp",
+    "bodyText": "BatalhaOkê\n\nSua voz entra na disputa.\n\nO público decide o campeão. Quem vai encarar a batalha?\n\n0 apresentações realizadas · 0 vot"
+  },
+  {
+    "state": "interval",
+    "w": 844,
+    "h": 390,
+    "file": "interval-844x390.png",
+    "scene": "waiting",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 844,
+      "height": 390
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-waiting.webp",
+    "bodyText": "BatalhaOkê\n\nÚLTIMA APRESENTAÇÃO\n\nMARIANA COSTA\n\nUma canção para toda a plateia\n\n24 votos 👍\n\nPrimeiro destaque da noite · líder at"
+  },
+  {
+    "state": "preparation",
+    "w": 844,
+    "h": 390,
+    "file": "preparation-844x390.png",
+    "scene": "duel",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 844,
+      "height": 390
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-duel.webp",
+    "bodyText": "BatalhaOkê\n\n⚔ ARENA X1\n\nA disputa vai começar\n\nPreparando o primeiro duelo\n\nPRIMEIRO DUELO\n\nMARIANA COSTA × RAFAEL SANTOS\n\nPrepara"
+  },
+  {
+    "state": "duel",
+    "w": 844,
+    "h": 390,
+    "file": "duel-844x390.png",
+    "scene": "duel",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 844,
+      "height": 390
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-duel.webp",
+    "bodyText": "BatalhaOkê\n\n⚔ ARENA X1\n\nA disputa vai começar\n\nPreparando o primeiro duelo\n\nPRÓXIMO DUELO\n\nMARIANA COSTA\n\nAguardando música\n\nVS\n\nR"
+  },
+  {
+    "state": "vote",
+    "w": 844,
+    "h": 390,
+    "file": "vote-844x390.png",
+    "scene": "duel",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 844,
+      "height": 390
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-duel.webp",
+    "bodyText": "BatalhaOkê\n\nQUEM VOCÊ PREFERE?\n\nMARIANA COSTA\n\n×\n\nRAFAEL SANTOS\n\n60\n\nEscaneie o QR Code e vote pelo celular!\n\nEscaneie para votar "
+  },
+  {
+    "state": "victory",
+    "w": 844,
+    "h": 390,
+    "file": "victory-844x390.png",
+    "scene": "victory",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 844,
+      "height": 390
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-victory.webp",
+    "bodyText": "BatalhaOkê\n\n👑 REI DA MESA\n\nMARIANA COSTA\n\n1 vitória consecutiva\n\nÚLTIMO DUELO\n\nMARIANA COSTA\n\n+22\n\n×\n\nRAFAEL SANTOS\n\n🏆 MARIANA C"
+  },
+  {
+    "state": "championship-vote",
+    "w": 844,
+    "h": 390,
+    "file": "championship-vote-844x390.png",
+    "scene": "duel",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 844,
+      "height": 390
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-duel.webp",
+    "bodyText": "BatalhaOkê\n\nCampeonato de vozes\n\nFINAL · CONFRONTO 1\n\nA · Mariana Costa\n\nApresentação pendente\n\n24 votos\n\n×\n\nB · Rafael Santos\n\nAp"
+  },
+  {
+    "state": "championship-victory",
+    "w": 844,
+    "h": 390,
+    "file": "championship-victory-844x390.png",
+    "scene": "victory",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 844,
+      "height": 390
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-victory.webp",
+    "bodyText": "BatalhaOkê\n\nCampeonato de vozes\n\nFINAL · CONFRONTO 1\n\nA · Mariana Costa\n\nApresentação pendente\n\n24 votos\n\n×\n\nB · Rafael Santos\n\nAp"
+  },
+  {
+    "state": "live",
+    "w": 844,
+    "h": 390,
+    "file": "live-844x390.png",
+    "scene": "live",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 844,
+      "height": 390
+    },
+    "player": {
+      "x": 92.140625,
+      "y": 53,
+      "width": 337.765625,
+      "height": 189.984375
+    },
+    "panel": {
+      "x": 510.96875,
+      "y": 90.328125,
+      "width": 311.9375,
+      "height": 213.3125
+    },
+    "bodyText": "BatalhaOkê\n\nParticipante 1\n\nMARIANA COSTA\n\nUMA CANÇÃO PARA TODA A PLATEIA\n\nAPRESENTAÇÃO EM ANDAMENTO\n\n👍 24 votos\n\nEscaneie para v"
+  },
+  {
+    "state": "long-live",
+    "w": 844,
+    "h": 390,
+    "file": "long-live-844x390.png",
+    "scene": "live",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 844,
+      "height": 390
+    },
+    "player": {
+      "x": 92.140625,
+      "y": 53,
+      "width": 337.765625,
+      "height": 189.984375
+    },
+    "panel": {
+      "x": 510.96875,
+      "y": 76.796875,
+      "width": 311.9375,
+      "height": 240.375
+    },
+    "bodyText": "BatalhaOkê\n\nParticipante 1\n\nMARIA APARECIDA DE ALBUQUERQUE E VASCONCELOS\n\nUMA CANÇÃO PARA TODA A PLATEIA\n\nAPRESENTAÇÃO EM ANDAMENT"
+  },
+  {
+    "state": "opening",
+    "w": 932,
+    "h": 430,
+    "file": "opening-932x430.png",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 932,
+      "height": 430
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-waiting.webp",
+    "bodyText": "BatalhaOkê\n\nCOMPETIÇÃO EM TRANSMISSÃO\n\nSua voz entra na disputa.\n\nO público decide o campeão.\n\nQuem vai encarar a batalha?\n\nAguard"
+  },
+  {
+    "state": "pairing",
+    "w": 932,
+    "h": 430,
+    "file": "pairing-932x430.png",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 932,
+      "height": 430
+    },
+    "player": null,
+    "panel": null,
+    "bodyText": "BatalhaOkê\n\nEsta TV ainda não está configurada.\n\nCódigo de pareamento\n\nABC123\n\nInforme este código ao operador para vincular esta "
+  },
+  {
+    "state": "waiting",
+    "w": 932,
+    "h": 430,
+    "file": "waiting-932x430.png",
+    "scene": "waiting",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 932,
+      "height": 430
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-waiting.webp",
+    "bodyText": "BatalhaOkê\n\nSua voz entra na disputa.\n\nO público decide o campeão. Quem vai encarar a batalha?\n\n0 apresentações realizadas · 0 vot"
+  },
+  {
+    "state": "interval",
+    "w": 932,
+    "h": 430,
+    "file": "interval-932x430.png",
+    "scene": "waiting",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 932,
+      "height": 430
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-waiting.webp",
+    "bodyText": "BatalhaOkê\n\nÚLTIMA APRESENTAÇÃO\n\nMARIANA COSTA\n\nUma canção para toda a plateia\n\n24 votos 👍\n\nPrimeiro destaque da noite · líder at"
+  },
+  {
+    "state": "preparation",
+    "w": 932,
+    "h": 430,
+    "file": "preparation-932x430.png",
+    "scene": "duel",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 932,
+      "height": 430
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-duel.webp",
+    "bodyText": "BatalhaOkê\n\n⚔ ARENA X1\n\nA disputa vai começar\n\nPreparando o primeiro duelo\n\nPRIMEIRO DUELO\n\nMARIANA COSTA × RAFAEL SANTOS\n\nPrepara"
+  },
+  {
+    "state": "duel",
+    "w": 932,
+    "h": 430,
+    "file": "duel-932x430.png",
+    "scene": "duel",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 932,
+      "height": 430
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-duel.webp",
+    "bodyText": "BatalhaOkê\n\n⚔ ARENA X1\n\nA disputa vai começar\n\nPreparando o primeiro duelo\n\nPRÓXIMO DUELO\n\nMARIANA COSTA\n\nAguardando música\n\nVS\n\nR"
+  },
+  {
+    "state": "vote",
+    "w": 932,
+    "h": 430,
+    "file": "vote-932x430.png",
+    "scene": "duel",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 932,
+      "height": 430
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-duel.webp",
+    "bodyText": "BatalhaOkê\n\nQUEM VOCÊ PREFERE?\n\nMARIANA COSTA\n\n×\n\nRAFAEL SANTOS\n\n60\n\nEscaneie o QR Code e vote pelo celular!\n\nEscaneie para votar "
+  },
+  {
+    "state": "victory",
+    "w": 932,
+    "h": 430,
+    "file": "victory-932x430.png",
+    "scene": "victory",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 932,
+      "height": 430
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-victory.webp",
+    "bodyText": "BatalhaOkê\n\n👑 REI DA MESA\n\nMARIANA COSTA\n\n1 vitória consecutiva\n\nÚLTIMO DUELO\n\nMARIANA COSTA\n\n+22\n\n×\n\nRAFAEL SANTOS\n\n🏆 MARIANA C"
+  },
+  {
+    "state": "championship-vote",
+    "w": 932,
+    "h": 430,
+    "file": "championship-vote-932x430.png",
+    "scene": "duel",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 932,
+      "height": 430
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-duel.webp",
+    "bodyText": "BatalhaOkê\n\nCampeonato de vozes\n\nFINAL · CONFRONTO 1\n\nA · Mariana Costa\n\nApresentação pendente\n\n24 votos\n\n×\n\nB · Rafael Santos\n\nAp"
+  },
+  {
+    "state": "championship-victory",
+    "w": 932,
+    "h": 430,
+    "file": "championship-victory-932x430.png",
+    "scene": "victory",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 932,
+      "height": 430
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-victory.webp",
+    "bodyText": "BatalhaOkê\n\nCampeonato de vozes\n\nFINAL · CONFRONTO 1\n\nA · Mariana Costa\n\nApresentação pendente\n\n24 votos\n\n×\n\nB · Rafael Santos\n\nAp"
+  },
+  {
+    "state": "live",
+    "w": 932,
+    "h": 430,
+    "file": "live-932x430.png",
+    "scene": "live",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 932,
+      "height": 430
+    },
+    "player": {
+      "x": 84.125,
+      "y": 53,
+      "width": 408.875,
+      "height": 229.984375
+    },
+    "panel": {
+      "x": 563.84375,
+      "y": 110.328125,
+      "width": 344.859375,
+      "height": 213.3125
+    },
+    "bodyText": "BatalhaOkê\n\nParticipante 1\n\nMARIANA COSTA\n\nUMA CANÇÃO PARA TODA A PLATEIA\n\nAPRESENTAÇÃO EM ANDAMENTO\n\n👍 24 votos\n\nEscaneie para v"
+  },
+  {
+    "state": "long-live",
+    "w": 932,
+    "h": 430,
+    "file": "long-live-932x430.png",
+    "scene": "live",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 932,
+      "height": 430
+    },
+    "player": {
+      "x": 84.125,
+      "y": 53,
+      "width": 408.875,
+      "height": 229.984375
+    },
+    "panel": {
+      "x": 563.84375,
+      "y": 96.796875,
+      "width": 344.859375,
+      "height": 240.375
+    },
+    "bodyText": "BatalhaOkê\n\nParticipante 1\n\nMARIA APARECIDA DE ALBUQUERQUE E VASCONCELOS\n\nUMA CANÇÃO PARA TODA A PLATEIA\n\nAPRESENTAÇÃO EM ANDAMENT"
+  },
+  {
+    "state": "opening",
+    "w": 768,
+    "h": 1024,
+    "file": "opening-768x1024.png",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 768,
+      "height": 1024
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-waiting.webp",
+    "bodyText": "BatalhaOkê\n\nCOMPETIÇÃO EM TRANSMISSÃO\n\nSua voz entra na disputa.\n\nO público decide o campeão.\n\nQuem vai encarar a batalha?\n\nAguard"
+  },
+  {
+    "state": "pairing",
+    "w": 768,
+    "h": 1024,
+    "file": "pairing-768x1024.png",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 768,
+      "height": 1024
+    },
+    "player": null,
+    "panel": null,
+    "bodyText": "BatalhaOkê\n\nEsta TV ainda não está configurada.\n\nCódigo de pareamento\n\nABC123\n\nInforme este código ao operador para vincular esta "
+  },
+  {
+    "state": "waiting",
+    "w": 768,
+    "h": 1024,
+    "file": "waiting-768x1024.png",
+    "scene": "waiting",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 768,
+      "height": 1024
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-waiting.webp",
+    "bodyText": "BatalhaOkê\n\nSua voz entra na disputa.\n\nO público decide o campeão. Quem vai encarar a batalha?\n\n0 apresentações realizadas · 0 vot"
+  },
+  {
+    "state": "interval",
+    "w": 768,
+    "h": 1024,
+    "file": "interval-768x1024.png",
+    "scene": "waiting",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 768,
+      "height": 1024
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-waiting.webp",
+    "bodyText": "BatalhaOkê\n\nÚLTIMA APRESENTAÇÃO\n\nMARIANA COSTA\n\nUma canção para toda a plateia\n\n24 votos 👍\n\nPrimeiro destaque da noite · líder at"
+  },
+  {
+    "state": "preparation",
+    "w": 768,
+    "h": 1024,
+    "file": "preparation-768x1024.png",
+    "scene": "duel",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 768,
+      "height": 1024
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-duel.webp",
+    "bodyText": "BatalhaOkê\n\n⚔ ARENA X1\n\nA disputa vai começar\n\nPreparando o primeiro duelo\n\nPRIMEIRO DUELO\n\nMARIANA COSTA × RAFAEL SANTOS\n\nPrepara"
+  },
+  {
+    "state": "duel",
+    "w": 768,
+    "h": 1024,
+    "file": "duel-768x1024.png",
+    "scene": "duel",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 768,
+      "height": 1024
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-duel.webp",
+    "bodyText": "BatalhaOkê\n\n⚔ ARENA X1\n\nA disputa vai começar\n\nPreparando o primeiro duelo\n\nPRÓXIMO DUELO\n\nMARIANA COSTA\n\nAguardando música\n\nVS\n\nR"
+  },
+  {
+    "state": "vote",
+    "w": 768,
+    "h": 1024,
+    "file": "vote-768x1024.png",
+    "scene": "duel",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 768,
+      "height": 1024
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-duel.webp",
+    "bodyText": "BatalhaOkê\n\nQUEM VOCÊ PREFERE?\n\nMARIANA COSTA\n\n×\n\nRAFAEL SANTOS\n\n60\n\nEscaneie o QR Code e vote pelo celular!\n\nEscaneie para votar "
+  },
+  {
+    "state": "victory",
+    "w": 768,
+    "h": 1024,
+    "file": "victory-768x1024.png",
+    "scene": "victory",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 768,
+      "height": 1024
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-victory.webp",
+    "bodyText": "BatalhaOkê\n\n👑 REI DA MESA\n\nMARIANA COSTA\n\n1 vitória consecutiva\n\nÚLTIMO DUELO\n\nMARIANA COSTA\n\n+22\n\n×\n\nRAFAEL SANTOS\n\n🏆 MARIANA C"
+  },
+  {
+    "state": "championship-vote",
+    "w": 768,
+    "h": 1024,
+    "file": "championship-vote-768x1024.png",
+    "scene": "duel",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 768,
+      "height": 1024
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-duel.webp",
+    "bodyText": "BatalhaOkê\n\nCampeonato de vozes\n\nFINAL · CONFRONTO 1\n\nA · Mariana Costa\n\nApresentação pendente\n\n24 votos\n\n×\n\nB · Rafael Santos\n\nAp"
+  },
+  {
+    "state": "championship-victory",
+    "w": 768,
+    "h": 1024,
+    "file": "championship-victory-768x1024.png",
+    "scene": "victory",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 768,
+      "height": 1024
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-victory.webp",
+    "bodyText": "BatalhaOkê\n\nCampeonato de vozes\n\nFINAL · CONFRONTO 1\n\nA · Mariana Costa\n\nApresentação pendente\n\n24 votos\n\n×\n\nB · Rafael Santos\n\nAp"
+  },
+  {
+    "state": "live",
+    "w": 768,
+    "h": 1024,
+    "file": "live-768x1024.png",
+    "scene": "live",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 768,
+      "height": 1024
+    },
+    "player": {
+      "x": 19.1875,
+      "y": 324.703125,
+      "width": 490.609375,
+      "height": 275.953125
+    },
+    "panel": {
+      "x": 525.796875,
+      "y": 248.296875,
+      "width": 223.015625,
+      "height": 526.78125
+    },
+    "bodyText": "BatalhaOkê\n\nParticipante 1\n\nMARIANA COSTA\n\nUMA CANÇÃO PARA TODA A PLATEIA\n\nAPRESENTAÇÃO EM ANDAMENTO\n\n👍 24 votos\n\nEscaneie para v"
+  },
+  {
+    "state": "long-live",
+    "w": 768,
+    "h": 1024,
+    "file": "long-live-768x1024.png",
+    "scene": "live",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 768,
+      "height": 1024
+    },
+    "player": {
+      "x": 19.1875,
+      "y": 324.703125,
+      "width": 490.609375,
+      "height": 275.953125
+    },
+    "panel": {
+      "x": 525.796875,
+      "y": 242.6875,
+      "width": 223.015625,
+      "height": 538
+    },
+    "bodyText": "BatalhaOkê\n\nParticipante 1\n\nMARIA APARECIDA DE ALBUQUERQUE E VASCONCELOS\n\nUMA CANÇÃO PARA TODA A PLATEIA\n\nAPRESENTAÇÃO EM ANDAMENT"
+  },
+  {
+    "state": "opening",
+    "w": 1024,
+    "h": 768,
+    "file": "opening-1024x768.png",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 1024,
+      "height": 768
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-waiting.webp",
+    "bodyText": "BatalhaOkê\n\nCOMPETIÇÃO EM TRANSMISSÃO\n\nSua voz entra na disputa.\n\nO público decide o campeão.\n\nQuem vai encarar a batalha?\n\nAguard"
+  },
+  {
+    "state": "pairing",
+    "w": 1024,
+    "h": 768,
+    "file": "pairing-1024x768.png",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 1024,
+      "height": 768
+    },
+    "player": null,
+    "panel": null,
+    "bodyText": "BatalhaOkê\n\nEsta TV ainda não está configurada.\n\nCódigo de pareamento\n\nABC123\n\nInforme este código ao operador para vincular esta "
+  },
+  {
+    "state": "waiting",
+    "w": 1024,
+    "h": 768,
+    "file": "waiting-1024x768.png",
+    "scene": "waiting",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 1024,
+      "height": 768
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-waiting.webp",
+    "bodyText": "BatalhaOkê\n\nSua voz entra na disputa.\n\nO público decide o campeão. Quem vai encarar a batalha?\n\n0 apresentações realizadas · 0 vot"
+  },
+  {
+    "state": "interval",
+    "w": 1024,
+    "h": 768,
+    "file": "interval-1024x768.png",
+    "scene": "waiting",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 1024,
+      "height": 768
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-waiting.webp",
+    "bodyText": "BatalhaOkê\n\nÚLTIMA APRESENTAÇÃO\n\nMARIANA COSTA\n\nUma canção para toda a plateia\n\n24 votos 👍\n\nPrimeiro destaque da noite · líder at"
+  },
+  {
+    "state": "preparation",
+    "w": 1024,
+    "h": 768,
+    "file": "preparation-1024x768.png",
+    "scene": "duel",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 1024,
+      "height": 768
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-duel.webp",
+    "bodyText": "BatalhaOkê\n\n⚔ ARENA X1\n\nA disputa vai começar\n\nPreparando o primeiro duelo\n\nPRIMEIRO DUELO\n\nMARIANA COSTA × RAFAEL SANTOS\n\nPrepara"
+  },
+  {
+    "state": "duel",
+    "w": 1024,
+    "h": 768,
+    "file": "duel-1024x768.png",
+    "scene": "duel",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 1024,
+      "height": 768
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-duel.webp",
+    "bodyText": "BatalhaOkê\n\n⚔ ARENA X1\n\nA disputa vai começar\n\nPreparando o primeiro duelo\n\nPRÓXIMO DUELO\n\nMARIANA COSTA\n\nAguardando música\n\nVS\n\nR"
+  },
+  {
+    "state": "vote",
+    "w": 1024,
+    "h": 768,
+    "file": "vote-1024x768.png",
+    "scene": "duel",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 1024,
+      "height": 768
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-duel.webp",
+    "bodyText": "BatalhaOkê\n\nQUEM VOCÊ PREFERE?\n\nMARIANA COSTA\n\n×\n\nRAFAEL SANTOS\n\n60\n\nEscaneie o QR Code e vote pelo celular!\n\nEscaneie para votar "
+  },
+  {
+    "state": "victory",
+    "w": 1024,
+    "h": 768,
+    "file": "victory-1024x768.png",
+    "scene": "victory",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 1024,
+      "height": 768
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-victory.webp",
+    "bodyText": "BatalhaOkê\n\n👑 REI DA MESA\n\nMARIANA COSTA\n\n1 vitória consecutiva\n\nÚLTIMO DUELO\n\nMARIANA COSTA\n\n+22\n\n×\n\nRAFAEL SANTOS\n\n🏆 MARIANA C"
+  },
+  {
+    "state": "championship-vote",
+    "w": 1024,
+    "h": 768,
+    "file": "championship-vote-1024x768.png",
+    "scene": "duel",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 1024,
+      "height": 768
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-duel.webp",
+    "bodyText": "BatalhaOkê\n\nCampeonato de vozes\n\nFINAL · CONFRONTO 1\n\nA · Mariana Costa\n\nApresentação pendente\n\n24 votos\n\n×\n\nB · Rafael Santos\n\nAp"
+  },
+  {
+    "state": "championship-victory",
+    "w": 1024,
+    "h": 768,
+    "file": "championship-victory-1024x768.png",
+    "scene": "victory",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 1024,
+      "height": 768
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-victory.webp",
+    "bodyText": "BatalhaOkê\n\nCampeonato de vozes\n\nFINAL · CONFRONTO 1\n\nA · Mariana Costa\n\nApresentação pendente\n\n24 votos\n\n×\n\nB · Rafael Santos\n\nAp"
+  },
+  {
+    "state": "live",
+    "w": 1024,
+    "h": 768,
+    "file": "live-1024x768.png",
+    "scene": "live",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 1024,
+      "height": 768
+    },
+    "player": {
+      "x": 25.59375,
+      "y": 149.5625,
+      "width": 702.34375,
+      "height": 395.0625
+    },
+    "panel": {
+      "x": 748.40625,
+      "y": 122.703125,
+      "width": 250,
+      "height": 526.78125
+    },
+    "bodyText": "BatalhaOkê\n\nParticipante 1\n\nMARIANA COSTA\n\nUMA CANÇÃO PARA TODA A PLATEIA\n\nAPRESENTAÇÃO EM ANDAMENTO\n\n👍 24 votos\n\nEscaneie para v"
+  },
+  {
+    "state": "long-live",
+    "w": 1024,
+    "h": 768,
+    "file": "long-live-1024x768.png",
+    "scene": "live",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 1024,
+      "height": 768
+    },
+    "player": {
+      "x": 25.59375,
+      "y": 149.5625,
+      "width": 702.34375,
+      "height": 395.0625
+    },
+    "panel": {
+      "x": 748.40625,
+      "y": 117.09375,
+      "width": 250,
+      "height": 538
+    },
+    "bodyText": "BatalhaOkê\n\nParticipante 1\n\nMARIA APARECIDA DE ALBUQUERQUE E VASCONCELOS\n\nUMA CANÇÃO PARA TODA A PLATEIA\n\nAPRESENTAÇÃO EM ANDAMENT"
+  },
+  {
+    "state": "opening",
+    "w": 1366,
+    "h": 768,
+    "file": "opening-1366x768.png",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 1366,
+      "height": 768
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-waiting.webp",
+    "bodyText": "BatalhaOkê\n\nCOMPETIÇÃO EM TRANSMISSÃO\n\nSua voz entra na disputa.\n\nO público decide o campeão.\n\nQuem vai encarar a batalha?\n\nAguard"
+  },
+  {
+    "state": "pairing",
+    "w": 1366,
+    "h": 768,
+    "file": "pairing-1366x768.png",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 1366,
+      "height": 768
+    },
+    "player": null,
+    "panel": null,
+    "bodyText": "BatalhaOkê\n\nEsta TV ainda não está configurada.\n\nCódigo de pareamento\n\nABC123\n\nInforme este código ao operador para vincular esta "
+  },
+  {
+    "state": "waiting",
+    "w": 1366,
+    "h": 768,
+    "file": "waiting-1366x768.png",
+    "scene": "waiting",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 1366,
+      "height": 768
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-waiting.webp",
+    "bodyText": "BatalhaOkê\n\nSua voz entra na disputa.\n\nO público decide o campeão. Quem vai encarar a batalha?\n\n0 apresentações realizadas · 0 vot"
+  },
+  {
+    "state": "interval",
+    "w": 1366,
+    "h": 768,
+    "file": "interval-1366x768.png",
+    "scene": "waiting",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 1366,
+      "height": 768
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-waiting.webp",
+    "bodyText": "BatalhaOkê\n\nÚLTIMA APRESENTAÇÃO\n\nMARIANA COSTA\n\nUma canção para toda a plateia\n\n24 votos 👍\n\nPrimeiro destaque da noite · líder at"
+  },
+  {
+    "state": "preparation",
+    "w": 1366,
+    "h": 768,
+    "file": "preparation-1366x768.png",
+    "scene": "duel",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 1366,
+      "height": 768
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-duel.webp",
+    "bodyText": "BatalhaOkê\n\n⚔ ARENA X1\n\nA disputa vai começar\n\nPreparando o primeiro duelo\n\nPRIMEIRO DUELO\n\nMARIANA COSTA × RAFAEL SANTOS\n\nPrepara"
+  },
+  {
+    "state": "duel",
+    "w": 1366,
+    "h": 768,
+    "file": "duel-1366x768.png",
+    "scene": "duel",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 1366,
+      "height": 768
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-duel.webp",
+    "bodyText": "BatalhaOkê\n\n⚔ ARENA X1\n\nA disputa vai começar\n\nPreparando o primeiro duelo\n\nPRÓXIMO DUELO\n\nMARIANA COSTA\n\nAguardando música\n\nVS\n\nR"
+  },
+  {
+    "state": "vote",
+    "w": 1366,
+    "h": 768,
+    "file": "vote-1366x768.png",
+    "scene": "duel",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 1366,
+      "height": 768
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-duel.webp",
+    "bodyText": "BatalhaOkê\n\nQUEM VOCÊ PREFERE?\n\nMARIANA COSTA\n\n×\n\nRAFAEL SANTOS\n\n60\n\nEscaneie o QR Code e vote pelo celular!\n\nEscaneie para votar "
+  },
+  {
+    "state": "victory",
+    "w": 1366,
+    "h": 768,
+    "file": "victory-1366x768.png",
+    "scene": "victory",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 1366,
+      "height": 768
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-victory.webp",
+    "bodyText": "BatalhaOkê\n\n👑 REI DA MESA\n\nMARIANA COSTA\n\n1 vitória consecutiva\n\nÚLTIMO DUELO\n\nMARIANA COSTA\n\n+22\n\n×\n\nRAFAEL SANTOS\n\n🏆 MARIANA C"
+  },
+  {
+    "state": "championship-vote",
+    "w": 1366,
+    "h": 768,
+    "file": "championship-vote-1366x768.png",
+    "scene": "duel",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 1366,
+      "height": 768
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-duel.webp",
+    "bodyText": "BatalhaOkê\n\nCampeonato de vozes\n\nFINAL · CONFRONTO 1\n\nA · Mariana Costa\n\nApresentação pendente\n\n24 votos\n\n×\n\nB · Rafael Santos\n\nAp"
+  },
+  {
+    "state": "championship-victory",
+    "w": 1366,
+    "h": 768,
+    "file": "championship-victory-1366x768.png",
+    "scene": "victory",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 1366,
+      "height": 768
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-victory.webp",
+    "bodyText": "BatalhaOkê\n\nCampeonato de vozes\n\nFINAL · CONFRONTO 1\n\nA · Mariana Costa\n\nApresentação pendente\n\n24 votos\n\n×\n\nB · Rafael Santos\n\nAp"
+  },
+  {
+    "state": "live",
+    "w": 1366,
+    "h": 768,
+    "file": "live-1366x768.png",
+    "scene": "live",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 1366,
+      "height": 768
+    },
+    "player": {
+      "x": 76.765625,
+      "y": 103.109375,
+      "width": 867.546875,
+      "height": 487.984375
+    },
+    "panel": {
+      "x": 1014.25,
+      "y": 143.90625,
+      "width": 317.609375,
+      "height": 484.390625
+    },
+    "bodyText": "BatalhaOkê\n\nParticipante 1\n\nMARIANA COSTA\n\nUMA CANÇÃO PARA TODA A PLATEIA\n\nAPRESENTAÇÃO EM ANDAMENTO\n\n👍 24 votos\n\nEscaneie para v"
+  },
+  {
+    "state": "long-live",
+    "w": 1366,
+    "h": 768,
+    "file": "long-live-1366x768.png",
+    "scene": "live",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 1366,
+      "height": 768
+    },
+    "player": {
+      "x": 76.765625,
+      "y": 103.109375,
+      "width": 867.546875,
+      "height": 487.984375
+    },
+    "panel": {
+      "x": 1014.25,
+      "y": 117.09375,
+      "width": 317.609375,
+      "height": 538
+    },
+    "bodyText": "BatalhaOkê\n\nParticipante 1\n\nMARIA APARECIDA DE ALBUQUERQUE E VASCONCELOS\n\nUMA CANÇÃO PARA TODA A PLATEIA\n\nAPRESENTAÇÃO EM ANDAMENT"
+  },
+  {
+    "state": "opening",
+    "w": 1280,
+    "h": 720,
+    "file": "opening-1280x720.png",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 1280,
+      "height": 720
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-waiting.webp",
+    "bodyText": "BatalhaOkê\n\nCOMPETIÇÃO EM TRANSMISSÃO\n\nSua voz entra na disputa.\n\nO público decide o campeão.\n\nQuem vai encarar a batalha?\n\nAguard"
+  },
+  {
+    "state": "pairing",
+    "w": 1280,
+    "h": 720,
+    "file": "pairing-1280x720.png",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 1280,
+      "height": 720
+    },
+    "player": null,
+    "panel": null,
+    "bodyText": "BatalhaOkê\n\nEsta TV ainda não está configurada.\n\nCódigo de pareamento\n\nABC123\n\nInforme este código ao operador para vincular esta "
+  },
+  {
+    "state": "waiting",
+    "w": 1280,
+    "h": 720,
+    "file": "waiting-1280x720.png",
+    "scene": "waiting",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 1280,
+      "height": 720
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-waiting.webp",
+    "bodyText": "BatalhaOkê\n\nSua voz entra na disputa.\n\nO público decide o campeão. Quem vai encarar a batalha?\n\n0 apresentações realizadas · 0 vot"
+  },
+  {
+    "state": "interval",
+    "w": 1280,
+    "h": 720,
+    "file": "interval-1280x720.png",
+    "scene": "waiting",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 1280,
+      "height": 720
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-waiting.webp",
+    "bodyText": "BatalhaOkê\n\nÚLTIMA APRESENTAÇÃO\n\nMARIANA COSTA\n\nUma canção para toda a plateia\n\n24 votos 👍\n\nPrimeiro destaque da noite · líder at"
+  },
+  {
+    "state": "preparation",
+    "w": 1280,
+    "h": 720,
+    "file": "preparation-1280x720.png",
+    "scene": "duel",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 1280,
+      "height": 720
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-duel.webp",
+    "bodyText": "BatalhaOkê\n\n⚔ ARENA X1\n\nA disputa vai começar\n\nPreparando o primeiro duelo\n\nPRIMEIRO DUELO\n\nMARIANA COSTA × RAFAEL SANTOS\n\nPrepara"
+  },
+  {
+    "state": "duel",
+    "w": 1280,
+    "h": 720,
+    "file": "duel-1280x720.png",
+    "scene": "duel",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 1280,
+      "height": 720
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-duel.webp",
+    "bodyText": "BatalhaOkê\n\n⚔ ARENA X1\n\nA disputa vai começar\n\nPreparando o primeiro duelo\n\nPRÓXIMO DUELO\n\nMARIANA COSTA\n\nAguardando música\n\nVS\n\nR"
+  },
+  {
+    "state": "vote",
+    "w": 1280,
+    "h": 720,
+    "file": "vote-1280x720.png",
+    "scene": "duel",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 1280,
+      "height": 720
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-duel.webp",
+    "bodyText": "BatalhaOkê\n\nQUEM VOCÊ PREFERE?\n\nMARIANA COSTA\n\n×\n\nRAFAEL SANTOS\n\n60\n\nEscaneie o QR Code e vote pelo celular!\n\nEscaneie para votar "
+  },
+  {
+    "state": "victory",
+    "w": 1280,
+    "h": 720,
+    "file": "victory-1280x720.png",
+    "scene": "victory",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 1280,
+      "height": 720
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-victory.webp",
+    "bodyText": "BatalhaOkê\n\n👑 REI DA MESA\n\nMARIANA COSTA\n\n1 vitória consecutiva\n\nÚLTIMO DUELO\n\nMARIANA COSTA\n\n+22\n\n×\n\nRAFAEL SANTOS\n\n🏆 MARIANA C"
+  },
+  {
+    "state": "championship-vote",
+    "w": 1280,
+    "h": 720,
+    "file": "championship-vote-1280x720.png",
+    "scene": "duel",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 1280,
+      "height": 720
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-duel.webp",
+    "bodyText": "BatalhaOkê\n\nCampeonato de vozes\n\nFINAL · CONFRONTO 1\n\nA · Mariana Costa\n\nApresentação pendente\n\n24 votos\n\n×\n\nB · Rafael Santos\n\nAp"
+  },
+  {
+    "state": "championship-victory",
+    "w": 1280,
+    "h": 720,
+    "file": "championship-victory-1280x720.png",
+    "scene": "victory",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 1280,
+      "height": 720
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-victory.webp",
+    "bodyText": "BatalhaOkê\n\nCampeonato de vozes\n\nFINAL · CONFRONTO 1\n\nA · Mariana Costa\n\nApresentação pendente\n\n24 votos\n\n×\n\nB · Rafael Santos\n\nAp"
+  },
+  {
+    "state": "live",
+    "w": 1280,
+    "h": 720,
+    "file": "live-1280x720.png",
+    "scene": "live",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 1280,
+      "height": 720
+    },
+    "player": {
+      "x": 87.28125,
+      "y": 103.109375,
+      "width": 782.21875,
+      "height": 439.984375
+    },
+    "panel": {
+      "x": 950.390625,
+      "y": 119.90625,
+      "width": 297.609375,
+      "height": 484.390625
+    },
+    "bodyText": "BatalhaOkê\n\nParticipante 1\n\nMARIANA COSTA\n\nUMA CANÇÃO PARA TODA A PLATEIA\n\nAPRESENTAÇÃO EM ANDAMENTO\n\n👍 24 votos\n\nEscaneie para v"
+  },
+  {
+    "state": "long-live",
+    "w": 1280,
+    "h": 720,
+    "file": "long-live-1280x720.png",
+    "scene": "live",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 1280,
+      "height": 720
+    },
+    "player": {
+      "x": 87.28125,
+      "y": 103.09375,
+      "width": 782.21875,
+      "height": 439.984375
+    },
+    "panel": {
+      "x": 950.390625,
+      "y": 93.09375,
+      "width": 297.609375,
+      "height": 538
+    },
+    "bodyText": "BatalhaOkê\n\nParticipante 1\n\nMARIA APARECIDA DE ALBUQUERQUE E VASCONCELOS\n\nUMA CANÇÃO PARA TODA A PLATEIA\n\nAPRESENTAÇÃO EM ANDAMENT"
+  },
+  {
+    "state": "opening",
+    "w": 1920,
+    "h": 1080,
+    "file": "opening-1920x1080.png",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 1920,
+      "height": 1080
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-waiting.webp",
+    "bodyText": "BatalhaOkê\n\nCOMPETIÇÃO EM TRANSMISSÃO\n\nSua voz entra na disputa.\n\nO público decide o campeão.\n\nQuem vai encarar a batalha?\n\nAguard"
+  },
+  {
+    "state": "pairing",
+    "w": 1920,
+    "h": 1080,
+    "file": "pairing-1920x1080.png",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 1920,
+      "height": 1080
+    },
+    "player": null,
+    "panel": null,
+    "bodyText": "BatalhaOkê\n\nEsta TV ainda não está configurada.\n\nCódigo de pareamento\n\nABC123\n\nInforme este código ao operador para vincular esta "
+  },
+  {
+    "state": "waiting",
+    "w": 1920,
+    "h": 1080,
+    "file": "waiting-1920x1080.png",
+    "scene": "waiting",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 1920,
+      "height": 1080
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-waiting.webp",
+    "bodyText": "BatalhaOkê\n\nSua voz entra na disputa.\n\nO público decide o campeão. Quem vai encarar a batalha?\n\n0 apresentações realizadas · 0 vot"
+  },
+  {
+    "state": "interval",
+    "w": 1920,
+    "h": 1080,
+    "file": "interval-1920x1080.png",
+    "scene": "waiting",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 1920,
+      "height": 1080
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-waiting.webp",
+    "bodyText": "BatalhaOkê\n\nÚLTIMA APRESENTAÇÃO\n\nMARIANA COSTA\n\nUma canção para toda a plateia\n\n24 votos 👍\n\nPrimeiro destaque da noite · líder at"
+  },
+  {
+    "state": "preparation",
+    "w": 1920,
+    "h": 1080,
+    "file": "preparation-1920x1080.png",
+    "scene": "duel",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 1920,
+      "height": 1080
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-duel.webp",
+    "bodyText": "BatalhaOkê\n\n⚔ ARENA X1\n\nA disputa vai começar\n\nPreparando o primeiro duelo\n\nPRIMEIRO DUELO\n\nMARIANA COSTA × RAFAEL SANTOS\n\nPrepara"
+  },
+  {
+    "state": "duel",
+    "w": 1920,
+    "h": 1080,
+    "file": "duel-1920x1080.png",
+    "scene": "duel",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 1920,
+      "height": 1080
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-duel.webp",
+    "bodyText": "BatalhaOkê\n\n⚔ ARENA X1\n\nA disputa vai começar\n\nPreparando o primeiro duelo\n\nPRÓXIMO DUELO\n\nMARIANA COSTA\n\nAguardando música\n\nVS\n\nR"
+  },
+  {
+    "state": "vote",
+    "w": 1920,
+    "h": 1080,
+    "file": "vote-1920x1080.png",
+    "scene": "duel",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 1920,
+      "height": 1080
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-duel.webp",
+    "bodyText": "BatalhaOkê\n\nQUEM VOCÊ PREFERE?\n\nMARIANA COSTA\n\n×\n\nRAFAEL SANTOS\n\n60\n\nEscaneie o QR Code e vote pelo celular!\n\nEscaneie para votar "
+  },
+  {
+    "state": "victory",
+    "w": 1920,
+    "h": 1080,
+    "file": "victory-1920x1080.png",
+    "scene": "victory",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 1920,
+      "height": 1080
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-victory.webp",
+    "bodyText": "BatalhaOkê\n\n👑 REI DA MESA\n\nMARIANA COSTA\n\n1 vitória consecutiva\n\nÚLTIMO DUELO\n\nMARIANA COSTA\n\n+22\n\n×\n\nRAFAEL SANTOS\n\n🏆 MARIANA C"
+  },
+  {
+    "state": "championship-vote",
+    "w": 1920,
+    "h": 1080,
+    "file": "championship-vote-1920x1080.png",
+    "scene": "duel",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 1920,
+      "height": 1080
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-duel.webp",
+    "bodyText": "BatalhaOkê\n\nCampeonato de vozes\n\nFINAL · CONFRONTO 1\n\nA · Mariana Costa\n\nApresentação pendente\n\n24 votos\n\n×\n\nB · Rafael Santos\n\nAp"
+  },
+  {
+    "state": "championship-victory",
+    "w": 1920,
+    "h": 1080,
+    "file": "championship-victory-1920x1080.png",
+    "scene": "victory",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 1920,
+      "height": 1080
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-victory.webp",
+    "bodyText": "BatalhaOkê\n\nCampeonato de vozes\n\nFINAL · CONFRONTO 1\n\nA · Mariana Costa\n\nApresentação pendente\n\n24 votos\n\n×\n\nB · Rafael Santos\n\nAp"
+  },
+  {
+    "state": "live",
+    "w": 1920,
+    "h": 1080,
+    "file": "live-1920x1080.png",
+    "scene": "live",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 1920,
+      "height": 1080
+    },
+    "player": {
+      "x": 48,
+      "y": 132.84375,
+      "width": 1339.203125,
+      "height": 753.296875
+    },
+    "panel": {
+      "x": 1425.59375,
+      "y": 273.328125,
+      "width": 446.40625,
+      "height": 550.328125
+    },
+    "bodyText": "BatalhaOkê\n\nParticipante 1\n\nMARIANA COSTA\n\nUMA CANÇÃO PARA TODA A PLATEIA\n\nAPRESENTAÇÃO EM ANDAMENTO\n\n👍 24 votos\n\nEscaneie para v"
+  },
+  {
+    "state": "long-live",
+    "w": 1920,
+    "h": 1080,
+    "file": "long-live-1920x1080.png",
+    "scene": "live",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 1920,
+      "height": 1080
+    },
+    "player": {
+      "x": 48,
+      "y": 132.84375,
+      "width": 1339.203125,
+      "height": 753.296875
+    },
+    "panel": {
+      "x": 1425.59375,
+      "y": 241.234375,
+      "width": 446.40625,
+      "height": 614.5
+    },
+    "bodyText": "BatalhaOkê\n\nParticipante 1\n\nMARIA APARECIDA DE ALBUQUERQUE E VASCONCELOS\n\nUMA CANÇÃO PARA TODA A PLATEIA\n\nAPRESENTAÇÃO EM ANDAMENT"
+  },
+  {
+    "state": "opening",
+    "w": 3840,
+    "h": 2160,
+    "file": "opening-3840x2160.png",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 3840,
+      "height": 2160
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-waiting.webp",
+    "bodyText": "BatalhaOkê\n\nCOMPETIÇÃO EM TRANSMISSÃO\n\nSua voz entra na disputa.\n\nO público decide o campeão.\n\nQuem vai encarar a batalha?\n\nAguard"
+  },
+  {
+    "state": "pairing",
+    "w": 3840,
+    "h": 2160,
+    "file": "pairing-3840x2160.png",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 3840,
+      "height": 2160
+    },
+    "player": null,
+    "panel": null,
+    "bodyText": "BatalhaOkê\n\nEsta TV ainda não está configurada.\n\nCódigo de pareamento\n\nABC123\n\nInforme este código ao operador para vincular esta "
+  },
+  {
+    "state": "waiting",
+    "w": 3840,
+    "h": 2160,
+    "file": "waiting-3840x2160.png",
+    "scene": "waiting",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 3840,
+      "height": 2160
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-waiting.webp",
+    "bodyText": "BatalhaOkê\n\nSua voz entra na disputa.\n\nO público decide o campeão. Quem vai encarar a batalha?\n\n0 apresentações realizadas · 0 vot"
+  },
+  {
+    "state": "interval",
+    "w": 3840,
+    "h": 2160,
+    "file": "interval-3840x2160.png",
+    "scene": "waiting",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 3840,
+      "height": 2160
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-waiting.webp",
+    "bodyText": "BatalhaOkê\n\nÚLTIMA APRESENTAÇÃO\n\nMARIANA COSTA\n\nUma canção para toda a plateia\n\n24 votos 👍\n\nPrimeiro destaque da noite · líder at"
+  },
+  {
+    "state": "preparation",
+    "w": 3840,
+    "h": 2160,
+    "file": "preparation-3840x2160.png",
+    "scene": "duel",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 3840,
+      "height": 2160
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-duel.webp",
+    "bodyText": "BatalhaOkê\n\n⚔ ARENA X1\n\nA disputa vai começar\n\nPreparando o primeiro duelo\n\nPRIMEIRO DUELO\n\nMARIANA COSTA × RAFAEL SANTOS\n\nPrepara"
+  },
+  {
+    "state": "duel",
+    "w": 3840,
+    "h": 2160,
+    "file": "duel-3840x2160.png",
+    "scene": "duel",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 3840,
+      "height": 2160
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-duel.webp",
+    "bodyText": "BatalhaOkê\n\n⚔ ARENA X1\n\nA disputa vai começar\n\nPreparando o primeiro duelo\n\nPRÓXIMO DUELO\n\nMARIANA COSTA\n\nAguardando música\n\nVS\n\nR"
+  },
+  {
+    "state": "vote",
+    "w": 3840,
+    "h": 2160,
+    "file": "vote-3840x2160.png",
+    "scene": "duel",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 3840,
+      "height": 2160
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-duel.webp",
+    "bodyText": "BatalhaOkê\n\nQUEM VOCÊ PREFERE?\n\nMARIANA COSTA\n\n×\n\nRAFAEL SANTOS\n\n60\n\nEscaneie o QR Code e vote pelo celular!\n\nEscaneie para votar "
+  },
+  {
+    "state": "victory",
+    "w": 3840,
+    "h": 2160,
+    "file": "victory-3840x2160.png",
+    "scene": "victory",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 3840,
+      "height": 2160
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-victory.webp",
+    "bodyText": "BatalhaOkê\n\n👑 REI DA MESA\n\nMARIANA COSTA\n\n1 vitória consecutiva\n\nÚLTIMO DUELO\n\nMARIANA COSTA\n\n+22\n\n×\n\nRAFAEL SANTOS\n\n🏆 MARIANA C"
+  },
+  {
+    "state": "championship-vote",
+    "w": 3840,
+    "h": 2160,
+    "file": "championship-vote-3840x2160.png",
+    "scene": "duel",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 3840,
+      "height": 2160
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-duel.webp",
+    "bodyText": "BatalhaOkê\n\nCampeonato de vozes\n\nFINAL · CONFRONTO 1\n\nA · Mariana Costa\n\nApresentação pendente\n\n24 votos\n\n×\n\nB · Rafael Santos\n\nAp"
+  },
+  {
+    "state": "championship-victory",
+    "w": 3840,
+    "h": 2160,
+    "file": "championship-victory-3840x2160.png",
+    "scene": "victory",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 3840,
+      "height": 2160
+    },
+    "player": null,
+    "panel": null,
+    "image": "http://127.0.0.1:8080/images/brand/pulso-arena-victory.webp",
+    "bodyText": "BatalhaOkê\n\nCampeonato de vozes\n\nFINAL · CONFRONTO 1\n\nA · Mariana Costa\n\nApresentação pendente\n\n24 votos\n\n×\n\nB · Rafael Santos\n\nAp"
+  },
+  {
+    "state": "live",
+    "w": 3840,
+    "h": 2160,
+    "file": "live-3840x2160.png",
+    "scene": "live",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 3840,
+      "height": 2160
+    },
+    "player": {
+      "x": 96,
+      "y": 266.375,
+      "width": 2676,
+      "height": 1505.25
+    },
+    "panel": {
+      "x": 2852,
+      "y": 546.65625,
+      "width": 892,
+      "height": 1100.671875
+    },
+    "bodyText": "BatalhaOkê\n\nParticipante 1\n\nMARIANA COSTA\n\nUMA CANÇÃO PARA TODA A PLATEIA\n\nAPRESENTAÇÃO EM ANDAMENTO\n\n👍 24 votos\n\nEscaneie para v"
+  },
+  {
+    "state": "long-live",
+    "w": 3840,
+    "h": 2160,
+    "file": "long-live-3840x2160.png",
+    "scene": "live",
+    "overlap": false,
+    "scrollX": false,
+    "scrollY": false,
+    "main": {
+      "x": 0,
+      "y": 0,
+      "width": 3840,
+      "height": 2160
+    },
+    "player": {
+      "x": 96,
+      "y": 266.375,
+      "width": 2676,
+      "height": 1505.25
+    },
+    "panel": {
+      "x": 2852,
+      "y": 482.5,
+      "width": 892,
+      "height": 1229
+    },
+    "bodyText": "BatalhaOkê\n\nParticipante 1\n\nMARIA APARECIDA DE ALBUQUERQUE E VASCONCELOS\n\nUMA CANÇÃO PARA TODA A PLATEIA\n\nAPRESENTAÇÃO EM ANDAMENT"
+  },
+  {
+    "playerNodeStableAcrossBreakpoints": true
+  },
+  {
+    "transitions": [
+      {
+        "state": "waiting",
+        "scene": "waiting",
+        "image": "/images/brand/pulso-arena-waiting.jpg"
+      },
+      {
+        "state": "vote",
+        "scene": "duel",
+        "image": "/images/brand/pulso-arena-duel.jpg"
+      },
+      {
+        "state": "victory",
+        "scene": "victory",
+        "image": "/images/brand/pulso-arena-victory.jpg"
+      },
+      {
+        "state": "live",
+        "scene": "live",
+        "image": null
+      },
+      {
+        "state": "waiting",
+        "scene": "waiting",
+        "image": "/images/brand/pulso-arena-waiting.jpg"
+      }
+    ]
+  },
+  {
+    "failure": "webp",
+    "image": {
+      "img": true,
+      "src": "http://127.0.0.1:8080/images/brand/pulso-arena-waiting.jpg",
+      "complete": true
+    }
+  },
+  {
+    "failure": "all",
+    "image": {
+      "img": false
+    }
+  }
+]
