@@ -1,9 +1,10 @@
 import { useState } from "react";
 
-/** Decorative scenery is never mounted while the provider player is visible. */
+/** Static scenery stays behind the interface, including the provider player. */
 export function ArenaBackdrop({ state }: { state: "waiting" | "duel" | "victory" | null }) {
   if (!state) return null;
-  const base = `/images/brand/pulso-arena-${state}`;
+  // The brighter floor and arches keep the waiting stage visible across aspect ratios.
+  const base = `/images/brand/pulso-arena-${state === "waiting" ? "duel" : state}`;
   return <ArenaImage key={state} base={base} />;
 }
 

@@ -541,22 +541,26 @@ html:not([data-tv-page]) .pulso-home-header h1 {
   }
 }
 
-/* Broadcast scenery has no presence in the live player layout. */
+/* Viewport scenery is independent of card growth and stays below the interface. */
 .tv-screen {
   position: relative;
   isolation: isolate;
   background: #08121f;
 }
 .pulso-arena-backdrop {
-  position: absolute;
+  position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  z-index: -1;
+  z-index: 0;
   overflow: hidden;
   pointer-events: none;
   background: #08121f;
+}
+.tv-screen > :not(.pulso-arena-backdrop) {
+  position: relative;
+  z-index: 1;
 }
 .pulso-arena-backdrop img {
   width: 100%;

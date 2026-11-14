@@ -459,9 +459,9 @@ function TvPage() {
     isChampionshipWaiting ||
     isChampionshipVoting;
 
-  // Presentation only: the live provider always takes precedence over scenery.
+  // Presentation only: scenery stays behind the existing player and information panels.
   const arenaScene = active?.source
-    ? null
+    ? "duel"
     : championship?.status === "completed" || (x1State?.currentChampion && !x1State.currentMatch)
       ? "victory"
       : directVoteMatch || showX1Arena || isChampionshipVoting
